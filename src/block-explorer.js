@@ -36,6 +36,7 @@ import {
   lookupCachedSignedTx,
   SUBNET1_FLEET_SOCIAL_DEFAULT,
 } from '@superlexicon/sdk';
+import { mountSlxSubnetWorldMap } from '@superlexicon/sdk/ui';
 import { slidesWallet, unifiedHdr } from './client-header.js';
 
 function esc(s) {
@@ -343,6 +344,9 @@ export function mountSubnetBlockExplorer() {
 
       <!-- Dynamic Cryptographic Inspector Result Panel -->
       <div id="slxExpInspector" style="display:none;border-radius:12px;border:1.5px solid rgba(52,211,153,0.5);background:#060c19;padding:15px 16px;flex-direction:column;gap:12px;"></div>
+
+      <!-- Interactive Global Subnet World Map & Roaming Topology -->
+      <div id="slxExpWorldMapMount" style="min-width:0;"></div>
 
       <!-- Live Dual-Subnet Radio <-> Hybrid Repeater <-> TCP Bridge Monitor -->
       <div id="slxExpDualSubnetPanel" style="display:none;border-radius:14px;border:1.5px solid rgba(168,85,247,0.45);background:linear-gradient(135deg,rgba(7,14,28,0.96),rgba(17,12,34,0.94));padding:14px 16px;flex-direction:column;gap:12px;">
@@ -1276,6 +1280,11 @@ export function mountSubnetBlockExplorer() {
     }
   }
 
+  const elWorldMapMount = root.querySelector('#slxExpWorldMapMount');
+  const worldMapApi = elWorldMapMount
+    ? mountSlxSubnetWorldMap({ mountContainer: elWorldMapMount })
+    : null;
+
   // Seed finalized blocks immediately at 0ms from validator `stats.phaseMetricsHistory` + live `newHeads`
   slxSubscribeStats(
     () => primaryRpc,
@@ -1343,6 +1352,10 @@ export function mountSubnetBlockExplorer() {
         if (recentBlocks.length > 24) recentBlocks.length = 24;
         renderBlocksFeed();
       }
+      const curKey = SlxSubnetManager.getActiveSubnetKey();
+      worldMapApi?.updateTelemetry(
+        curKey === 'subnet2' ? { s2Tip: head.blockNumberNum } : { s1Tip: head.blockNumberNum }
+      );
     }
   );
 
@@ -1555,6 +1568,14 @@ export function mountSubnetBlockExplorer() {
       const totalConfirmed =
         Number(s1St?.confirmed_foreign_responses || 0) + Number(s2St?.confirmed_foreign_responses || 0);
       elCrossSummary.textContent = `${rows.length} tracked • ${fmtInt(totalConfirmed)} round-trip receipts confirmed`;
+      worldMapApi?.updateTelemetry({
+        s1Tip,
+        s2Tip,
+        confirmedCrossTxns: totalConfirmed,
+        inFlightCrossTxns:
+          Number(repSt?.pending_foreign_txns || 0) + Number(repSt?.pending_foreign_responses || 0),
+        lane,
+      });
     }
 
     if (elCrossFeed) {
