@@ -328,12 +328,35 @@ export function mountSubnetBlockExplorer() {
   const elContractCount = root.querySelector('#slxExpContractCount');
   const elContractsGrid = root.querySelector('#slxExpContractsGrid');
 
+  function syncSubnetSelectorOptions() {
+    if (!elSubnetSelect) return;
+    const curProf = SlxSubnetManager.getActiveSubnetProfile();
+    elSubnetSelect.innerHTML = SlxSubnetManager.listSubnets()
+      .map(
+        (s) =>
+          `<option value="${esc(s.key)}" ${s.key === curProf?.key ? 'selected' : ''}>${esc(s.icon || '🌐')} ${esc(s.name)} (${esc(s.subnetId || '—')})</option>`
+      )
+      .join('');
+    if (elTitleText && curProf) {
+      elTitleText.innerHTML = `🔎 ${esc(curProf.shortLabel || 'Subnet 1')} Cryptographic Block Explorer &amp; Quorum Verifier`;
+    }
+    if (elContractsSubnetLbl && curProf) {
+      elContractsSubnetLbl.textContent = curProf.shortLabel || 'Subnet 1';
+    }
+  }
+
   elSubnetSelect?.addEventListener('change', (ev) => {
     const nextKey = ev.target.value;
     if (nextKey && nextKey !== SlxSubnetManager.getActiveSubnetKey()) {
       SlxSubnetManager.setActiveSubnetKey(nextKey, { reload: true });
     }
   });
+
+  window.addEventListener('slx:subnets-updated', syncSubnetSelectorOptions);
+  window.addEventListener('slx:subnet-changed', syncSubnetSelectorOptions);
+  SlxSubnetManager.refreshDiscoveryMetadata()
+    .then(syncSubnetSelectorOptions)
+    .catch(() => {});
 
   function showInspector(html) {
     elInspector.style.display = 'flex';
@@ -1224,33 +1247,63 @@ export function mountSubnetBlockExplorer() {
   }
 
   async function refreshDualSubnetBridge() {
-    if (!elDualPanel || window.location?.protocol === 'https:') return;
+    if (!elDualPanel) return;
+    const isHttps =
+      typeof window !== 'undefined' &&
+      (window.location?.protocol === 'https:' ||
+        String(window.location?.hostname || '').toLowerCase().endsWith('superlexicon.com'));
     if (!subnet2Meta) {
       try {
         const res = await fetch(`/contracts/subnet2-deployments.json?t=${Date.now()}`);
         if (res.ok) subnet2Meta = await res.json();
       } catch (_) {}
     }
-    const s1Http = 'http://192.168.50.91:8545';
-    const repHttp = subnet2Meta?.repeaterRpcUrl || 'http://192.168.50.4:8545';
-    const s2Http = subnet2Meta?.rpcUrls?.[0] || 'http://192.168.50.91:18545';
 
-    const [s1St, s1BlkHex, repSt, s2St, s2BlkHex] = await Promise.all([
-      httpJsonRpc(s1Http, 'slx_roamingStatus').catch(() => null),
-      httpJsonRpc(s1Http, 'eth_blockNumber').catch(() => null),
-      httpJsonRpc(repHttp, 'slx_roamingStatus').catch(() => null),
-      httpJsonRpc(s2Http, 'slx_roamingStatus').catch(() => null),
-      httpJsonRpc(s2Http, 'eth_blockNumber').catch(() => null),
-    ]);
+    let s1St = null;
+    let s1BlkHex = null;
+    let repSt = null;
+    let s2St = null;
+    let s2BlkHex = null;
 
-    if (!s2St && !repSt?.roaming) return;
+    if (isHttps) {
+      const allSubs = SlxSubnetManager.listSubnets();
+      const s1Prof = allSubs.find((s) => s.key === 'subnet1') || allSubs[0];
+      const s2Prof = allSubs.find((s) => s.key === 'subnet2' || (s.key !== 'subnet1' && s.discovered));
+      const s1Wss = s1Prof?.rpcUrl || primaryRpc;
+      const s2Wss = s2Prof?.rpcUrl || '';
+
+      [s1St, s1BlkHex, s2St, s2BlkHex] = await Promise.all([
+        s1Wss ? slxNodeRpc(s1Wss, 'slx_roamingStatus', [], 3000).catch(() => null) : null,
+        s1Wss ? slxNodeRpc(s1Wss, 'eth_blockNumber', [], 3000).catch(() => null) : null,
+        s2Wss ? slxNodeRpc(s2Wss, 'slx_roamingStatus', [], 2500).catch(() => null) : null,
+        s2Wss ? slxNodeRpc(s2Wss, 'eth_blockNumber', [], 2500).catch(() => null) : null,
+      ]);
+    } else {
+      const s1Http = 'http://192.168.50.91:8545';
+      const repHttp = subnet2Meta?.repeaterRpcUrl || 'http://192.168.50.4:8545';
+      const s2Http = subnet2Meta?.rpcUrls?.[0] || 'http://192.168.50.91:18545';
+
+      [s1St, s1BlkHex, repSt, s2St, s2BlkHex] = await Promise.all([
+        httpJsonRpc(s1Http, 'slx_roamingStatus').catch(() => null),
+        httpJsonRpc(s1Http, 'eth_blockNumber').catch(() => null),
+        httpJsonRpc(repHttp, 'slx_roamingStatus').catch(() => null),
+        httpJsonRpc(s2Http, 'slx_roamingStatus').catch(() => null),
+        httpJsonRpc(s2Http, 'eth_blockNumber').catch(() => null),
+      ]);
+    }
+
+    const s1WorldMapS2 = Array.isArray(s1St?.world_map_subnets)
+      ? s1St.world_map_subnets.find((w) => w && w.subnet_id && w.subnet_id !== (s1St?.subnet_id || '00000001'))
+      : null;
+
+    if (!s2St && !repSt?.roaming && !s1WorldMapS2) return;
     elDualPanel.style.display = 'flex';
 
-    const s1Id = s1St?.subnet_id || subnet2Meta?.subnet1Id || '—';
-    const s2Id = s2St?.subnet_id || subnet2Meta?.subnetId || '—';
-    const s1Tip = parseHexInt(s1BlkHex);
-    const s2Tip = parseHexInt(s2BlkHex);
-    const lane = String(repSt?.active_transport_lane || '');
+    const s1Id = s1St?.subnet_id || subnet2Meta?.subnet1Id || '00000001';
+    const s2Id = s2St?.subnet_id || s1WorldMapS2?.subnet_id || subnet2Meta?.subnetId || '6eaa3da4';
+    const s1Tip = s1BlkHex ? parseHexInt(s1BlkHex) : Number(s1St?.this_subnet?.tip_height || 0);
+    const s2Tip = s2BlkHex ? parseHexInt(s2BlkHex) : Number(s1WorldMapS2?.tip_height || 0);
+    const lane = String(repSt?.active_transport_lane || (s1WorldMapS2 ? 'hybrid-rf+tcp' : ''));
     const isTcpLane = lane.includes('tcp');
 
     if (elRepBadge) {
@@ -1258,14 +1311,21 @@ export function mountSubnetBlockExplorer() {
         ? isTcpLane
           ? `🔌 Repeater .4 Active: TCP Subnet 2 (${s2Id})`
           : `📡 Repeater .4 Active: 915 MHz RF Subnet 1 (${s1Id})`
-        : '🛰️ Repeater .4 Offline';
+        : s1WorldMapS2
+          ? `🛰️ Auto-Discovered via WorldMap Gossip (${s1Id} ⇄ ${s2Id})`
+          : '🛰️ Repeater .4 Offline';
       elRepBadge.style.borderColor = isTcpLane ? 'rgba(192,132,252,0.7)' : 'rgba(56,189,248,0.7)';
       elRepBadge.style.color = isTcpLane ? '#f3e8ff' : '#bae6fd';
       elRepBadge.style.background = isTcpLane ? 'rgba(168,85,247,0.22)' : 'rgba(14,165,233,0.22)';
     }
 
     if (elBridgeTopo) {
-      const wmCount = Array.isArray(repSt?.world_map_subnets) ? repSt.world_map_subnets.length : 0;
+      const wmCount = repSt
+        ? Array.isArray(repSt.world_map_subnets)
+          ? repSt.world_map_subnets.length
+          : 0
+        : 1 + (Array.isArray(s1St?.world_map_subnets) ? s1St.world_map_subnets.length : 0);
+      const s2ValCount = Number(s2St?.this_subnet?.validator_count || s1WorldMapS2?.validator_count || 3);
       elBridgeTopo.innerHTML = `
         <div style="padding:10px 12px;border-radius:10px;background:#050b16;border:1px solid rgba(56,189,248,0.45);font-family:'JetBrains Mono',monospace;font-size:0.7rem;display:flex;flex-direction:column;gap:4px;">
           <div style="display:flex;justify-content:space-between;"><strong style="color:#7dd3fc;">📡 Subnet 1 (LR2021 RF)</strong><span style="color:#6ee7b7;">#${fmtInt(s1Tip)}</span></div>
@@ -1275,12 +1335,12 @@ export function mountSubnetBlockExplorer() {
         <div style="padding:10px 12px;border-radius:10px;background:#080b18;border:1.5px solid ${isTcpLane ? 'rgba(192,132,252,0.65)' : 'rgba(56,189,248,0.65)'};font-family:'JetBrains Mono',monospace;font-size:0.7rem;display:flex;flex-direction:column;gap:4px;">
           <div style="display:flex;justify-content:space-between;"><strong style="color:#fcd34d;">🛰️ Hybrid Repeater (.4)</strong><span style="color:#e2e8f0;">${esc(lane || 'roaming')}</span></div>
           <div style="color:#94a3b8;font-size:0.65rem;">Discovered subnets: <strong style="color:#f8fafc;">${wmCount}</strong> (RF + TCP)</div>
-          <div style="color:#cbd5e1;font-size:0.65rem;">Carrying txns: <strong style="color:#fbbf24;">${fmtInt(repSt?.pending_foreign_txns || 0)}</strong> • Carrying receipts: <strong style="color:#c084fc;">${fmtInt(repSt?.pending_foreign_responses || 0)}</strong></div>
+          <div style="color:#cbd5e1;font-size:0.65rem;">${repSt ? `Carrying txns: <strong style="color:#fbbf24;">${fmtInt(repSt?.pending_foreign_txns || 0)}</strong> • Carrying receipts: <strong style="color:#c084fc;">${fmtInt(repSt?.pending_foreign_responses || 0)}</strong>` : `Protocol-native <code>SubnetWorldMap</code> gossip active`}</div>
         </div>
         <div style="padding:10px 12px;border-radius:10px;background:#070918;border:1px solid rgba(192,132,252,0.45);font-family:'JetBrains Mono',monospace;font-size:0.7rem;display:flex;flex-direction:column;gap:4px;">
-          <div style="display:flex;justify-content:space-between;"><strong style="color:#d8b4fe;">🔌 Subnet 2 (TCP/IP Mesh)</strong><span style="color:#6ee7b7;">#${fmtInt(s2Tip)}</span></div>
-          <div style="color:#94a3b8;font-size:0.65rem;">ID: <code style="color:#f8fafc;">${esc(s2Id)}</code> • 3 TCP Validators (:18545)</div>
-          <div style="color:#cbd5e1;font-size:0.65rem;">Outbound queued: <strong>${fmtInt(s2St?.pending_foreign_txns || 0)}</strong> • Receipts returned: <strong style="color:#34d399;">${fmtInt(s2St?.confirmed_foreign_responses || 0)}</strong></div>
+          <div style="display:flex;justify-content:space-between;"><strong style="color:#d8b4fe;">🔌 ${esc(s1WorldMapS2?.name || 'Subnet 2 (TCP/IP Mesh)')}</strong><span style="color:#6ee7b7;">#${fmtInt(s2Tip)}</span></div>
+          <div style="color:#94a3b8;font-size:0.65rem;">ID: <code style="color:#f8fafc;">${esc(s2Id)}</code> • ${fmtInt(s2ValCount)} TCP Validators</div>
+          <div style="color:#cbd5e1;font-size:0.65rem;">${s2St ? `Outbound queued: <strong>${fmtInt(s2St?.pending_foreign_txns || 0)}</strong> • Receipts returned: <strong style="color:#34d399;">${fmtInt(s2St?.confirmed_foreign_responses || 0)}</strong>` : `Endpoint: <code style="color:#e9d5ff;">${esc(s1WorldMapS2?.public_rpc_url || 'wss://node6.superlexicon.com/rpc')}</code>`}</div>
         </div>
       `;
     }
@@ -1352,10 +1412,11 @@ export function mountSubnetBlockExplorer() {
 
   async function sendUiCrossSubnetTx(direction) {
     if (!subnet2Meta) return;
+    const isHttps =
+      typeof window !== 'undefined' &&
+      (window.location?.protocol === 'https:' ||
+        String(window.location?.hostname || '').toLowerCase().endsWith('superlexicon.com'));
     const isRfToTcp = direction === 'RF_TO_TCP';
-    const originUrls = isRfToTcp
-      ? ['http://192.168.50.91:8545', 'http://192.168.50.92:8555', 'http://192.168.50.93:8545', 'http://192.168.50.94:8545']
-      : subnet2Meta.rpcUrls || ['http://192.168.50.91:18545'];
     const targetSubnet = isRfToTcp ? subnet2Meta.subnetId : subnet2Meta.subnet1Id;
     const targetMsgAddr = isRfToTcp ? subnet2Meta.messaging : subnet2Meta.subnet1Messaging;
     if (!targetSubnet || !targetMsgAddr) return;
@@ -1375,9 +1436,27 @@ export function mountSubnetBlockExplorer() {
       gasLimit: 500_000n,
       chainId: BigInt(subnet2Meta.chainId || 1337),
     });
-    await Promise.all(
-      originUrls.map((u) => httpJsonRpc(u, 'subnet_sendTransaction', [targetSubnet, signed.raw]).catch(() => null))
-    );
+
+    if (isHttps) {
+      const allSubs = SlxSubnetManager.listSubnets();
+      const s1Prof = allSubs.find((s) => s.key === 'subnet1') || allSubs[0];
+      const s2Prof = allSubs.find((s) => s.key === 'subnet2' || (s.key !== 'subnet1' && s.discovered));
+      const wsTargets = isRfToTcp
+        ? (s1Prof?.validatorNodes || []).map((v) => v.url).filter(Boolean)
+        : s2Prof?.rpcUrl
+          ? [s2Prof.rpcUrl]
+          : [];
+      await Promise.all(
+        wsTargets.map((u) => slxNodeRpc(u, 'subnet_sendTransaction', [targetSubnet, signed.raw], 4000).catch(() => null))
+      );
+    } else {
+      const originUrls = isRfToTcp
+        ? ['http://192.168.50.91:8545', 'http://192.168.50.92:8555', 'http://192.168.50.93:8545', 'http://192.168.50.94:8545']
+        : subnet2Meta.rpcUrls || ['http://192.168.50.91:18545'];
+      await Promise.all(
+        originUrls.map((u) => httpJsonRpc(u, 'subnet_sendTransaction', [targetSubnet, signed.raw]).catch(() => null))
+      );
+    }
     await refreshDualSubnetBridge();
   }
 
