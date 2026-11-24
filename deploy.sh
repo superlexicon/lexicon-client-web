@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Deployment Script for SuperLexicon Website Container
+# Deployment Script for SuperLexicon Client Web Container (lexicon-client-web)
 # ==============================================================================
 
 set -euo pipefail
 
-IMAGE_NAME="10.0.0.14:5000/superlexicon-website:latest"
-CONTAINER_NAME="superlexicon-website"
-HOST_PORT="${HOST_PORT:-3200}" # Host port for Nginx reverse proxy (local or private LAN).
+IMAGE_NAME="${IMAGE_NAME:-superlexicon-client-web:latest}"
+CONTAINER_NAME="${CONTAINER_NAME:-superlexicon-client-web}"
+HOST_PORT="${HOST_PORT:-3200}" # Host port for Nginx container (local or private LAN).
 
 PORT_ARGS=()
 BOUND_ENDPOINTS=()
@@ -17,7 +17,6 @@ if [ -n "${BIND_ADDR:-}" ]; then
     BOUND_ENDPOINTS+=( "http://${BIND_ADDR}:${HOST_PORT}" )
 else
     # Bind to loopback + all non-Docker private network IPs (10.x, 192.168.x, 172.16-31.x, 100.64-127.x)
-    # so Nginx on another machine in the private LAN can forward seamlessly without exposing any public WAN IP!
     PORT_ARGS+=( -p "127.0.0.1:${HOST_PORT}:80" )
     BOUND_ENDPOINTS+=( "http://127.0.0.1:${HOST_PORT}" )
     while IFS= read -r priv_ip; do
@@ -33,23 +32,23 @@ else
     )
 fi
 
-echo "=== [1/4] Pulling Latest Image: $IMAGE_NAME ==="
-docker pull "$IMAGE_NAME"
-
-echo ""
-echo "=== [2/4] Checking for Existing Containers ==="
-if [ "$(docker ps -aq -f name=^/${CONTAINER_NAME}$)" ]; then
-    echo "Stopping existing container: $CONTAINER_NAME..."
-    docker stop "$CONTAINER_NAME"
-
-    echo "Removing existing container: $CONTAINER_NAME..."
-    docker rm "$CONTAINER_NAME"
+if [[ "${PULL_IMAGE:-0}" == "1" || "$IMAGE_NAME" == *"/"* ]]; then
+    echo "=== [1/4] Pulling Image: $IMAGE_NAME ==="
+    docker pull "$IMAGE_NAME"
 else
-    echo "No existing container named '$CONTAINER_NAME' found."
+    echo "=== [1/4] Using Local Docker Image: $IMAGE_NAME ==="
 fi
 
 echo ""
-echo "=== [3/4] Launching New Container (${BOUND_ENDPOINTS[*]}) ==="
+echo "=== [2/4] Checking for Existing Container ($CONTAINER_NAME) ==="
+if [ "$(docker ps -aq -f name=^/${CONTAINER_NAME}$)" ]; then
+    echo "Stopping & removing existing container: $CONTAINER_NAME..."
+    docker stop "$CONTAINER_NAME"
+    docker rm "$CONTAINER_NAME"
+fi
+
+echo ""
+echo "=== [3/4] Launching Container (${BOUND_ENDPOINTS[*]}) ==="
 docker run -d \
     --name "$CONTAINER_NAME" \
     --restart unless-stopped \
