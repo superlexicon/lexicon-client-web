@@ -1,6 +1,16 @@
 {
   "chainId": 1337,
-  "messaging": "0x55b175c8df962fa58b532937e838bc000a7fb9d1",
+  "messaging": "0x07fd8feb5638a3b33a24dc6acf7fe9839ce5c92f",
+  "publicRpcUrls": [
+    "wss://node21.superlexicon.com/rpc",
+    "wss://node22.superlexicon.com/rpc",
+    "wss://node23.superlexicon.com/rpc"
+  ],
+  "publicWsUrls": [
+    "wss://node21.superlexicon.com",
+    "wss://node22.superlexicon.com",
+    "wss://node23.superlexicon.com"
+  ],
   "repeaterRpcUrl": "http://192.168.50.4:8545",
   "repeaterWsUrl": "ws://192.168.50.4:8566",
   "rpcUrls": [
@@ -12,7 +22,7 @@
   "subnet1Messaging": "0x4e9bc36f233ccb81d00ccceb892fdf08e28196fb",
   "subnetId": "6eaa3da4",
   "transport": "tcp",
-  "updatedAtMs": 1795507892479,
+  "updatedAtMs": 1795515744782,
   "wsUrls": [
     "ws://192.168.50.91:18566",
     "ws://192.168.50.92:18566",

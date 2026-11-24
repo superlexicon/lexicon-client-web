@@ -27,6 +27,7 @@ import {
   SlxHfsCache,
   SlxSubnetManager,
   slxWaitForReceipt,
+  slxSubscribeStats,
   slxSubscribeNewHeads,
   slxSubscribeLogs,
   fetchRegisteredHfsByType,
@@ -376,7 +377,7 @@ export function mountSubnetBlockExplorer() {
             <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:#64748b;">Tap block to inspect</span>
           </div>
           <div id="slxExpBlocksList" style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;">
-            <div style="color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:0.73rem;padding:12px 4px;">Subscribing to live Subnet 1 newHeads…</div>
+            <div style="color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:0.73rem;padding:12px 4px;">Subscribing to live ${esc(activeSubnetInit?.shortLabel || 'Subnet')} newHeads…</div>
           </div>
         </div>
 
@@ -975,11 +976,15 @@ export function mountSubnetBlockExplorer() {
   elBtnProof?.addEventListener('click', async () => {
     elBtnProof.disabled = true;
     const origText = elBtnProof.textContent;
-    elBtnProof.textContent = '⏳ Signing & Finalizing on Subnet 1…';
+    const curSubLbl = SlxSubnetManager.getActiveSubnetProfile()?.shortLabel || 'Subnet';
+    elBtnProof.textContent = `⏳ Signing & Finalizing on ${curSubLbl}…`;
 
     try {
       const messagingAddr =
-        manifest?.fleetSocial?.messaging || SUBNET1_FLEET_SOCIAL_DEFAULT.messaging;
+        manifest?.messaging ||
+        manifest?.fleetSocial?.messaging ||
+        manifest?.commonsRf?.messaging ||
+        SUBNET1_FLEET_SOCIAL_DEFAULT.messaging;
       const chanHash = keccak256Hex(utf8ToBytes('SLX_EXPLORER_PROOF_BEACON_V1'));
       const proofMsg = `LIVE_PROOF:${new Date().toISOString()}:by:${slidesWallet.keypair.address.slice(0, 10)}`;
       const calldata = encodeAbi('postMessage(bytes32,bytes)', [
@@ -1073,17 +1078,29 @@ export function mountSubnetBlockExplorer() {
     manifest = hydrated.manifest;
     if (hydrated.cache?.rpcUrl) primaryRpc = hydrated.cache.rpcUrl;
 
-    // 1. Backfill last 16 blocks of logs so the Live Transactions panel is populated immediately!
+    // 1. Backfill recent blocks of logs so the Live Transactions panel is populated immediately!
     const tipHex = await slxNodeRpc(primaryRpc, 'eth_blockNumber', [], 4000).catch(() => '0x0');
     const tip = parseHexInt(tipHex);
     if (tip > 0) {
       const fromHex = '0x' + Math.max(0, tip - 16).toString(16);
-      const logs = await slxNodeRpc(
+      let logs = await slxNodeRpc(
         primaryRpc,
         'eth_getLogs',
         [{ fromBlock: fromHex, toBlock: 'latest' }],
         5000
       ).catch(() => []);
+      if ((!logs || logs.length < 8) && tip > 16) {
+        const widerFromHex = '0x' + Math.max(0, tip - 1024).toString(16);
+        const widerLogs = await slxNodeRpc(
+          primaryRpc,
+          'eth_getLogs',
+          [{ fromBlock: widerFromHex, toBlock: 'latest' }],
+          5000
+        ).catch(() => []);
+        if (Array.isArray(widerLogs) && widerLogs.length > (logs?.length || 0)) {
+          logs = widerLogs;
+        }
+      }
       const blkMap = new Map();
       for (const lg of logs || []) {
         ingestLogEntry(lg);
@@ -1117,7 +1134,11 @@ export function mountSubnetBlockExplorer() {
         recentBlocks.push(...seeded);
         renderBlocksFeed();
       }
-      renderTxsFeed();
+      if (recentTxs.size > 0) {
+        renderTxsFeed();
+      } else if (elTxsList) {
+        elTxsList.innerHTML = `<div style="color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:0.73rem;padding:12px 4px;">No HFS transactions in recent blocks yet — click <strong>⚡ Send &amp; Verify Live Proof Tx</strong> above!</div>`;
+      }
     }
 
     // Refresh subnet selector options & labels after discovery metadata hydration
@@ -1255,11 +1276,62 @@ export function mountSubnetBlockExplorer() {
     }
   }
 
+  // Seed finalized blocks immediately at 0ms from validator `stats.phaseMetricsHistory` + live `newHeads`
+  slxSubscribeStats(
+    () => primaryRpc,
+    (snap) => {
+      if (!snap || typeof snap !== 'object') return;
+      let changed = false;
+      const upsertHist = (pm) => {
+        if (!pm || Number(pm.phase) !== 4) return;
+        const h = Number(pm.blockHeight || 0);
+        if (h <= 0) return;
+        const rawBh = String(pm.blockHash || '').trim();
+        const bh = rawBh ? (rawBh.startsWith('0x') ? rawBh : `0x${rawBh}`) : '';
+        const existing = recentBlocks.find((b) => b.number === h);
+        if (existing) {
+          if (!existing.hash && bh) {
+            existing.hash = bh;
+            changed = true;
+          }
+          if (typeof pm.phaseValue === 'number' && pm.phaseValue > existing.txCount) {
+            existing.txCount = pm.phaseValue;
+            changed = true;
+          }
+        } else {
+          recentBlocks.push({
+            number: h,
+            hash: bh,
+            parentHash: '',
+            txCount: Number(pm.phaseValue || 0),
+            timestamp: 0,
+          });
+          changed = true;
+        }
+      };
+      if (Array.isArray(snap.phaseMetricsHistory)) {
+        for (const pm of snap.phaseMetricsHistory) upsertHist(pm);
+      }
+      if (snap.phaseMetrics) upsertHist(snap.phaseMetrics);
+      if (changed) {
+        recentBlocks.sort((a, b) => b.number - a.number);
+        if (recentBlocks.length > 24) recentBlocks.length = 24;
+        renderBlocksFeed();
+      }
+    }
+  );
+
   slxSubscribeNewHeads(
     () => primaryRpc,
     (head) => {
       if (!head || !head.blockNumberNum) return;
-      if (!recentBlocks.some((b) => b.number === head.blockNumberNum)) {
+      const existing = recentBlocks.find((b) => b.number === head.blockNumberNum);
+      if (existing) {
+        if (head.hash) existing.hash = head.hash;
+        if (head.parentHash) existing.parentHash = head.parentHash;
+        existing.txCount = Math.max(existing.txCount || 0, head.txCountNum || 0);
+        renderBlocksFeed();
+      } else {
         recentBlocks.unshift({
           number: head.blockNumberNum,
           hash: head.hash || '',
@@ -1267,6 +1339,7 @@ export function mountSubnetBlockExplorer() {
           txCount: head.txCountNum || 0,
           timestamp: head.timestampNum || 0,
         });
+        recentBlocks.sort((a, b) => b.number - a.number);
         if (recentBlocks.length > 24) recentBlocks.length = 24;
         renderBlocksFeed();
       }
@@ -1363,10 +1436,10 @@ export function mountSubnetBlockExplorer() {
         s1Wss ? slxNodeRpc(s1Wss, 'slx_roamingStatus', [], 3000).catch(() => null) : null,
         s1Wss ? slxNodeRpc(s1Wss, 'eth_blockNumber', [], 3000).catch(() => null) : null,
         s2Wss
-          ? slxNodeRpc(s2Wss, 'slx_roamingStatus', [], 2500, { allowFailover: false }).catch(() => null)
+          ? slxNodeRpc(s2Wss, 'slx_roamingStatus', [], 3000).catch(() => null)
           : null,
         s2Wss
-          ? slxNodeRpc(s2Wss, 'eth_blockNumber', [], 2500, { allowFailover: false }).catch(() => null)
+          ? slxNodeRpc(s2Wss, 'eth_blockNumber', [], 3000).catch(() => null)
           : null,
       ]);
     } else {
@@ -1439,7 +1512,7 @@ export function mountSubnetBlockExplorer() {
         <div style="padding:10px 12px;border-radius:10px;background:#070918;border:1px solid rgba(192,132,252,0.45);font-family:'JetBrains Mono',monospace;font-size:0.7rem;display:flex;flex-direction:column;gap:4px;">
           <div style="display:flex;justify-content:space-between;"><strong style="color:#d8b4fe;">🔌 ${esc(s1WorldMapS2?.name || 'Subnet 2 (TCP/IP Mesh)')}</strong><span style="color:#6ee7b7;">#${fmtInt(s2Tip)}</span></div>
           <div style="color:#94a3b8;font-size:0.65rem;">ID: <code style="color:#f8fafc;">${esc(s2Id)}</code> • ${fmtInt(s2ValCount)} TCP Validators</div>
-          <div style="color:#cbd5e1;font-size:0.65rem;">${s2St ? `Outbound queued: <strong>${fmtInt(s2St?.pending_foreign_txns || 0)}</strong> • Receipts returned: <strong style="color:#34d399;">${fmtInt(s2St?.confirmed_foreign_responses || 0)}</strong>` : `Endpoint: <code style="color:#e9d5ff;">${esc(s1WorldMapS2?.public_rpc_url || 'wss://node6.superlexicon.com/rpc')}</code>`}</div>
+          <div style="color:#cbd5e1;font-size:0.65rem;">${s2St ? `Outbound queued: <strong>${fmtInt(s2St?.pending_foreign_txns || 0)}</strong> • Receipts returned: <strong style="color:#34d399;">${fmtInt(s2St?.confirmed_foreign_responses || 0)}</strong>` : `Endpoint: <code style="color:#e9d5ff;">${esc(s1WorldMapS2?.public_rpc_url || 'wss://node21.superlexicon.com/rpc')}</code>`}</div>
         </div>
       `;
     }
@@ -1542,9 +1615,11 @@ export function mountSubnetBlockExplorer() {
       const s2Prof = allSubs.find((s) => s.key === 'subnet2' || (s.key !== 'subnet1' && s.discovered));
       const wsTargets = isRfToTcp
         ? (s1Prof?.validatorNodes || []).map((v) => v.url).filter(Boolean)
-        : s2Prof?.rpcUrl
-          ? [s2Prof.rpcUrl]
-          : [];
+        : (s2Prof?.validatorNodes || []).length
+          ? s2Prof.validatorNodes.map((v) => v.url).filter(Boolean)
+          : s2Prof?.rpcUrl
+            ? [s2Prof.rpcUrl]
+            : ['wss://node21.superlexicon.com/rpc'];
       await Promise.all(
         wsTargets.map((u) => slxNodeRpc(u, 'subnet_sendTransaction', [targetSubnet, signed.raw], 4000).catch(() => null))
       );
