@@ -1275,8 +1275,12 @@ export function mountSubnetBlockExplorer() {
       [s1St, s1BlkHex, s2St, s2BlkHex] = await Promise.all([
         s1Wss ? slxNodeRpc(s1Wss, 'slx_roamingStatus', [], 3000).catch(() => null) : null,
         s1Wss ? slxNodeRpc(s1Wss, 'eth_blockNumber', [], 3000).catch(() => null) : null,
-        s2Wss ? slxNodeRpc(s2Wss, 'slx_roamingStatus', [], 2500).catch(() => null) : null,
-        s2Wss ? slxNodeRpc(s2Wss, 'eth_blockNumber', [], 2500).catch(() => null) : null,
+        s2Wss
+          ? slxNodeRpc(s2Wss, 'slx_roamingStatus', [], 2500, { allowFailover: false }).catch(() => null)
+          : null,
+        s2Wss
+          ? slxNodeRpc(s2Wss, 'eth_blockNumber', [], 2500, { allowFailover: false }).catch(() => null)
+          : null,
       ]);
     } else {
       const s1Http = 'http://192.168.50.91:8545';
@@ -1292,14 +1296,22 @@ export function mountSubnetBlockExplorer() {
       ]);
     }
 
+    const s1OwnId = s1St?.subnet_id || s1St?.this_subnet?.subnet_id || '';
+    if (s2St && s1OwnId && s2St.subnet_id === s1OwnId) {
+      s2St = null;
+      s2BlkHex = null;
+    }
+
     const s1WorldMapS2 = Array.isArray(s1St?.world_map_subnets)
-      ? s1St.world_map_subnets.find((w) => w && w.subnet_id && w.subnet_id !== (s1St?.subnet_id || '00000001'))
+      ? s1St.world_map_subnets.find(
+          (w) => w && w.subnet_id && w.subnet_id !== '00000001' && w.subnet_id !== s1OwnId
+        )
       : null;
 
     if (!s2St && !repSt?.roaming && !s1WorldMapS2) return;
     elDualPanel.style.display = 'flex';
 
-    const s1Id = s1St?.subnet_id || subnet2Meta?.subnet1Id || '00000001';
+    const s1Id = s1OwnId || subnet2Meta?.subnet1Id || '—';
     const s2Id = s2St?.subnet_id || s1WorldMapS2?.subnet_id || subnet2Meta?.subnetId || '6eaa3da4';
     const s1Tip = s1BlkHex ? parseHexInt(s1BlkHex) : Number(s1St?.this_subnet?.tip_height || 0);
     const s2Tip = s2BlkHex ? parseHexInt(s2BlkHex) : Number(s1WorldMapS2?.tip_height || 0);
