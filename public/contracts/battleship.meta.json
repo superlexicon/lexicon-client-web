@@ -1,0 +1,21 @@
+{
+  "artifact": "dist/battleship.wasm",
+  "code_hash": "0x6a5e510168af50485deb952def622bccbd768ad065d3e08e7c5f781aafa0db1d",
+  "exports": [
+    "memory",
+    "main"
+  ],
+  "hps": "battleship",
+  "imports": [
+    "env::host_state_set",
+    "env::get_calldata",
+    "env::host_emit_event",
+    "env::get_msg_sender",
+    "env::get_block_number",
+    "env::host_state_get"
+  ],
+  "initial_memory_pages": 32,
+  "max_memory_pages": 64,
+  "optimized_wasm_bytes": 38472,
+  "raw_wasm_bytes": 38508
+}

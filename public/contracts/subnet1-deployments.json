@@ -1,0 +1,631 @@
+{
+  "deployedAt": "2026-11-24T01:12:34.149Z",
+  "wsPort": 8545,
+  "codeHashes": {
+    "battleship": "0x6a5e510168af50485deb952def622bccbd768ad065d3e08e7c5f781aafa0db1d",
+    "identity_registry": "0x6e10c61e55dfdbd777eb9c5c64771a6064263380a3c526dbe19d6ea4848b333d",
+    "identity": "0x76ea486f595517f47cac5e927bd280f5c4afd16f0253076254ee942e2b8cbddc",
+    "messaging": "0xe5eb6cbc561a2e6b84ac8047d86492b942e63c3f9a43ce6fe527d600ed1fac63",
+    "product_ledger": "0x590bdeb07de7b13758fd84976f624bc5dabe411aa56d7245f7603c629977fa32",
+    "social_charter": "0xcb336f1c9d24be323ae9c4c5e51b25adfa43b562bbb00ca4a7fc7ff4ec57f698",
+    "social_relationships": "0x095edc94ebcdebe658e82e8a11536fa4e75c0a0780fe643061009a583f89a625",
+    "social_feed": "0xf2d8fb1c9a526c547ad3c7c2c20d838f90fd06344ba1add95439ecfb3e398e44",
+    "social_events": "0x0ec1707ec40e134459ad196f213827bfb1ec329c08bc57c3a9f659ac80c3083f",
+    "asset_ledger": "0xd49fe9103190ffd83fa8b9db7addd160f7e87fade1301e52b77613220f2bfa0c",
+    "dex_clob": "0x0225c10b0447dc9ef3e7bee6c8878bbf43bc0ec4d529a6fccca48027572f9818",
+    "corporate_charter": "0xbca7d543e5aa1439b743eb3e14ef6dda47c516f77886185e9952852ab56d42f8",
+    "authorization": "0xc7ae3320a544d65a02c727455af6fb53a3b4277612003fd30165c687004105c1",
+    "accounting_ledger": "0x059131d44d88e520cea3f223acd5b219ab014c6f94d6e5046fa1bc61ea92907b",
+    "confidential_ledger": "0x76006dbc173b4d91f40a6393be2d417e03ee0944fbea4f3339a5e82b283122f9",
+    "share_capital": "0xa3b95da0441d75f2c5117ed0bc014e0b33a0aaf70fa882e7a4ef23ee04b8187b",
+    "hfs_registry": "0x2ec51fe027c2cf006ce58658068b6bfb06deb4ec8a923872893d3651cba4b18d",
+    "hegemony": "0x6ec4d45aac397c97f2a9e98daa18831ca9fcee2f8a839a082d16ad2d46aee66e",
+    "cipher_noir": "0x09dc9c499c3a1e6ed78562e0c26a44bb3b5ce7a259a946796e32142bf57e0826",
+    "vrf_beacon": "0xbe906042cf5412ca0ddd9c6a861f1f8cd1e024c3edac5bcb42f1809fdb558a79",
+    "lottery": "0x47ad30cec9bea929e83508ac042394ce0bce98caa120afe871bd79e3850bd354",
+    "secret_ballot": "0x1817db8449f5166890989a1c56c5552fd21a9af39dfa4c963073a7dfc85adf8f"
+  },
+  "battleship": {
+    "contractAddr": "0xabb7f6c0ea97ed6f946a51b5d0a944f98226cab1",
+    "battleId": "0x4e4156414c5f5355424e45545f31310000000000000000000000000000000000",
+    "aiSeedTag": "PHANTOM_FLEET_AI_V6",
+    "aiIdentities": [
+      "0x304c46052f1d620131fc34f82af419931dec9d4d",
+      "0x11ca4cc429859525c4e63b7639ae27623969ebad",
+      "0x63fe11dab6407d3bfbb1bafd2bf2d69cef812730",
+      "0xd8ec31498705e8c02a0576b60798b21471229c7e",
+      "0xdd69e89f40cc91f2231bab1dc9a73e74db4eda07",
+      "0xd5bb5955c1c0c61845255387f579f06c270a9518",
+      "0xba8308fd2134b82aafcf1268dc9b0de3f3a1eb05",
+      "0xe606922ea79fc8c1022a5c7c8b2311857b87215b",
+      "0x866529d053591caf6d3ea281165f62b1a78a73db",
+      "0xc02ede42dbeb8c4e45f55a4b207de9b5746278c5",
+      "0x6e921fc0d2bb3f5caaf98a161a15e4a23dbccafb",
+      "0x620478c1126f3f98f1ff5128776aae4c9bc64762",
+      "0xf0f4abe0dc348d151dd6df0e27d84bd5dec8594d",
+      "0xe9aa4b5af5e23ddab4df634453fcb61ca933adf6"
+    ]
+  },
+  "commonsRf": {
+    "identityRegistry": "0x0f11c30d48bfc9c95a2c7eea61037ed0d485a790",
+    "messaging": "0x4e9bc36f233ccb81d00ccceb892fdf08e28196fb",
+    "charter": "0x6c20ad98d0d970be9fdc376e57f28cbe4560f646",
+    "relationships": "0x64fe94d81cabeda2c4e4c4e762e216a5e3467f4f",
+    "feed": "0x5ab7aa7251b60788f9a20c5c4d537078c52c963f",
+    "events": "0x656b149cc4295782495d8d8400146a5df32a287b",
+    "meiProductLedger": "0x2c2926c93de938bf5c0a89efb80951ef6a5e5d39",
+    "personaIdentities": [
+      "0x77ba8af54ae782779188e75f89bb1c067aeff704",
+      "0xc1c49bea5f130467627dec38100fa2d323b8964d",
+      "0xcce049a879356931b92628451a599ea85b74a3f1",
+      "0x64b6a83e55dc2c045528ccdd1eb9e4eb20ac0c0f",
+      "0x82e97f4a746aeb8ea1ba95bf54eb1eaa0e221733",
+      "0x9beba984734952af412e8075b0ef24c822108c9a"
+    ],
+    "personaPrivs": [
+      "0x248ed59176c6f5633c483092d217713653b150c3239aabe6c38a681c494c3c36",
+      "0xf309389669aa0b2262213e4decfe8b1dff09a968f98aacc92218ab586b8ffa9b",
+      "0xca6f753de1361e99a87c5765c8b2f9ecacf3c4e8f3814c9827302922302e213f",
+      "0xd0dd59e01d8cdf4a7fef448fae71e93953dcdd328d30559925a57602f8ce1725",
+      "0x6b2cc30c552e5b79ee48076f8c13c9a499bdd60368826fe11d40425bc104b52b",
+      "0x65274e1bb65db6d45c1e84ac30c93ee570a868edacb93678af18b09605c92262"
+    ],
+    "citizenOnboardingPool": [
+      "0xb92d881c6a3c878114fd26e380d018e00d69dc80",
+      "0x2fd9bb374ee9afbee1f1a845ece9dde9f5425374",
+      "0xc0b1258806e1b28417d7785b7641acdb1d104ae4",
+      "0xa6749b151cd9d716f57536e46b9a206490e9b75e",
+      "0x043f6e0155744983076fdeb17278ef379f310362",
+      "0xceb7dffd31f5716613b8741918f8524e30547daa",
+      "0x45f159af20c94ec4b9ba32c9d052337e83cd4672",
+      "0xd6a27dd0f72cc5e677b465db555fcb726010bd0c",
+      "0xf8aacb195702ed5f1cfd4b3faaf83363338be882",
+      "0xfe9da0b0b007fec28e1faab445c1bb0bba0a918e"
+    ],
+    "poolSlotPrivs": [
+      "0x2caebb7d393611938cfa638946e25b67f6e625a72abd991049f96eaf25163f5a",
+      "0x69be2b950b8c7d7b283d7a965364968943dffcc4d214e093f09fade85f7d2dc9",
+      "0x1db94959794b08938c2050d63830a028db1b8f316e821c3b90a8d76aaead1a14",
+      "0xa8f5251764ef50a791f701db1c14443994e75dc3fefc57a1d3fbdfcdfd3d79b5",
+      "0xa41cb08f2643b05311f688c064b8cdc7058aab707f4e669303e78a5ec7b32d50",
+      "0x9b69f0978abb33e2bb5516f80d07b0fa3ceea608a60f26f79f9b8c16993de7c8",
+      "0x50abcdff5cb2b915939154e41b7df6c04d40336d9c676546e5bcbfc650e5d855",
+      "0xd76fdfb967e8e22e41027d3f0d5029b9b728238810afe4cfa75c26c86c88ce20",
+      "0x1d80fe89a963ff9323c20a5be9cdd87f844ce5b23005e56d05da8ae97783a6a7",
+      "0xf2484eae4a53c3c5595c7f60809ac965a220cb1b280da85deb93f9d919718ac2"
+    ]
+  },
+  "institutional": {
+    "deployedAt": "2026-11-24T01:12:34.149Z",
+    "companyName": "Nvidya Systems Pte. Ltd. [SIM-BOT]",
+    "shareTicker": "NVDAX-EQ",
+    "firstResolutionAuth": "0xdaccc3a5fd598b76e0b0aeca662aec6a254b7187",
+    "registry": "0x35779fc846c1f35fe209032ec7c31830bc8b4ef9",
+    "fiatLedger": "0xc6d1cdcbec1f8ac69f3b76967ed4f211a7d7293c",
+    "shareLedger": "0xdf8d218d822632b4b3025e899117120c2456cb9f",
+    "shareCapital": "0x72e2d4f971143fb47a8a1fac524bd2d4741dc132",
+    "corporateCharter": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
+    "dexClob": "0x79319a0e4616b598d10e1ee4af362343c4af5138",
+    "accountingLedger": "0x4f225000bcb350d37d38d320b3bf50394d235724",
+    "confidentialLedger": "0x975de7db44cc3a0d8445a6139cf77be587b42677",
+    "productLedger": "0xb0e642e03a200d6a19c4cab2eb39575a37079e57",
+    "dexEscrowIdentity": "0xb69e98bba386c7c6f845a80897c518e8902129fe",
+    "merchantRevenueIdentity": "0xe70b00c67c233de24a3e2463405c8b734fecda4f",
+    "faucetIdentity": "0x2ba0009bdeee8c367b904f01f89518d167ae53b1",
+    "faucetPriv": "0xca59566d0a56de36fca692bf2be334ec2aa890df6701b6c64d1aba68a7805a38",
+    "keeperIdentity": "0xa53ee8907808e59db0ec6b6fe1a2fe2d2646aef2",
+    "keeperPriv": "0xad7f8a75dec4618762f686867f5327c11272f5fdb7f31b0dab8c9f916d86e818",
+    "director2Identity": "0xf682bd5c5de0ce2b6c63edef7ad563c34e341f29",
+    "director2Priv": "0xd8233892ea11a75e0b9dd94335cf67212a7e557bc7c2af5f835a24246cdc9fa9",
+    "actors": [
+      {
+        "key": "founder",
+        "name": "Jenson Hwangg [SIM-BOT]",
+        "handle": "jenson.hwangg.simbot",
+        "identityAddr": "0xa53ee8907808e59db0ec6b6fe1a2fe2d2646aef2",
+        "eoa": "0x345da6843e2363bd3026edf047da150b6d5d55d2"
+      },
+      {
+        "key": "director2",
+        "name": "Lisa Suu [SIM-BOT]",
+        "handle": "lisa.suu.simbot",
+        "identityAddr": "0xf682bd5c5de0ce2b6c63edef7ad563c34e341f29",
+        "eoa": "0x832b2b64935db125307496433bb244bec6e737b0"
+      },
+      {
+        "key": "mmA",
+        "name": "Citadell Desk [SIM-BOT]",
+        "handle": "citadell.mm.simbot",
+        "identityAddr": "0x33081e758e029ec0d4c70f6f04a2dfb5cfb6c6ae",
+        "eoa": "0x4931eb574501dd6ef7f1458aea38eb0d3f88f885"
+      },
+      {
+        "key": "mmB",
+        "name": "Renaissanz MM [SIM-BOT]",
+        "handle": "renaissanz.mm.simbot",
+        "identityAddr": "0xa477380ceae8ce265f7d3713d3608325755e553f",
+        "eoa": "0x48549f22a27d3cac9e9d56d2a53673e09d0bfa35"
+      },
+      {
+        "key": "faucet",
+        "name": "JPMorgann Faucet [SIM-BOT]",
+        "handle": "jpmorgann.rsv.simbot",
+        "identityAddr": "0x457eda8dbf8018374ccc4b5f6a2e5e180ceb9a74",
+        "eoa": "0xe4a47397c48a75e5734eba9f4b87344973fdbe23"
+      },
+      {
+        "key": "dexEscrow",
+        "name": "Nasdakk Escrow [SIM-BOT]",
+        "handle": "nasdakk.esc.simbot",
+        "identityAddr": "0xb69e98bba386c7c6f845a80897c518e8902129fe",
+        "eoa": "0x802565bc63c488329b5fc194181db74f7e8636cf"
+      },
+      {
+        "key": "merchantRev",
+        "name": "Amazzon Vault [SIM-BOT]",
+        "handle": "amazzon.rev.simbot",
+        "identityAddr": "0xe70b00c67c233de24a3e2463405c8b734fecda4f",
+        "eoa": "0xda4f1c63eefb64304a043e129065a4a35338c32e"
+      },
+      {
+        "key": "candDir3",
+        "name": "Satyaa Nadella [SIM-BOT]",
+        "handle": "satyaa.nadella.simbot",
+        "identityAddr": "0xbbbc80d551ca79037739e0380856699dd7792d17",
+        "eoa": "0x03cfef45b94609399ce19bae7a027916924e34be"
+      },
+      {
+        "key": "candCfo",
+        "name": "Ruth Poratt [SIM-BOT]",
+        "handle": "ruth.poratt.simbot",
+        "identityAddr": "0x08b77cfcc44fef1fc5b91c179ea2daa0f41524ab",
+        "eoa": "0x30922ae86aaca72676b221cb701c7ddfcbc2321e"
+      },
+      {
+        "key": "candPm",
+        "name": "Timm Cookk [SIM-BOT]",
+        "handle": "timm.cookk.simbot",
+        "identityAddr": "0xf3fef15737bc44bed1f5a30d828fd36934770189",
+        "eoa": "0x4e296f86af00d07997b7f7bc544d549eb5533431"
+      }
+    ],
+    "userOnboardingPool": [
+      "0x8dcf816d01b0cae6ea76f8801679698d75282ce6",
+      "0xa6be7f7e89f355167b66e9fa44e9744dcd3d83d5",
+      "0xf6fbc214dc65d8bb6917bdd46ff68da7f6ca3958",
+      "0xe5f220723dd4ec17aa8fc3060773213b32f4c357",
+      "0x7eb3cfcf6b418d605c01ebd0819b9d2b8d9f7ee2",
+      "0x9a0ada5044608e211889ef238732fe0176c6ea9c",
+      "0xf678692c1a8147fc7eeb28ef956051feef03a789",
+      "0x08f63ff81bb28efd27d10ab0f05e31e03a4d56c3",
+      "0x8e2265fd0c6f642e68b8461909e94b7f47e3e736",
+      "0xf1a2cde91fac91b3d9ee17b5bab1a621f57bb9c2",
+      "0xb0dd816539558919379af4de14deb0c10214bf9e",
+      "0xcadd178cc2f725c82df486df3c2c4010dfbc4d86",
+      "0xfdf4456fbad406131826e000bd2ca01a8d8f0fe6",
+      "0x5eff8c11b961bad969a685e41107646a9995bf58",
+      "0x2ba0009bdeee8c367b904f01f89518d167ae53b1",
+      "0x0fbc610f38174e4a6ceed387ec5176444bfd41d1"
+    ],
+    "userPoolPrivs": [
+      "0x2ccceefb9ce5620afc708a0c93aa19881ad98cfd42debb820682c9d17f102e9a",
+      "0xce424f7a08b39a4439908ed81832b063cac10fa3f921969a6df5fbcbef0be0e7",
+      "0x542e29695b87dcb4fae24ef66649c5395ca730e58dd1dcf750ad39a51a5ba7d8",
+      "0x91f0335d0a3ae855538280588db886d7a821028ae236407abb09fac3ee74b0d0",
+      "0x9da2513bc8f162eb7e7aacc037f4f97a555ad6db134fb04ff29c5d19638f11ed",
+      "0x0fc3ff69703914b41a92da2f88cebc3d727f60d694a982bdd7e66ceabeef90ca",
+      "0x4b376f85d3772d9df8ac2e3e3e7ae4b0bbdcfdd30e12bbfe286e1a5e3ef28dcd",
+      "0xea5f78ac7870bfbb7e269bcded5e15fda16366639e7161b16b9c84ae924b3078",
+      "0x224a16fd3ef1137aabf409e60f6539e698667f03b41bab658310c20d908c86fb",
+      "0xc5ad8963076e330d61fbf9228644f42fbdfc75e4c0340a9ccff0fdf4eb7331ff",
+      "0x31a799fb72ed5fc5f6a8fef1e617d6479ee2fde7fbfceb9eb965a015de8ba821",
+      "0xa09e37df54b86a1bdd143eb2492f295a37b8d9df691f2ed9ef386bec4c6678c2",
+      "0xa10fda0842c58cce449c67ee2f874e76c504f98645fe5b7a29304e820026c5a2",
+      "0x2055fe156435cfa2d9e6d1cb438023231afae09160ba6e514bb306280f751904",
+      "0xda960aa7abbb576f799fb6dac6da043d5f880b6772af0e1d5dabb430d5dfc509",
+      "0x976b32e4918fb6326e5cbc3dc900dfd9bada32fa0e32792070286e38ca34b9a7"
+    ],
+    "products": [
+      {
+        "code": "NVD-DGX-POD",
+        "name": "Nvidya H200 Mini-Pod [SIM-BOT]",
+        "fullName": "Nvidya H200 Edge AI & Dual-RF Wallet Pod [SIM-BOT]",
+        "tier": "b2c",
+        "units": 180,
+        "price": 240,
+        "unitCost": 95,
+        "isCashProcure": true,
+        "defaultOrderQty": 1,
+        "category": "B2C Retail • Edge AI RF Pod",
+        "specs": "2× Semtech LR2021 (Sub-GHz + 2.4 GHz FLRC) + Edge Tensor Module • Offline radio mesh signing pod",
+        "skuId": "0xd4325ca8bbee0b6635c61d1ad04a45cf99ed65fe88ebc6dc3a4885d447039860"
+      },
+      {
+        "code": "APEL-VIZ-PRO",
+        "name": "Apel Vizion Pro Mesh [SIM-BOT]",
+        "fullName": "Apel Vizion Pro — Titanium Spatial Mesh Headset [SIM-BOT]",
+        "tier": "b2c",
+        "units": 120,
+        "price": 920,
+        "unitCost": 390,
+        "isCashProcure": true,
+        "defaultOrderQty": 1,
+        "category": "B2C Retail • Wearable Mesh Node",
+        "specs": "Grade-5 Titanium • Dual Micro-OLED • 2× LR2021 Dual-Band RF • u-blox GNSS • Secure Enclave",
+        "skuId": "0x36021700c04a386869f065a5069816ee906b735b373086406de6703bec8b1fd3"
+      },
+      {
+        "code": "STRL-DISH-PRO",
+        "name": "Starlynx Mini Dish [SIM-BOT]",
+        "fullName": "Starlynx Mini Phased-Array & RISC-V Field Terminal [SIM-BOT]",
+        "tier": "b2c",
+        "units": 90,
+        "price": 1600,
+        "unitCost": 680,
+        "isCashProcure": true,
+        "defaultOrderQty": 1,
+        "category": "B2C Retail • Satellite + RF Terminal",
+        "specs": "Dual-Core 64-bit RISC-V • Phased-Array LEO + 2× LR2021 Sub-GHz/2.4GHz • Hardware Signing Vault",
+        "skuId": "0x3de6ea08cfa9dd9614d8b002be585922ebd0f8a1194699a8ee99809cc81e6c61"
+      },
+      {
+        "code": "ARMX-RISC-KIT",
+        "name": "Armm RISC-V DevKit [SIM-BOT]",
+        "fullName": "Armm Dual RISC-V + Dual-LR2021 Developer Kit [SIM-BOT]",
+        "tier": "b2c",
+        "units": 110,
+        "price": 680,
+        "unitCost": 270,
+        "isCashProcure": true,
+        "defaultOrderQty": 1,
+        "category": "B2C Retail • RISC-V RF DevKit",
+        "specs": "Dual 64-bit RISC-V + Dual-LR2021 Hat + Wasmtime HFS SDK & Sub-GHz/2.4GHz SMA Antennas",
+        "skuId": "0x225e352f361eab1a8951cda5631ccdf34e6d0068a84d4b19b352712ba9167cd5"
+      },
+      {
+        "code": "B2B-DGX-100",
+        "name": "B2B 100x H200 Pods [SIM-BOT]",
+        "fullName": "B2B Fleet Crate — 100× Nvidya H200 Mini-Pods (19% Bulk Discount) [SIM-BOT]",
+        "tier": "b2b",
+        "units": 45,
+        "price": 19500,
+        "unitCost": 8800,
+        "isCashProcure": true,
+        "defaultOrderQty": 3,
+        "category": "B2B Bulk Deal • 100-Unit Crate",
+        "specs": "100× serialized Nvidya H200 Mini-Pods in Pelican fleet case + bulk IdentityRegistry onboarding manifest",
+        "skuId": "0x991a271a41ca03befc33feba482499f7a93f471579af34ba951a06f7ed020453"
+      },
+      {
+        "code": "B2B-VIZ-50",
+        "name": "B2B 50x Apel Vizion [SIM-BOT]",
+        "fullName": "B2B Field Crew Pack — 50× Apel Vizion Pro Mesh Nodes (17% Bulk Discount) [SIM-BOT]",
+        "tier": "b2b",
+        "units": 35,
+        "price": 38000,
+        "unitCost": 17500,
+        "isCashProcure": true,
+        "defaultOrderQty": 2,
+        "category": "B2B Bulk Deal • 50-Unit Crew Pack",
+        "specs": "50× Grade-5 Titanium Apel Vizion nodes pre-keyed for maritime, aerospace & industrial field crews",
+        "skuId": "0x5b8843b1ecda5d82ea90c0abf100dad7ee0baf2eaf30e82cecf21d7d6883c932"
+      },
+      {
+        "code": "B2B-DISH-25",
+        "name": "B2B 25x Starlynx Kit [SIM-BOT]",
+        "fullName": "B2B Command Lot — 25× Starlynx Mini Field Terminals (16% Bulk Discount) [SIM-BOT]",
+        "tier": "b2b",
+        "units": 35,
+        "price": 33500,
+        "unitCost": 15500,
+        "isCashProcure": true,
+        "defaultOrderQty": 3,
+        "category": "B2B Bulk Deal • 25-Unit Lot",
+        "specs": "25× Starlynx Mini field terminals with Satellite NTN + Dual-LR2021 + 8-bay rugged rack charger",
+        "skuId": "0x807d6957aba1b2124d8df17676bd7e19a35fd90a3585ac33d55273ebff47a0d1"
+      },
+      {
+        "code": "CISKO-GW-RACK",
+        "name": "Cisko 8-Ch RF Relay [SIM-BOT]",
+        "fullName": "Cisko IP67 8-Channel Diversity FLRC Mast Relay & Validator [SIM-BOT]",
+        "tier": "b2b",
+        "units": 40,
+        "price": 28000,
+        "unitCost": 11800,
+        "isCashProcure": false,
+        "defaultOrderQty": 3,
+        "category": "B2B Infrastructure • RF Mast Relay",
+        "specs": "MIL-STD-810H tower/mast relay • 8× parallel LR2021 diversity channels • PoE++ / Solar • Embedded BFT Validator",
+        "skuId": "0x64270a26ccabf499d86dcfa2b1a8ddd77e3c62a54ce0cd87041ea2aa17234ea7"
+      },
+      {
+        "code": "DELX-BFT-RACK",
+        "name": "Delx 1U BFT Server [SIM-BOT]",
+        "fullName": "Delx PowerEdge 1U BFT Validator Rack + Enterprise HFS Suite [SIM-BOT]",
+        "tier": "b2b",
+        "units": 35,
+        "price": 45000,
+        "unitCost": 14000,
+        "isCashProcure": true,
+        "defaultOrderQty": 2,
+        "category": "B2B Enterprise • BFT Node Rack",
+        "specs": "Dual-PSU 1U Validator Server pre-loaded with Wasmtime HFS Suite (Charter, IFRS, DEX, Custody Vault)",
+        "skuId": "0x0434c12c6afc2712ccb61725d587d6c878c55c7cf2a7139ffff305378d8b555e"
+      }
+    ],
+    "sampleResolutions": [
+      {
+        "id": "res_add_dir3",
+        "authAddr": "0x7c4a1d7e0aa7189544df91275e30a33e47f986ae",
+        "title": "Resolution #2026-01: Appoint Independent Director [SIM-BOT]",
+        "summary": "Appoint Satyaa Nadella [SIM-BOT] to the Board of Directors of Nvidya Systems Pte. Ltd. [SIM-BOT].",
+        "category": "Board Expansion",
+        "policyLabel": "Shareholder Super-Majority (≥75%)",
+        "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
+        "targetHps": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
+        "actionHash": "0xf098aac6988986504ca0df5c07197d50e405d6b6599b8caa3f4af9109775acd6",
+        "execKind": "addDirector",
+        "execSubjectAddr": "0xbbbc80d551ca79037739e0380856699dd7792d17",
+        "execSubjectLabel": "Satyaa Nadella [SIM-BOT]"
+      },
+      {
+        "id": "res_grant_cfo",
+        "authAddr": "0xb8dbf7f5c3809168d64aea2eaa9ab479e14ccf32",
+        "title": "Resolution #2026-02: Appoint Chief Financial Officer [SIM-BOT]",
+        "summary": "Grant ROLE_TREASURY_MANAGER to Ruth Poratt [SIM-BOT] under Nvidya Systems Pte. Ltd. [SIM-BOT].",
+        "category": "Executive Role Grant",
+        "policyLabel": "Shareholder Super-Majority (≥75%)",
+        "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
+        "targetHps": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
+        "actionHash": "0x08dfbdc2a459e9f6e40731bc020c5eaddc6dd13e7bfa96017e436816663c2d58",
+        "execKind": "grantRole",
+        "roleId": "0xeed8967f77314cb9509704749de6f91c4a59cade181d6e377c26775e759a943d",
+        "roleName": "ROLE_TREASURY_MANAGER",
+        "execSubjectAddr": "0x08b77cfcc44fef1fc5b91c179ea2daa0f41524ab",
+        "execSubjectLabel": "Ruth Poratt [SIM-BOT]"
+      },
+      {
+        "id": "res_issue_r_and_d",
+        "authAddr": "0x01f5362d794521af9cbc7f97ec2c446138f5b3f3",
+        "title": "Resolution #2026-03: Authorize R&D Treasury Share Issuance [SIM-BOT]",
+        "summary": "Issue +20,000 new NVDAX-EQ Common Shares into Nvidya Corporate Reserve [SIM-BOT].",
+        "category": "Share Capital Issuance",
+        "policyLabel": "Shareholder Super-Majority (≥75%)",
+        "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
+        "targetHps": "0xdf8d218d822632b4b3025e899117120c2456cb9f",
+        "actionHash": "0xf6c0893fed98b058891fcb4b8c3f833aac3bfaa787446974e6a71366be9acf07",
+        "execKind": "issueShares",
+        "execSubjectAddr": "0xe70b00c67c233de24a3e2463405c8b734fecda4f",
+        "issueAmount": 20000,
+        "execSubjectLabel": "Amazzon Vault [SIM-BOT] (+20,000 NVDAX-EQ)"
+      },
+      {
+        "id": "res_grant_pm",
+        "authAddr": "0x4314a67ff5b71db35f89c4edd64f1f478de16900",
+        "title": "Resolution #2026-04: Authorize Catalog Product Manager [SIM-BOT]",
+        "summary": "Grant ROLE_PRODUCT_MANAGER to Timm Cookk [SIM-BOT] to govern ProductLedger pricing & restocks.",
+        "category": "Commerce Governance",
+        "policyLabel": "Shareholder Super-Majority (≥75%)",
+        "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
+        "targetHps": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
+        "actionHash": "0xd7358ebe7d174e6ee6dd0fa50340fe46d1d278a777c4fd68076936900941f5e4",
+        "execKind": "grantRole",
+        "roleId": "0xc4bda889b9f16bbf9fd87de1e771b8a7cbb4813dbd802a98993c406979e2ea86",
+        "roleName": "ROLE_PRODUCT_MANAGER",
+        "execSubjectAddr": "0xf3fef15737bc44bed1f5a30d828fd36934770189",
+        "execSubjectLabel": "Timm Cookk [SIM-BOT]"
+      }
+    ],
+    "seededMatchHistory": [
+      {
+        "block": 74,
+        "price": 104,
+        "volume": 85
+      }
+    ],
+    "dexDeskIdentities": [
+      {
+        "key": "dex_desk_0",
+        "nickname": "Citadell Sec [SIM-BOT]",
+        "handle": "citadell.sec.simbot",
+        "identityAddr": "0xf6fbc214dc65d8bb6917bdd46ff68da7f6ca3958",
+        "eoaTrunc4": "9846"
+      },
+      {
+        "key": "dex_desk_1",
+        "nickname": "Jayne Streett [SIM-BOT]",
+        "handle": "jayne.streett.simbot",
+        "identityAddr": "0xe5f220723dd4ec17aa8fc3060773213b32f4c357",
+        "eoaTrunc4": "18da"
+      },
+      {
+        "key": "dex_desk_2",
+        "nickname": "Jumpp Tradin [SIM-BOT]",
+        "handle": "jumpp.tradin.simbot",
+        "identityAddr": "0x7eb3cfcf6b418d605c01ebd0819b9d2b8d9f7ee2",
+        "eoaTrunc4": "2fe2"
+      },
+      {
+        "key": "dex_desk_3",
+        "nickname": "Wyntermute MM [SIM-BOT]",
+        "handle": "wyntermute.mm.simbot",
+        "identityAddr": "0x9a0ada5044608e211889ef238732fe0176c6ea9c",
+        "eoaTrunc4": "0ef9"
+      },
+      {
+        "key": "dex_desk_4",
+        "nickname": "Goldmann Desk [SIM-BOT]",
+        "handle": "goldmann.desk.simbot",
+        "identityAddr": "0xf678692c1a8147fc7eeb28ef956051feef03a789",
+        "eoaTrunc4": "e5fd"
+      },
+      {
+        "key": "dex_desk_5",
+        "nickname": "BlakRock Quant [SIM-BOT]",
+        "handle": "blakrock.quant.simbot",
+        "identityAddr": "0x08f63ff81bb28efd27d10ab0f05e31e03a4d56c3",
+        "eoaTrunc4": "f736"
+      },
+      {
+        "key": "dex_desk_6",
+        "nickname": "Optyver Desk [SIM-BOT]",
+        "handle": "optyver.desk.simbot",
+        "identityAddr": "0x8e2265fd0c6f642e68b8461909e94b7f47e3e736",
+        "eoaTrunc4": "b0a9"
+      },
+      {
+        "key": "dex_desk_7",
+        "nickname": "TwoSygma Quant [SIM-BOT]",
+        "handle": "twosygma.qnt.simbot",
+        "identityAddr": "0xf1a2cde91fac91b3d9ee17b5bab1a621f57bb9c2",
+        "eoaTrunc4": "6388"
+      }
+    ],
+    "mevBotIdentities": [
+      {
+        "key": "mev_predator_bot",
+        "nickname": "Sammy Bankmann [SIM-BOT]",
+        "handle": "sammy.mev.simbot",
+        "role": "sandwich",
+        "identityAddr": "0xcadd178cc2f725c82df486df3c2c4010dfbc4d86",
+        "frontEoaPrefix": "0x001149",
+        "backEoaPrefix": "0xfffa95"
+      },
+      {
+        "key": "mev_flasharb_sniper",
+        "nickname": "Bill Hwangg [SIM-BOT]",
+        "handle": "billh.sniper.simbot",
+        "role": "frontrun",
+        "identityAddr": "0x5eff8c11b961bad969a685e41107646a9995bf58",
+        "frontEoaPrefix": "0x003322",
+        "backEoaPrefix": null
+      }
+    ],
+    "dexSeedTag": "PHANTOM_FLEET_AI_V6",
+    "treasuryIdentity": "0x8a7fd72cc6a828f68d22cb6bf18039fbfc79c5b1"
+  },
+  "hfsRegistry": "0xe1dc7648205c3704eba81797325e6163a9404d64",
+  "secondaryDeployments": {
+    "techDex": {
+      "dexClob": "0x0af24ca472ded127a172cde227b356ec60e836a6",
+      "shareLedger": "0xe0e5a66a4e4ef731fbae4ddeb98f7bd3cc527dbd",
+      "fiatLedger": "0xac46013fdc08aed0787cf7e934df607c22359fa7",
+      "dexEscrowIdentity": "0xb69e98bba386c7c6f845a80897c518e8902129fe"
+    },
+    "battleship2": {
+      "contractAddr": "0xdac19222a32d8f5b88d596912dbb1303190e5a54",
+      "battleId": "0x4e4156414c5f5355424e45545f31320000000000000000000000000000000000"
+    },
+    "hegemony2": {
+      "contractAddr": "0xba2b23fda2319da666c75da0ea97179f181c9da6",
+      "realmId": "0x484547454d4f4e595f574f524c445f3032000000000000000000000000000000"
+    },
+    "cipherNoir2": {
+      "contractAddr": "0xaca36a55c07d615606343be20a322e1320578fb6",
+      "caseId": "0x4e4f49525f5a55524943485f3030303100000000000000000000000000000000"
+    }
+  },
+  "fleetSocial": {
+    "identityRegistry": "0x35779fc846c1f35fe209032ec7c31830bc8b4ef9",
+    "messaging": "0xa6f1c6069dab07f854fd707cf68fcc413874e944",
+    "charter": "0x56205f6cade15085906ff1def11fb03ab40a8eb8",
+    "relationships": "0xfbb429b290b54e46ee65399769e10f785196a0da",
+    "feed": "0xf6c3cfe1fb6f9fa18f22b3bdaa3593abc141bde0",
+    "events": "0x22c4c488184c9ff39c7df305f0ac1a5100524d71"
+  },
+  "hegemony": {
+    "contractAddr": "0xe74f4cfc102a15871be55d4e34701c88e6633531",
+    "realmId": "0x484547454d4f4e595f574f524c445f3031000000000000000000000000000000",
+    "aiSeedTag": "SLX_HEGEMONY_SOVEREIGN_V1",
+    "aiIdentities": [
+      "0xc3df187b66c9376027010d331f1b262fdf51261e",
+      "0xf7a6fe0af3d48802fd5583fd7933588a25b1596d",
+      "0xc18108cbb6277b5c8cd32977f218eabf9f324b1a",
+      "0x536a1bf2d658f8fc8e4e2c3a5f933b4c23065469",
+      "0x1109e6351a58e7ff30f9de83402aebe7edea5ee8",
+      "0x69fb76651b78abe88a5391eaef54baa1e1640106"
+    ]
+  },
+  "cipherNoir": {
+    "contractAddr": "0x93d34010ebfd46a16882c56b001d6603c6af0e7d",
+    "caseId": "0x4e4f49525f47454e4556415f3030303100000000000000000000000000000000",
+    "vrfBeaconAddr": "0xc98072285235f4ba4669ea786484cbe1461cf432",
+    "aiSeedTag": "SLX_NOIR_OPERATIVE_V1",
+    "aiIdentities": [
+      "0x1cd0ba2f588f91dbe831cf8ec6be32f8dd6aa0c1",
+      "0x7b72522a96b2f27c045f68e45616d38eb25d1b96",
+      "0xcaf3ed9a3622577a37d277aa661a7f0038404fe0",
+      "0xffe5f0f831c30f1edfc8e65581632298e547df71",
+      "0x175ba4f9fd62ab85c382ea4fe155080d224cc88d"
+    ]
+  },
+  "quantumLottery": {
+    "deployedAt": "2026-11-24T01:12:34.149Z",
+    "vrfBeacon": "0x2d2b26458cfa2bec8741e18ec41aab17e67b47b6",
+    "contractAddr": "0xeb3ee8d4739cfeb2883ff8583766f4793efdeb15",
+    "vaultIdentity": "0x539d6590f7199c4aea51997787ac47693194d912",
+    "minValidators": 4,
+    "roundBlocks": 12,
+    "secondaryPool": {
+      "contractAddr": "0x230bd19c43762d81d92eb69b6cc9f374f404f7c9",
+      "vaultIdentity": "0x72f06a0fa9699d143f35803d29a2056add5113ae"
+    }
+  },
+  "secretBallot": {
+    "deployedAt": "2026-11-24T01:12:34.149Z",
+    "vrfBeacon": "0xc98072285235f4ba4669ea786484cbe1461cf432",
+    "contractAddr": "0xb2bcd0053c45f268fba8a0aec259e3d8da837747",
+    "secondaryHub": "0xc7ba5e936761fc4a64a2d319c454ea17a3ffd1bf",
+    "minValidators": 4
+  },
+  "ifrsAccounting": {
+    "deployedAt": "2026-11-24T01:12:34.149Z",
+    "primaryLedger": "0x4f225000bcb350d37d38d320b3bf50394d235724",
+    "primaryConfidentialLedger": "0x975de7db44cc3a0d8445a6139cf77be587b42677",
+    "primaryTreasuryIdentity": "0x8a7fd72cc6a828f68d22cb6bf18039fbfc79c5b1",
+    "primaryProductLedger": "0xb0e642e03a200d6a19c4cab2eb39575a37079e57",
+    "secondaryCompany": {
+      "name": "Bostun Dynamix Pte. Ltd. [SIM-BOT]",
+      "accountingLedger": "0x493afd09dddfaf189054831aaa85aaaa1af1f061",
+      "confidentialLedger": "0xa91dd797ff8e4480a8c6d59ce52cc904884bf72b",
+      "corporateCharter": "0xc0496d81d936bdc213d5fc8002f1fee885780df8",
+      "bankLedger": "0x88a461d3e5c3534e5cacd23acca5a875b83933a5",
+      "shareLedger": "0xd4743d7171d933fd4f4b2031452b0975357053df",
+      "treasuryIdentity": "0xd9141a15f43ca17180cca5f70d278923ea4fd52f",
+      "shareCapital": "0xe3f4cf9ac3bc8b2b3d71bda5c43dd16c7f3f3b74"
+    }
+  },
+  "identityHfsExtension": "0x78b12a31dfdf38f98cea39c79c420de6f0674139",
+  "recoveryOracle": {
+    "identityAddr": "0x7dcd1c7166ca7fc4de94851f4f9c477c766c832f",
+    "nickname": "BiometricOracle [SIM-BOT]",
+    "handle": "@biometric_oracle_bot",
+    "maxCapacityPerSlot": 4,
+    "slots": [
+      {
+        "slotId": 0,
+        "label": "Biometric Enclave #0 [SIM-BOT]",
+        "maxCapacity": 4,
+        "operatorEoa": "0xf26ab3bbf3f94125af7961f30bb13bf36fab0720",
+        "privateKey": "0x42401346223517c017e5e1cdefe6ca1a8958af515298ccf94930b1537b3e38e5",
+        "edPub32Hex": "0xeef24798db1535800b299ea4e21021f09a702fbbfcfdb457d507948eb31d2d98"
+      },
+      {
+        "slotId": 1,
+        "label": "Biometric Enclave #1 [SIM-BOT]",
+        "maxCapacity": 4,
+        "operatorEoa": "0xfd915b5fe1039015996d2823b887074043eeaf2e",
+        "privateKey": "0x3e2e3daa2fa6331659084a969f1f77fc457e87c7cf82467fbb2264da1c8aaa13",
+        "edPub32Hex": "0x7b7b1ef2fba1dbdc1ac2aae3c257198c9bd5d7836b183f63508e6bd6451f2518"
+      },
+      {
+        "slotId": 2,
+        "label": "Biometric Enclave #2 [SIM-BOT]",
+        "maxCapacity": 4,
+        "operatorEoa": "0x3ceb304cd8533d093d790cff927b1a2af4365129",
+        "privateKey": "0x6e212d66aa0e333eb4a5568ee8936e972b49daad6c5a37795cad73569ccc5666",
+        "edPub32Hex": "0xa533db5608a3641a32b6d7c35a2466f54e4dbf342980679590cbd0cd86d74618"
+      }
+    ]
+  }
+}

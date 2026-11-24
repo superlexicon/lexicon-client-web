@@ -1,0 +1,518 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --sc-bg: #08101e;
+  --sc-surface: #0f1b31;
+  --sc-card: #152440;
+  --sc-card-hover: #1b2e52;
+  --sc-border: #253c66;
+  --sc-fb-blue: #2563eb;
+  --sc-cyan: #38bdf8;
+  --sc-emerald: #10b981;
+  --sc-amber: #f59e0b;
+  --sc-rose: #f43f5e;
+  --sc-text: #f8fafc;
+  --sc-muted: #94a3b8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--sc-bg);
+  color: var(--sc-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Facebook-Style Top Navigation Bar (inside .slx-sticky-top-stack beneath .slx-chain-bar) */
+.sc-navbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(180deg, #10203d 0%, #0b162b 100%);
+  border-bottom: 1px solid var(--sc-border);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.sc-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sc-logo-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: #fff;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+  flex-shrink: 0;
+}
+
+.sc-back {
+  padding: 0.35rem 0.68rem;
+  border-radius: 0.48rem;
+  border: 1px solid var(--sc-border);
+  background: var(--sc-card);
+  color: var(--sc-muted);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sc-back:hover {
+  color: #fff;
+  border-color: var(--sc-cyan);
+}
+
+.sc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.16rem 0.52rem;
+  border-radius: 999px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sc-badge-blue {
+  background: rgba(37, 99, 235, 0.22);
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  color: #93c5fd;
+}
+
+.sc-badge-cyan {
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.42);
+  color: #7dd3fc;
+}
+
+.sc-badge-emerald {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #6ee7b7;
+}
+
+.sc-badge-amber {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fcd34d;
+}
+
+.sc-badge-rose {
+  background: rgba(244, 63, 94, 0.18);
+  border: 1px solid rgba(244, 63, 94, 0.48);
+  color: #fda4af;
+}
+
+.sc-badge-dormant {
+  background: rgba(71, 85, 105, 0.3);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #94a3b8;
+}
+
+.sc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.78rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--sc-border);
+  background: var(--sc-card);
+  color: var(--sc-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.14s ease;
+  font-family: inherit;
+}
+
+.sc-btn:hover:not(:disabled) {
+  background: var(--sc-card-hover);
+  border-color: var(--sc-cyan);
+}
+
+.sc-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.sc-btn-primary {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  border-color: #60a5fa;
+  color: #fff;
+}
+
+.sc-btn-emerald {
+  background: linear-gradient(135deg, #047857, #10b981);
+  border-color: #6ee7b7;
+  color: #fff;
+}
+
+.sc-btn-amber {
+  background: linear-gradient(135deg, #b45309, #f59e0b);
+  border-color: #fde68a;
+  color: #09111f;
+}
+
+.sc-btn-rose {
+  background: rgba(244, 63, 94, 0.16);
+  border-color: rgba(244, 63, 94, 0.45);
+  color: #fda4af;
+}
+
+.sc-btn-rose:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.28);
+  border-color: #fb7185;
+}
+
+.sc-select, .sc-input, .sc-textarea {
+  background: #0b1629;
+  color: var(--sc-text);
+  border: 1px solid var(--sc-border);
+  border-radius: 0.5rem;
+  padding: 0.42rem 0.65rem;
+  font-size: 0.78rem;
+  font-family: inherit;
+}
+
+.sc-textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 70px;
+  line-height: 1.45;
+}
+
+.sc-textarea:focus, .sc-input:focus, .sc-select:focus {
+  outline: none;
+  border-color: var(--sc-cyan);
+}
+
+/* Live RPC Drawer */
+.sc-rpc-drawer {
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.52rem 1.2rem;
+  background: #060e1c;
+  border-bottom: 1px solid var(--sc-border);
+  font-size: 0.73rem;
+}
+
+.sc-rpc-drawer.open {
+  display: flex;
+}
+
+/* Alert Toast Banner */
+.sc-toast-bar {
+  max-width: 1460px;
+  margin: 0.65rem auto 0 auto;
+  padding: 0 1rem;
+}
+
+.sc-toast-inner {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.95rem;
+  border-radius: 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.sc-toast-inner.show {
+  display: flex;
+}
+
+/* 3-Column Facebook + Neighborhood RF Layout */
+.sc-grid {
+  max-width: 1460px;
+  margin: 0 auto;
+  padding: 0.85rem 1rem 2rem 1rem;
+  display: grid;
+  grid-template-columns: 375px minmax(0, 1fr) 345px;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 1220px) {
+  .sc-grid {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+  .sc-right-col {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 860px) {
+  .sc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sc-card {
+  background: var(--sc-surface);
+  border: 1px solid var(--sc-border);
+  border-radius: 0.85rem;
+  padding: 0.95rem 1.05rem;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
+}
+
+.sc-col-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* Interactive Neighborhood RF Radar Canvas */
+.sc-radar-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #050d1a;
+  border: 1.5px solid #2b497a;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+#rfRadarCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+#rfRadarCanvas:active {
+  cursor: grabbing;
+}
+
+.sc-radar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+  font-size: 0.69rem;
+  color: var(--sc-muted);
+}
+
+/* Avatar Circle */
+.sc-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: #fff;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.sc-avatar-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--sc-surface);
+}
+
+/* Filter Tabs */
+.sc-tabs {
+  display: flex;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--sc-border);
+  padding-bottom: 0.55rem;
+}
+
+.sc-tab {
+  padding: 0.42rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--sc-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.sc-tab.active {
+  background: rgba(37, 99, 235, 0.2);
+  border-color: rgba(96, 165, 250, 0.45);
+  color: #fff;
+}
+
+/* Facebook-Style Post Card */
+.sc-post-card {
+  background: var(--sc-surface);
+  border: 1px solid var(--sc-border);
+  border-radius: 0.85rem;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.26);
+}
+
+.sc-post-card.dormant-post {
+  opacity: 0.68;
+  border-style: dashed;
+}
+
+.sc-post-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.sc-post-body {
+  font-size: 0.92rem;
+  line-height: 1.52;
+  color: #f1f5f9;
+  white-space: pre-wrap;
+}
+
+.sc-post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(37, 60, 102, 0.7);
+}
+
+.sc-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+  padding-top: 0.4rem;
+}
+
+.sc-comment-bubble {
+  background: #0b1629;
+  border: 1px solid #1e3358;
+  border-radius: 0.65rem;
+  padding: 0.48rem 0.7rem;
+  font-size: 0.79rem;
+}
+
+/* Trust Progress Bar */
+.sc-trust-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #091224;
+  overflow: hidden;
+  border: 1px solid #1e3358;
+}
+
+.sc-trust-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+/* Neighbor / Friend Row */
+.sc-person-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.65rem;
+  background: #0b1629;
+  border: 1px solid #1d3154;
+}
+
+/* Modular 6-Subroutine Architecture Inspector Drawer */
+.sc-arch-drawer {
+  display: none;
+  background: #071122;
+  border-bottom: 1px solid var(--sc-border);
+  padding: 0.75rem 1.2rem;
+}
+
+.sc-arch-drawer.open {
+  display: block;
+}
+
+.sc-arch-inner {
+  max-width: 1460px;
+  margin: 0 auto;
+}
+
+.sc-arch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 0.55rem;
+}
+
+.sc-arch-chip {
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.6rem;
+  background: #0d1b34;
+  border: 1px solid #243e6b;
+  font-size: 0.69rem;
+  line-height: 1.4;
+}
+
+/* Messenger Chat Split */
+.sc-dm-layout {
+  display: grid;
+  grid-template-columns: 205px minmax(0, 1fr);
+  gap: 0.75rem;
+  min-height: 360px;
+}
+
+@media (max-width: 680px) {
+  .sc-dm-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sc-dm-bubble {
+  max-width: 82%;
+  padding: 0.52rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.42;
+}
+
+.sc-dm-bubble.mine {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #fff;
+}
+
+.sc-dm-bubble.theirs {
+  align-self: flex-start;
+  background: #0b1629;
+  border: 1px solid #223a63;
+  color: #e2e8f0;
+}

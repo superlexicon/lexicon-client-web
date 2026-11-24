@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PHANTOM FLEET: 100-PLAYER RED vs. BLUE NAVAL WARFARE — SuperLexicon HFS #13</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/battleship.css" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+</head>
+<body>
+  <div class="nv-shell">
+    <div id="slxUnifiedHeaderMount"></div>
+
+    <!-- Adopted into Unified Header Context & Action Slots -->
+    <div id="nvHeaderScoreboard" data-uh-unhide="1" class="nv-scoreboard mono" style="display:none;">
+      <span class="nv-badge nv-badge-red" id="scoreRedBadge">🔴 RED: 0 Sinks (0p)</span>
+      <span style="color:#64748b;">vs</span>
+      <span class="nv-badge nv-badge-blue" id="scoreBlueBadge">🔵 BLUE: 0 Sinks (0p)</span>
+      <span style="color:#475569;">|</span>
+      <span id="gridSizeBadge" style="color:#7dd3fc;font-weight:700;">🌊 48×30</span>
+    </div>
+    <button id="btnOpenJoinModal" data-uh-unhide="1" class="nv-btn nv-btn-primary" style="display:none;">⚓ Squadron / Join</button>
+    <button id="btnNavalHowToPlay" data-uh-unhide="1" class="nv-btn" style="display:none;">📖 How to Play</button>
+
+    <!-- Collapsible SuperLexicon Node RPC Inspector (toggled via ⚙ Node in SlxChainBar) -->
+    <div id="rpcDrawer" class="nv-rpc-drawer mono">
+      <strong style="color:#7dd3fc;">SUBNET 1 WSS:</strong>
+      <input id="rpcUrlInput" class="nv-input mono" style="width:235px;" value="wss://node4.superlexicon.com/rpc" />
+      <button id="btnDeployWasm" class="nv-btn nv-btn-emerald">Deploy Fresh HFS</button>
+      <input id="contractAddrInput" class="nv-input mono" style="width:170px;" placeholder="HFS Address 0x..." />
+      <input id="battleIdInput" class="nv-input mono" style="width:155px;" placeholder="Battle ID (0x...)" />
+      <button id="btnRpcCreateOrJoin" class="nv-btn nv-btn-primary">Join / Deploy Fleet</button>
+      <span id="rpcStatusText" style="color:#94a3b8;">Connecting to live Subnet 1 validator…</span>
+    </div>
+
+    <!-- Main Tactical Workspace -->
+    <main class="nv-main">
+      <!-- Left: Dynamic High-Resolution Ocean Viewport -->
+      <section class="nv-ocean-col">
+        <div id="nvWelcomeMount"></div>
+        <div id="nvCoachMount"></div>
+        <div class="nv-guide-strip">
+          <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+            <button type="button" id="cursorModePill" class="nv-mode-pill move mono" title="Green Navigation Mode — click inside Green Circle to sail">
+              🟢 Move Mode
+            </button>
+            <button type="button" id="btnTargetModePill" class="nv-btn mono" style="padding:0.3rem 0.65rem;font-size:0.72rem;border-color:rgba(251,113,133,0.55);color:#fda4af;" title="Red Targeting Mode — click inside Red Ring to fire (or hold Shift/Space)">
+              🎯 Fire Mode
+            </button>
+            <button type="button" id="btnRotateHull" class="nv-btn mono" style="padding:0.3rem 0.6rem;font-size:0.72rem;" title="Rotate ship 90° before clicking destination tile (Hotkey: R)">
+              ↻ Rotate (`R`)
+            </button>
+            <span style="color:#cbd5e1;font-size:0.72rem;">
+              <strong>[1/2/3]</strong> Select Ship &bull; Hold <strong>Shift / Space</strong> anytime for instant Red Aiming
+            </span>
+          </div>
+          <span id="selectedShipHint" class="mono" style="font-size:0.72rem;color:#fcd34d;">
+            Selected: Ship [1]
+          </span>
+        </div>
+
+        <div class="nv-canvas-wrap" id="canvasWrap">
+          <canvas id="oceanCanvas" width="1100" height="760"></canvas>
+
+          <!-- Hover Cell, Range & Targeting Inspector -->
+          <div id="hoverTooltip" class="nv-hover-tooltip mono">
+            Click anywhere inside the Green Range Circle to move (`R` to rotate) • Hold Shift or Space for Red Targeting
+          </div>
+
+          <!-- Camera & Zoom Controls -->
+          <div class="nv-zoom-controls">
+            <button id="btnFitSquare" type="button" class="nv-btn nv-btn-primary">⛶ Fit Full Sea (`F`)</button>
+            <button id="btnZoomIn" type="button" class="nv-btn">＋ Zoom In</button>
+            <button id="btnZoomOut" type="button" class="nv-btn">－ Zoom Out</button>
+            <button id="btnCenterShip" type="button" class="nv-btn">🎯 Center Ship (`C`)</button>
+          </div>
+
+          <!-- Tactical Radar Minimap -->
+          <div class="nv-minimap-box" title="Click anywhere on Minimap to pan camera">
+            <canvas id="minimapCanvas" width="176" height="110"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Bankroll, 3 Ship Command Slots (Speed, Guns, 100% Square Integrity, Repairs) & Battle Feed -->
+      <aside class="nv-side-col">
+        <!-- Captain Bankroll & Score -->
+        <div class="nv-wallet-card">
+          <div>
+            <div style="display:flex;align-items:center;gap:0.45rem;">
+              <span id="myTeamBadge" class="nv-badge nv-badge-red mono">🔴 RED ARMADA</span>
+              <span class="mono" style="font-size:0.7rem;color:#94a3b8;" id="myPidLabel">Not Joined Yet</span>
+            </div>
+            <div style="font-size:1.18rem;font-weight:800;color:#6ee7b7;margin-top:3px;" class="mono">
+              💰 <span id="myCreditsText">1,000</span> CR
+            </div>
+          </div>
+          <div style="text-align:right;" class="mono">
+            <div style="font-size:0.65rem;color:#94a3b8;" id="myBestScoreText">🏆 HIGH: 0 pts</div>
+            <div style="font-size:0.94rem;font-weight:800;color:#fcd34d;" id="myScoreText">0 pts</div>
+            <div style="font-size:0.66rem;color:#cbd5e1;" id="myKillsText">0 Ships Sunk</div>
+          </div>
+        </div>
+
+        <!-- Sidebar Switcher: Fleet Command | High-Score Leaderboard | In-Game Comms & Social -->
+        <div class="nv-side-tabs mono">
+          <button type="button" id="tabFleetCmd" class="nv-side-tab active">⚓ Fleet</button>
+          <button type="button" id="tabFleetScores" class="nv-side-tab">🏆 Leaderboard</button>
+          <button type="button" id="tabFleetSocial" class="nv-side-tab">
+            📡 Comms <span id="socialNotifBadge" class="nv-notif-pill" style="display:none;">0</span>
+          </button>
+        </div>
+
+        <!-- Pane A: Game Over Card + Incoming Comms Alert + Compact 3-Ship Strip + Unified Round Action Deck + Combat Feed -->
+        <div id="fleetCommandPane" style="display:flex;flex-direction:column;gap:0.52rem;">
+          <div id="gameOverBanner" style="display:none;"></div>
+          <div id="fleetSocialAlertBanner" style="display:none;"></div>
+          <div id="shipSlotsContainer" class="nv-squadron-strip"></div>
+          <div id="roundActionDeck" class="nv-action-deck"></div>
+
+          <!-- Live Combat & Teleport Event-Log Feed -->
+          <div class="nv-log-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <strong style="font-size:0.71rem;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;">
+                Live HFS Event Log &amp; Combat Feed
+              </strong>
+              <span id="shotsCountBadge" class="mono" style="font-size:0.66rem;color:#7dd3fc;">0 salvos</span>
+            </div>
+            <div id="combatFeedBox" class="nv-log-box mono"></div>
+          </div>
+        </div>
+
+        <!-- Pane B: High-Score Scoreboard / Leaderboard (Separate from Credits) -->
+        <div id="fleetLeaderboardPane" class="nv-social-pane" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:0.4rem;">
+            <strong style="font-size:0.76rem;color:#fde047;">🏆 HIGH-SCORE LEADERBOARD</strong>
+            <span class="mono" style="font-size:0.62rem;color:#94a3b8;">+100/hit • +250–1,500/sink</span>
+          </div>
+          <div style="font-size:0.65rem;color:#94a3b8;line-height:1.35;">
+            Ranked by <strong>Peak High Score</strong> (separate from spendable <code>CR</code>). Starting anew after Game Over refills <code>1,000 CR</code> at a <strong>-50% Current Score</strong> penalty.
+          </div>
+          <div id="leaderboardBodyBox" class="nv-social-body mono"></div>
+        </div>
+
+        <!-- Pane B: On-Chain Social Network & VHF Comms (`Messaging` + `SocialCharter` + `SocialRelationships` + `SocialFeed`) -->
+        <div id="fleetSocialPane" class="nv-social-pane" style="display:none;">
+          <div class="nv-social-subtabs mono">
+            <button type="button" class="nv-subtab-btn active" data-soc-tab="bridge">🌐 Bridge</button>
+            <button type="button" class="nv-subtab-btn" data-soc-tab="squadron">🚩 Squadron</button>
+            <button type="button" class="nv-subtab-btn" data-soc-tab="captains">🤝 Captains</button>
+            <button type="button" class="nv-subtab-btn" data-soc-tab="dm">💬 Direct / Wall</button>
+          </div>
+          <div id="socialIncomingBox" style="display:none;"></div>
+          <div id="socialPeerSelectRow" class="nv-social-peer-row mono" style="display:none;"></div>
+          <div id="socialBodyBox" class="nv-social-body mono"></div>
+          <form id="socialComposerForm" class="nv-social-composer">
+            <input
+              id="socialMsgInput"
+              class="nv-input mono"
+              style="flex:1;min-width:0;"
+              maxlength="240"
+              placeholder="Transmit on Bridge VHF Ch.16…"
+            />
+            <button id="socialSendBtn" type="submit" class="nv-btn nv-btn-emerald">Transmit</button>
+          </form>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Join Battle, Auto-Balanced Team Picker & 1-Block 3-Ship Starter Shipyard Modal -->
+  <div id="joinModal" class="nv-modal-backdrop">
+    <div class="nv-modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+        <span class="nv-badge nv-badge-cyan mono">LIVE SUBNET 1 • 1-BLOCK ATOMIC DEPLOY • STARTING BANKROLL: 1,000 CR</span>
+        <button id="btnCloseJoinModal" type="button" class="nv-btn">✕ Spectate / Resume</button>
+      </div>
+      <h2 style="margin:0.45rem 0 0.2rem 0;font-size:1.25rem;">Deploy Your Starter Squadron on Subnet 1</h2>
+      <p style="margin:0;font-size:0.78rem;color:#cbd5e1;">
+        Teams auto-balance on-chain within <strong>at most +1 captain</strong> (`|Red - Blue| &le; 1`). Choose up to 3 ships for your <strong>1,000 CR</strong> starting bankroll — all 3 commission atomically in <strong>1 single block</strong> via <code>joinAndDeploy</code>!
+      </p>
+
+      <!-- 1. Team Picker -->
+      <div style="margin-top:0.75rem;font-size:0.73rem;font-weight:700;color:#94a3b8;text-transform:uppercase;">
+        1. Choose Armada <span id="teamBalanceHint" style="color:#fcd34d;margin-left:6px;text-transform:none;"></span>
+      </div>
+      <div class="nv-team-choice-grid">
+        <button id="btnPickRed" type="button" class="nv-team-btn active-red">
+          <div style="font-weight:800;font-size:0.92rem;color:#fca5a5;">🔴 RED ARMADA (Full-Ocean Deploy)</div>
+          <div id="redCountSub" class="mono" style="font-size:0.72rem;color:#cbd5e1;margin-top:3px;">Live Captains: —</div>
+        </button>
+        <button id="btnPickBlue" type="button" class="nv-team-btn">
+          <div style="font-weight:800;font-size:0.92rem;color:#93c5fd;">🔵 BLUE COALITION (Full-Ocean Deploy)</div>
+          <div id="blueCountSub" class="mono" style="font-size:0.72rem;color:#cbd5e1;margin-top:3px;">Live Captains: —</div>
+        </button>
+      </div>
+
+      <!-- 2. 3-Ship Starter Shipyard -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;margin-top:0.35rem;">
+        <span style="font-size:0.73rem;font-weight:700;color:#94a3b8;text-transform:uppercase;">
+          2. Select Up to 3 Starter Ships (Budget: 1,000 CR)
+        </span>
+        <span id="loadoutBudgetText" class="mono" style="font-size:0.8rem;font-weight:800;color:#6ee7b7;">
+          Cost: 750 CR • Spare Credits: 250 CR
+        </span>
+      </div>
+      <div id="loadoutSlotsGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.55rem;margin-bottom:0.9rem;"></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.6rem;">
+        <div style="font-size:0.72rem;color:#94a3b8;">
+          💡 Every square hit destroys <strong>100%</strong> of that hull square (<strong>+120 CR</strong>) + <strong>Kill Bounties</strong> (`120–600 CR`)!
+        </div>
+        <button id="btnLaunchBattle" type="button" class="nv-btn nv-btn-emerald" style="padding:0.58rem 1.25rem;font-size:0.86rem;">
+          ⚓ Sign &amp; Deploy Fleet on Subnet 1 →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/battleship.js"></script>
+  <script type="module" src="/src/legal-consent.js"></script>
+</body>
+</html>

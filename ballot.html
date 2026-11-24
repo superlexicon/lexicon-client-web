@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CIPHERVOTE — Threshold Homomorphic Zero-Knowledge Secret-Ballot Governance (SuperLexicon Subnet 1)</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/ballot.css" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+</head>
+<body>
+  <div class="bv-shell">
+    <div id="slxUnifiedHeaderMount"></div>
+    <button id="btnOpenNewPoll" data-uh-unhide="1" class="bv-btn bv-btn-violet" style="display:none;">➕ New Encrypted Poll</button>
+    <button id="btnCryptoSpec" data-uh-unhide="1" class="bv-btn" style="display:none;">🔬 Homomorphic ZK Math</button>
+
+    <main class="bv-main">
+      <!-- Left / Primary Column: Active Poll Hero + Encrypted Ballot Booth + Public Ciphertext Box -->
+      <section class="bv-primary-col">
+        <div class="bv-hero-card">
+          <div class="bv-hero-top">
+            <div style="min-width:0;flex:1;">
+              <div class="bv-eyebrow mono">
+                <span class="bv-pulse-dot" id="pollStatusDot"></span>
+                <span id="pollStatusBadge">POLL #— • CONNECTING…</span>
+                <span class="bv-mode-chip" id="pollModeBadge">—</span>
+              </div>
+              <h1 class="bv-poll-title" id="pollTitle">Loading CipherVote Homomorphic Governance…</h1>
+              <p class="bv-poll-desc" id="pollDesc">
+                Votes are encrypted client-side under the validator quorum’s <code>Edwards25519</code> DKG key and proven <code>0/1</code> + one-hot in zero knowledge. Individual choices stay encrypted forever.
+              </p>
+            </div>
+
+            <div class="bv-countdown-box">
+              <span class="bv-countdown-lbl mono" id="windowLabel">BALLOT WINDOW</span>
+              <strong class="bv-countdown-val mono" id="windowValue">—</strong>
+              <span class="bv-countdown-sub mono" id="windowSub">Epoch #— ElGamal Key</span>
+              <button id="btnCloseAndDecrypt" class="bv-btn bv-btn-amber" style="display:none;margin-top:8px;width:100%;">
+                🔓 Close Poll &amp; Request Quorum Tally
+              </button>
+              <button id="btnAuditActivePoll" class="bv-btn bv-btn-cyan" style="margin-top:8px;width:100%;">
+                🔬 Verify Homomorphic Proof
+              </button>
+            </div>
+          </div>
+
+          <!-- Tally Visualization (Encrypted Ciphertext Lock while Open -> Quorum-Decrypted Bars once Verified) -->
+          <div id="tallySection" class="bv-tally-section"></div>
+        </div>
+
+        <!-- Zero-Knowledge Secret-Ballot Booth -->
+        <div class="bv-panel">
+          <div class="bv-panel-hdr">
+            <h3>🗳️ Zero-Knowledge Encrypted Voting Booth</h3>
+            <span class="mono bv-power-pill" id="myVotingPowerBadge">Power: —</span>
+          </div>
+
+          <div class="bv-choice-grid" id="choiceGrid">
+            <button type="button" class="bv-choice-card selected" data-choice="0">
+              <span class="bv-choice-icon">✅</span>
+              <strong class="bv-choice-lbl">YES / APPROVE</strong>
+              <span class="mono bv-choice-vec">Enc([1, 0, 0]) + ZK Proof</span>
+            </button>
+            <button type="button" class="bv-choice-card" data-choice="1">
+              <span class="bv-choice-icon">❌</span>
+              <strong class="bv-choice-lbl">NO / REJECT</strong>
+              <span class="mono bv-choice-vec">Enc([0, 1, 0]) + ZK Proof</span>
+            </button>
+            <button type="button" class="bv-choice-card" data-choice="2">
+              <span class="bv-choice-icon">⚖️</span>
+              <strong class="bv-choice-lbl">ABSTAIN</strong>
+              <span class="mono bv-choice-vec">Enc([0, 0, 1]) + ZK Proof</span>
+            </button>
+          </div>
+
+          <div class="bv-booth-footer">
+            <div class="bv-zk-note mono" id="zkBoothHint">
+              🔒 Your browser generates 3 fresh 252-bit blinding scalars, 3 Cramer-Damgård-Schoenmakers <code>0/1</code> OR-proofs (<code>384 B</code>), and 1 Chaum-Pedersen <code>sum == 1</code> DLEQ proof (<code>64 B</code>). Cleartext never leaves this tab.
+            </div>
+            <button type="button" id="btnCastBallot" class="bv-btn bv-btn-primary">
+              🔐 Encrypt &amp; Cast Zero-Knowledge Ballot on Subnet 1
+            </button>
+          </div>
+          <div id="txStatusMsg" class="bv-tx-status mono"></div>
+        </div>
+
+        <!-- On-Chain Encrypted Ballot Box & Running Homomorphic Accumulators -->
+        <div class="bv-panel">
+          <div class="bv-panel-hdr">
+            <h3>📦 Public Encrypted Ballot Box (<span id="ballotBoxCount">0</span> Cast)</h3>
+            <span class="mono bv-commit-pill" id="ballotsCommitTag" title="Rolling keccak256 commitment over all cast ciphertexts">commit: —</span>
+          </div>
+          <div id="accumulatorsStrip" class="bv-acc-strip mono"></div>
+          <div id="ballotsList" class="bv-ballots-list mono"></div>
+        </div>
+      </section>
+
+      <!-- Right / Sidebar Column: All Polls Selector + Validator Threshold Key + Privacy Guarantees -->
+      <aside class="bv-side-col">
+        <!-- Polls Directory -->
+        <div class="bv-panel">
+          <div class="bv-panel-hdr">
+            <h3>📋 Governance &amp; Referendum Polls</h3>
+            <span class="mono bv-muted" id="pollsTotalTag">0 Polls</span>
+          </div>
+          <div id="pollsList" class="bv-polls-list"></div>
+        </div>
+
+        <!-- Validator Quorum ElGamal Key -->
+        <div class="bv-panel">
+          <div class="bv-panel-hdr">
+            <h3>🛡️ Validator Threshold ElGamal Key</h3>
+            <span class="mono bv-quorum-pill" id="quorumBadge">— of — BFT</span>
+          </div>
+          <div class="bv-beacon-meta mono" id="beaconMetaSummary">
+            Reading <code>vrf-beacon</code> active DKG epoch…
+          </div>
+          <div id="validatorNodesList" class="bv-validators-list mono"></div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Create New Poll Modal -->
+    <div id="newPollModal" class="bv-modal-backdrop" style="display:none;">
+      <div class="bv-modal" style="max-width:580px;">
+        <div class="bv-modal-hdr">
+          <h3>➕ Create Encrypted Secret-Ballot Poll</h3>
+          <button type="button" id="btnCloseNewPoll" class="bv-btn">✕</button>
+        </div>
+        <form id="newPollForm" class="bv-modal-body bv-form">
+          <label class="bv-field">
+            <span class="mono">Proposal Title</span>
+            <input type="text" id="npTitle" maxlength="92" required placeholder="e.g. Subnet 1 Civic Referendum: Expand Sub-GHz Relay Quota" />
+          </label>
+          <label class="bv-field">
+            <span class="mono">Description &amp; Context</span>
+            <textarea id="npDesc" rows="3" maxlength="240" placeholder="Explain what Yes / No / Abstain authorizes…"></textarea>
+          </label>
+          <div class="bv-form-row">
+            <label class="bv-field">
+              <span class="mono">Voting Weight Mode</span>
+              <select id="npWeightMode">
+                <option value="1">🪪 1-Identity = 1-Vote (Civic Referendum)</option>
+                <option value="2">🏛️ Share-Weighted (NVDAX-EQ Equity Balance)</option>
+              </select>
+            </label>
+            <label class="bv-field">
+              <span class="mono">Voting Window (Blocks, ~4s/blk)</span>
+              <input type="number" id="npDuration" min="4" max="600" value="20" required />
+            </label>
+          </div>
+          <div id="npStatus" class="bv-tx-status mono"></div>
+          <button type="submit" id="btnSubmitNewPoll" class="bv-btn bv-btn-primary" style="width:100%;">
+            🚀 Lock Epoch Key &amp; Open Encrypted Poll
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Client-Side Homomorphic Re-Summation + Threshold DLEQ Audit Modal -->
+    <div id="auditModal" class="bv-modal-backdrop" style="display:none;">
+      <div class="bv-modal">
+        <div class="bv-modal-hdr">
+          <h3 id="auditModalTitle">🔬 Browser Homomorphic &amp; Threshold DLEQ Audit</h3>
+          <button type="button" id="btnCloseAudit" class="bv-btn">✕</button>
+        </div>
+        <div id="auditModalBody" class="bv-modal-body mono"></div>
+      </div>
+    </div>
+
+    <!-- Cryptographic Architecture Modal -->
+    <div id="specModal" class="bv-modal-backdrop" style="display:none;">
+      <div class="bv-modal">
+        <div class="bv-modal-hdr">
+          <h3>🔬 Wasmtime Threshold Additive Homomorphic Encryption Architecture</h3>
+          <button type="button" id="btnCloseSpec" class="bv-btn">✕</button>
+        </div>
+        <div class="bv-modal-body">
+          <p><strong>1. Exponential ElGamal over Prime-Order <code>Edwards25519</code>:</strong> Each ballot slot encrypts bit <code>b<sub>s</sub> &in; {0, 1}</code> under the validator quorum&rsquo;s DKG public key <code>Y = S &middot; B</code> as <code>(C<sub>1</sub>, C<sub>2</sub>) = (r &middot; B, b<sub>s</sub> &middot; B + r &middot; Y)</code>. No single validator ever knows <code>S</code>.</p>
+          <p><strong>2. Zero-Knowledge Well-Formedness (<code>640 B</code> Total Proof):</strong> Wasmtime host precompile <code>env::host_he_verify_zero_or_one</code> verifies three 128-byte Cramer-Damgård-Schoenmakers 1-of-2 Disjunctive Schnorr proofs (<code>b<sub>s</sub> &in; {0, 1}</code>) bound to <code>(poll_id, voter_identity, slot)</code>, and <code>env::host_ec_dleq_verify</code> verifies <code>b<sub>yes</sub> + b<sub>no</sub> + b<sub>abstain</sub> == 1</code> directly on <code>C<sub>yes</sub> + C<sub>no</sub> + C<sub>abstain</sub></code>.</p>
+          <p><strong>3. Homomorphic Weight Scaling &amp; Accumulation:</strong> For token-weighted shareholder resolutions, <code>env::host_he_scale_ciphertext</code> multiplies each voter&rsquo;s encrypted choice by <code>w = shareLedger.balanceOf(voter)</code> inside WASM (<code>w &middot; Enc(b<sub>s</sub>) = Enc(w &middot; b<sub>s</sub>)</code>) and <code>env::host_he_add_ciphertexts</code> folds it into <code>(Acc<sub>Yes</sub>, Acc<sub>No</sub>, Acc<sub>Abstain</sub>)</code>—without learning how the shareholder voted!</p>
+          <p><strong>4. <code>&gt; 2/3</code> Validator-Quorum Threshold Decryption:</strong> When the poll closes, validators submit DLEQ-verified partial decryptions <code>D<sub>i,s</sub> = s<sub>i</sub> &middot; Acc<sub>s,1</sub></code> **only** for the 3 aggregate accumulators. <code>env::host_he_lagrange_decrypt</code> interpolates <code>D<sub>s</sub> = &sum; &lambda;<sub>i</sub> D<sub>i,s</sub></code> and recovers the exact integer tally via a cached Baby-Step Giant-Step discrete-log table in <code>&lt; 0.3 ms</code>. Individual ballots remain encrypted forever.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/ballot.js"></script>
+  <script type="module" src="/src/legal-consent.js"></script>
+</body>
+</html>

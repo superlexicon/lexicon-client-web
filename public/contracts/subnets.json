@@ -1,0 +1,21 @@
+{
+  "description": "SuperLexicon Subnet Directory for lexicon-client-web. Add or edit subnets here, or connect custom subnets directly from the top telemetry bar dropdown.",
+  "subnets": [
+    {
+      "key": "subnet1",
+      "name": "Subnet 1 — 915 MHz LR2021 RF",
+      "shortLabel": "SUBNET 1 • RF",
+      "transport": "flrc",
+      "subnetId": "00000001",
+      "manifestUrl": "/contracts/subnet1-deployments.json"
+    },
+    {
+      "key": "subnet2",
+      "name": "Subnet 2 — Encrypted TCP/IP Mesh",
+      "shortLabel": "SUBNET 2 • TCP",
+      "transport": "tcp",
+      "subnetId": "6eaa3da4",
+      "manifestUrl": "/contracts/subnet2-deployments.json"
+    }
+  ]
+}

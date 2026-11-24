@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SuperLexicon Corporate Accounting &amp; Live IFRS Statements</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+  <link rel="stylesheet" href="/src/slx-inst.css" />
+  <link rel="stylesheet" href="/src/accounting.css" />
+</head>
+<body>
+  <div id="instHeaderMount"></div>
+
+  <main class="inst-shell">
+    <div id="accBanner" class="inst-banner">
+      <span id="accBannerText"></span>
+      <button class="inst-btn sm" id="accBannerClose">✕</button>
+    </div>
+
+    <!-- Single Clean Status & Quick-Action Bar -->
+    <section class="ifrs-top-bar">
+      <div class="ifrs-top-left">
+        <span class="ifrs-live-dot" id="streamDot"></span>
+        <span class="ifrs-pill ok" id="pillSummaryStatus">✓ Books Balanced &amp; Bank Cash Verified</span>
+        <span class="ifrs-stream-chip" id="streamAnchorMeta">Syncing ledger…</span>
+        <span class="ifrs-stream-chip emerald" id="streamEventsMeta">Live Stream</span>
+      </div>
+      <div class="ifrs-top-actions">
+        <button type="button" class="inst-btn sm" id="btnTopUpFiat">💧 +25,000 SGD</button>
+        <button type="button" class="inst-btn sm emerald" id="btnCrankAccruals">⚡ Crank Accruals</button>
+        <button type="button" class="inst-btn sm emerald" id="btnToggleKinetic" title="Toggle animated numbers &amp; +100K/-10K delta callouts">⚡ FX: ON</button>
+        <button type="button" class="inst-btn sm" id="btnToggleDiag" title="Show technical audit proofs &amp; raw WebSocket log stream">🔬 Diagnostics</button>
+      </div>
+    </section>
+
+    <!-- Optional Collapsible Technical & Audit Diagnostics Drawer (Hidden by Default) -->
+    <section class="ifrs-diag-drawer" id="techDiagDrawer" hidden>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="ifrs-proof-pills" id="proofPills">
+          <span class="ifrs-pill ok" id="pillEquation">✓ IAS 1: Assets ≡ Liabilities + Equity</span>
+          <span class="ifrs-pill ok" id="pillCustody">✓ IAS 7: Bank Cash ≡ 1010 + Suspense</span>
+          <span class="ifrs-pill ok" id="pillVirgin">✓ Virgin Treasury (owner == IFRS Ledger)</span>
+          <span class="ifrs-pill ok" id="pillCodeHash">✓ Single code_hash Deduplicated VM</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="ifrs-stream-chip cyan" id="streamParityMeta">Parity: Verified</span>
+          <button type="button" class="inst-btn sm" id="btnVerifyParity">🔬 Verify On-Chain Parity</button>
+          <button type="button" class="inst-btn sm" id="btnReanchor">🔄 Re-Anchor</button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--txt-2);font-family:var(--mono);">
+        <span id="streamModeLabel">EVENT-SOURCED REALTIME STREAM</span>
+        <span id="kpiCardLiabEq">Liab + Eq: <strong id="kpiLiabEq">0 SGD</strong> (<span id="kpiLiabEqSub">—</span>)</span>
+        <span id="kpiCardPeriod"><strong id="kpiPeriod">Period #1</strong> • <span id="kpiJournalCnt">0 entries</span></span>
+      </div>
+      <div class="ifrs-event-ticker" id="liveEventTicker">
+        <span class="ifrs-ticker-empty">Listening for live WebSocket events…</span>
+      </div>
+    </section>
+
+    <!-- 4-Card Clean Executive Summary -->
+    <section class="inst-kpi-grid ifrs-clean-kpis">
+      <div class="inst-kpi" id="kpiCardAssets">
+        <span class="inst-kpi-label">Total Assets</span>
+        <span class="inst-kpi-val" id="kpiAssets">0 SGD</span>
+        <span class="inst-kpi-sub" id="kpiAssetsSub">Current 0 • Long-Term 0</span>
+      </div>
+      <div class="inst-kpi" id="kpiCardRev">
+        <span class="inst-kpi-label">Earned Revenue</span>
+        <span class="inst-kpi-val" id="kpiArmsRev">0 SGD</span>
+        <span class="inst-kpi-sub" id="kpiRpRevSub">Arm's-length customer sales</span>
+      </div>
+      <div class="inst-kpi" id="kpiCardProfit">
+        <span class="inst-kpi-label">Net Profit</span>
+        <span class="inst-kpi-val" id="kpiNetIncome">0 SGD</span>
+        <span class="inst-kpi-sub" id="kpiDistributable">Distributable: 0 SGD</span>
+      </div>
+      <div class="inst-kpi" id="kpiCardCash">
+        <span class="inst-kpi-label">Cash in Bank</span>
+        <span class="inst-kpi-val" id="kpiBankCash">0 SGD</span>
+        <span class="inst-kpi-sub" id="kpiSuspenseSub">Verified Treasury Custody</span>
+      </div>
+    </section>
+
+    <!-- Clean Workspace View Switcher -->
+    <nav class="chr-tabs ifrs-workspace-nav" id="accWorkspaceTabs" aria-label="Accounting Views">
+      <button type="button" class="chr-tab-btn active" data-wtab="statements">📊 Financial Statements</button>
+      <button type="button" class="chr-tab-btn" data-wtab="ledger">📖 Plain-English Ledger &amp; Journal</button>
+      <button type="button" class="chr-tab-btn" data-wtab="valuation">💎 Company Valuation (V*)</button>
+      <button type="button" class="chr-tab-btn" data-wtab="confidential">🔒 Confidential Roll-Ups</button>
+      <button type="button" class="chr-tab-btn" data-wtab="ops">⚙️ Contracts &amp; Operations</button>
+      <button type="button" class="chr-tab-btn" data-wtab="all" style="margin-left:auto;font-size:11.5px;opacity:0.85;">View All</button>
+    </nav>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 1: FINANCIAL STATEMENTS                                       -->
+    <!-- ================================================================== -->
+    <section class="inst-card ifrs-traj-card" data-wview="statements">
+      <div class="inst-card-head" style="flex-wrap:wrap;gap:10px;">
+        <div>
+          <h3 class="inst-card-title">Financial Trajectory</h3>
+          <div style="font-size:12px;color:var(--txt-2);" id="trajSubMeta">Live balance &amp; revenue progression across recent blocks</div>
+        </div>
+        <div class="ifrs-series-toggles" id="trajSeriesToggles">
+          <button type="button" class="ifrs-series-pill active" data-series="assets" style="--sc:#38bdf8;">● Assets</button>
+          <button type="button" class="ifrs-series-pill active" data-series="cash" style="--sc:#34d399;">● Cash</button>
+          <button type="button" class="ifrs-series-pill active" data-series="revenue" style="--sc:#fbbf24;">● Revenue</button>
+          <button type="button" class="ifrs-series-pill" data-series="equity" style="--sc:#a78bfa;">● Equity</button>
+          <button type="button" class="ifrs-series-pill" data-series="profit" style="--sc:#fb7185;">● Profit</button>
+          <button type="button" class="ifrs-series-pill" data-series="intrinsic" style="--sc:#22d3ee;">◆ Valuation V*</button>
+        </div>
+      </div>
+      <div class="ifrs-traj-svg-wrap" id="trajectoryChartMount"></div>
+    </section>
+
+    <div data-wview="statements" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 4px;">
+      <span style="font-size:12.5px;color:var(--txt-2);">Showing active non-zero accounts for easy reading.</span>
+      <button type="button" class="inst-btn sm" id="btnToggleZeroRows">Show $0 Accounts</button>
+    </div>
+
+    <section class="ifrs-stmt-grid" data-wview="statements">
+      <article class="inst-card ifrs-stmt-card">
+        <div class="inst-card-head">
+          <div>
+            <h3 class="inst-card-title">📊 Balance Sheet</h3>
+            <div style="font-size:11.5px;color:var(--txt-2);" id="bsAsOfMeta">What we own vs. owe</div>
+          </div>
+        </div>
+        <div class="ifrs-viz-box" id="bsGraphicMount"></div>
+        <table class="ifrs-stmt-table" id="balanceSheetTable"></table>
+      </article>
+
+      <article class="inst-card ifrs-stmt-card">
+        <div class="inst-card-head">
+          <div>
+            <h3 class="inst-card-title">📈 Profit &amp; Loss</h3>
+            <div style="font-size:11.5px;color:var(--txt-2);" id="plPeriodMeta">Revenue minus costs</div>
+          </div>
+        </div>
+        <div class="ifrs-viz-box" id="plGraphicMount"></div>
+        <table class="ifrs-stmt-table" id="incomeStmtTable"></table>
+      </article>
+
+      <article class="inst-card ifrs-stmt-card">
+        <div class="inst-card-head">
+          <div>
+            <h3 class="inst-card-title">💸 Cash Flows</h3>
+            <div style="font-size:11.5px;color:var(--txt-2);" id="cfCustodyMeta">Cash in &amp; out of bank</div>
+          </div>
+        </div>
+        <div class="ifrs-viz-box" id="cfGraphicMount"></div>
+        <table class="ifrs-stmt-table" id="cashFlowTable"></table>
+      </article>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 2: PLAIN-ENGLISH LEDGER & LIVE GENERAL JOURNAL                -->
+    <!-- ================================================================== -->
+    <section class="inst-card" id="humanGlSection" data-wview="ledger">
+      <div class="inst-card-head" style="flex-wrap:wrap;gap:10px;">
+        <div>
+          <h3 class="inst-card-title">📖 How Buying Products &amp; Services Moves the Books</h3>
+          <div style="font-size:12.5px;color:var(--txt-2);">
+            Pick any scenario below to see in plain English why each account is Debited (<code>Dr</code>) vs. Credited (<code>Cr</code>).
+          </div>
+        </div>
+        <a href="/commerce.html#shopGlSection" class="inst-btn sm" style="text-decoration:none;">🛍️ Try Live Storefront →</a>
+      </div>
+      <div class="ifrs-tab-strip" id="hglScenarioTabs"></div>
+      <div id="hglBlueprintMount"></div>
+    </section>
+
+    <section class="inst-card" data-wview="ledger">
+      <div class="inst-card-head" style="flex-wrap:wrap;gap:10px;">
+        <div>
+          <h3 class="inst-card-title">📒 Live General Journal</h3>
+          <div style="font-size:12px;color:var(--txt-2);" id="journalFeedMeta">Loading recent entries…</div>
+        </div>
+        <button type="button" class="inst-btn sm emerald" id="btnToggleHumanJournal">📖 Plain-English Mode: ON</button>
+      </div>
+      <div class="inst-table-wrap ifrs-journal-scroll-wrap" id="journalScrollWrap">
+        <table class="inst-table ifrs-clean-journal">
+          <thead>
+            <tr>
+              <th style="width:120px;">Entry</th>
+              <th style="width:34%;">What Happened</th>
+              <th>Debits &amp; Credits</th>
+              <th style="text-align:right;width:130px;">Total</th>
+            </tr>
+          </thead>
+          <tbody id="journalTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 3: COMPANY VALUATION STUDIO                                   -->
+    <!-- ================================================================== -->
+    <section class="inst-card ifrs-val-studio" id="valuationStudioSection" data-wview="valuation">
+      <div class="inst-card-head" style="flex-wrap:wrap;gap:10px;">
+        <div>
+          <h3 class="inst-card-title">💎 Live Company Valuation (<code>V*</code>)</h3>
+          <div style="font-size:12px;color:var(--txt-2);margin-top:2px;" id="valSubMeta">
+            Blends Residual Income (EBO), Discounted Cash Flow (DCF), and Revenue/EBITDA Multiples vs. live DEX share price.
+          </div>
+        </div>
+        <div class="ifrs-val-badges" id="valHeaderBadges">
+          <span class="ifrs-stream-chip cyan" id="valRegimeBadge">HYDRATING…</span>
+          <span class="ifrs-stream-chip emerald" id="valIas24Badge">✓ Wash-Sale Filter Active</span>
+          <a class="inst-btn sm primary" id="valMarketLinkBtn" href="/dex.html">📈 Trade on DEX →</a>
+        </div>
+      </div>
+
+      <div class="ifrs-val-kpi-grid">
+        <div class="ifrs-val-kpi" id="valKpiIntrinsicCard">
+          <span class="inst-kpi-label">Intrinsic Equity Value (V*)</span>
+          <span class="inst-kpi-val" id="valKpiIntrinsicEq" style="color:#22d3ee;">— SGD</span>
+          <span class="inst-kpi-sub" id="valKpiIntrinsicSub">EV — • Net Cash —</span>
+        </div>
+        <div class="ifrs-val-kpi" id="valKpiShareCard">
+          <span class="inst-kpi-label">Fair Value per Share</span>
+          <span class="inst-kpi-val" id="valKpiIntrinsicSh" style="color:#a78bfa;">— SGD / sh</span>
+          <span class="inst-kpi-sub" id="valKpiSharesSub">Shares: —</span>
+        </div>
+        <div class="ifrs-val-kpi" id="valKpiMarketCard">
+          <span class="inst-kpi-label">Live DEX Share Price (P*)</span>
+          <span class="inst-kpi-val" id="valKpiDexPx" style="color:#fb7185;">—</span>
+          <span class="inst-kpi-sub" id="valKpiDexSub">Checking DEX…</span>
+        </div>
+        <div class="ifrs-val-kpi" id="valKpiSignalCard">
+          <span class="inst-kpi-label">Valuation Signal</span>
+          <span class="inst-kpi-val" id="valKpiSignal" style="color:#6ee7b7;">—</span>
+          <span class="inst-kpi-sub" id="valKpiRatiosSub">P/B — • EV/ARR —</span>
+        </div>
+      </div>
+
+      <div class="ifrs-val-split">
+        <div class="ifrs-val-field-box">
+          <div class="ifrs-val-subhead">
+            <span>Valuation Range Across 5 Methods</span>
+            <span id="valWeightsLegend" style="color:#94a3b8;">EBO 40% • DCF 35% • Multiples 25%</span>
+          </div>
+          <div id="valFootballSvgMount" class="ifrs-val-svg-wrap"></div>
+        </div>
+
+        <div class="ifrs-val-controls-box">
+          <div class="ifrs-val-subhead">
+            <span>🎛️ Model Assumptions</span>
+            <button type="button" class="inst-btn sm" id="btnResetValParams" style="padding:2px 8px;font-size:10px;">Reset</button>
+          </div>
+
+          <div class="ifrs-slider-group">
+            <div class="ifrs-slider-row">
+              <div class="ifrs-slider-lbl">
+                <span>Discount Rate (<code>WACC</code>)</span>
+                <strong id="lblValWacc">10.0%</strong>
+              </div>
+              <input type="range" id="rngValWacc" min="5" max="22" step="0.5" value="10" />
+            </div>
+
+            <div class="ifrs-slider-row">
+              <div class="ifrs-slider-lbl">
+                <span>Long-Term Growth (<code>g</code>)</span>
+                <strong id="lblValGrowth">3.0%</strong>
+              </div>
+              <input type="range" id="rngValGrowth" min="0" max="6" step="0.5" value="3" />
+            </div>
+
+            <div class="ifrs-slider-row">
+              <div class="ifrs-slider-lbl">
+                <span>Blocks per Fiscal Year</span>
+                <strong id="lblValBlocksYr">4,800 blks/yr</strong>
+              </div>
+              <input type="range" id="rngValBlocksYr" min="1000" max="16000" step="200" value="4800" />
+            </div>
+          </div>
+
+          <details class="ifrs-adv-details">
+            <summary>Sensitivity Matrix &amp; Run-Rate Drivers</summary>
+            <div style="margin-top:8px;" id="valSensitivityMount"></div>
+            <div id="valDriversStrip" class="ifrs-val-drivers"></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 4: CONTRACTS, SUB-LEDGERS & INTERACTIVE OPS                   -->
+    <!-- ================================================================== -->
+    <section class="inst-card" data-wview="ops">
+      <div class="inst-card-head">
+        <div>
+          <h3 class="inst-card-title">🗂️ Active Contracts &amp; Sub-Ledger Schedules</h3>
+          <div style="font-size:12px;color:var(--txt-2);" id="schedMeta">Defense &amp; B2B contracts, open customer invoices, inventory &amp; capital assets</div>
+        </div>
+      </div>
+      <div class="ifrs-tab-strip" id="schedTabs">
+        <button type="button" class="ifrs-tab-btn active" data-stab="svc">🛡️ Defense &amp; B2B Contracts</button>
+        <button type="button" class="ifrs-tab-btn" data-stab="conf">🔒 Shielded Category Roll-Ups</button>
+        <button type="button" class="ifrs-tab-btn" data-stab="ar">Customer Invoices (AR)</button>
+        <button type="button" class="ifrs-tab-btn" data-stab="inv">Warehouse Inventory</button>
+        <button type="button" class="ifrs-tab-btn" data-stab="assets">Equipment &amp; IP</button>
+        <button type="button" class="ifrs-tab-btn" data-stab="leases">Facility Leases</button>
+        <button type="button" class="ifrs-tab-btn" data-stab="def">SaaS Subscriptions</button>
+        <button type="button" class="ifrs-tab-btn" data-stab="loans">Term Loans</button>
+      </div>
+      <div class="inst-table-wrap">
+        <table class="inst-table" id="schedTable"></table>
+      </div>
+    </section>
+
+    <section class="inst-card" data-wview="ops">
+      <div class="inst-card-head">
+        <div>
+          <h3 class="inst-card-title">⚙️ Book Transactions &amp; Treasury Actions</h3>
+          <div style="font-size:12px;color:var(--txt-2);">
+            Bill a contract milestone, buy a SaaS plan, or run treasury operations and watch the statements update live.
+          </div>
+        </div>
+        <div style="font-size:12px;font-family:var(--mono);color:#6ee7b7;" id="myRoleAndFiatMeta">My Balance: 0 SGD</div>
+      </div>
+
+      <div class="ifrs-tab-strip" id="consoleTabs">
+        <button type="button" class="ifrs-tab-btn active" data-ctab="svc">1. Defense &amp; B2B Milestones</button>
+        <button type="button" class="ifrs-tab-btn" data-ctab="sub">2. SaaS Subscription</button>
+        <button type="button" class="ifrs-tab-btn" data-ctab="ops">3. CapEx / OpEx / Payroll</button>
+        <button type="button" class="ifrs-tab-btn" data-ctab="bilat">4. Credit Invoice / Lease</button>
+        <button type="button" class="ifrs-tab-btn" data-ctab="close">5. Dividends &amp; Period Close</button>
+      </div>
+
+      <div id="consolePane"></div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 5: CONFIDENTIAL CATEGORY ROLL-UPS & SHIELDED SETTLEMENT       -->
+    <!-- ================================================================== -->
+    <section class="inst-card ifrs-conf-hero" id="confRollupSection" data-wview="confidential">
+      <div class="inst-card-head" style="flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 class="inst-card-title">🔒 Confidential Category Roll-Ups &amp; Shielded Settlement</h3>
+          <div style="font-size:12px;color:var(--txt-2);margin-top:2px;" id="confHeroSub">
+            Aggregate salaries &amp; B2B defense totals stay 100% public and ZK-verified, while individual payslips, contract splits &amp; counterparties stay encrypted.
+          </div>
+        </div>
+        <div class="ifrs-val-badges" id="confHeaderBadges">
+          <span class="ifrs-stream-chip cyan" id="confViewerRoleBadge">🌐 Public Roll-Up View</span>
+          <span class="ifrs-stream-chip emerald" id="confShieldedPoolBadge">Shielded Pool: 0 SGD</span>
+          <button type="button" class="inst-btn sm" id="btnTogglePublicPreview" style="display:none;">👁️ Preview Public View: OFF</button>
+        </div>
+      </div>
+
+      <div class="ifrs-conf-cat-grid" id="confCategoryGrid"></div>
+    </section>
+
+    <section class="inst-card ifrs-conf-personal-card" id="myConfidentialCard" data-wview="confidential" style="display:none;">
+      <div class="inst-card-head" style="flex-wrap:wrap;gap:10px;">
+        <div>
+          <h3 class="inst-card-title">🔑 My Confidential Payslips, Shielded Notes &amp; Stealth Contracts</h3>
+          <div style="font-size:12px;color:var(--txt-2);">
+            Decrypted locally using your connected keypair. Withdrawals and stealth co-signatures broadcast via fresh <code>$0</code>-gas ephemeral EOAs with zero identity linkage.
+          </div>
+        </div>
+      </div>
+      <div id="myConfidentialMount"></div>
+    </section>
+
+    <section class="inst-card" data-wview="confidential">
+      <div class="inst-card-head" style="flex-wrap:wrap;gap:10px;">
+        <div>
+          <h3 class="inst-card-title">🧾 Verified Confidential Roll-Up Batches &amp; Shielded Receivables</h3>
+          <div style="font-size:12px;color:var(--txt-2);" id="confFeedMeta">
+            Every batch is verified in-browser via Edwards25519 homomorphic ElGamal commitments &amp; Chaum-Pedersen DLEQ proofs.
+          </div>
+        </div>
+        <div class="ifrs-tab-strip" id="confFeedTabs" style="margin:0;">
+          <button type="button" class="ifrs-tab-btn active" data-cftab="batches">📦 Category Roll-Up Batches</button>
+          <button type="button" class="ifrs-tab-btn" data-cftab="receivables">🛡️ Shielded Defense &amp; AR Contracts</button>
+        </div>
+      </div>
+      <div class="inst-table-wrap ifrs-conf-feed-scroll-wrap" id="confFeedScrollWrap">
+        <table class="inst-table ifrs-conf-feed-table" id="confFeedTable"></table>
+      </div>
+    </section>
+
+    <section class="inst-card" id="confOfficerBookingCard" data-wview="confidential" style="display:none;">
+      <div class="inst-card-head" style="flex-wrap:wrap;gap:10px;">
+        <div>
+          <h3 class="inst-card-title">🛡️ Officer Confidential Booking &amp; Epoch Roll-Up Studio</h3>
+          <div style="font-size:12px;color:var(--txt-2);">
+            Available to verified Directors, Treasury Managers (CFO), and Chief Accountants. Generates 24-bit ZK non-negative range proofs &amp; padded dummy commitments in-browser.
+          </div>
+        </div>
+        <div class="ifrs-tab-strip" id="confComposeTabs" style="margin:0;">
+          <button type="button" class="ifrs-tab-btn active" data-cctab="payroll">1. Confidential Payroll / Vendor Batch</button>
+          <button type="button" class="ifrs-tab-btn" data-cctab="defense">2. Shielded Defense / B2B Contract &amp; Epoch Flush</button>
+        </div>
+      </div>
+      <div id="confComposeMount"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/src/accounting.js"></script>
+</body>
+</html>

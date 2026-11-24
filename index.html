@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SuperLexicon — Multi-Subnet HFS Client &amp; Block Explorer</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at 50% 0%, #0b1830 0%, #050a14 70%);
+        color: #f8fafc;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      }
+      .slx-hub-wrap {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 22px 18px 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .slx-hub-hero {
+        border-radius: 16px;
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        background: linear-gradient(135deg, rgba(8, 17, 34, 0.95), rgba(14, 24, 46, 0.92));
+        padding: 18px 22px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .slx-hub-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+        gap: 12px;
+      }
+      .slx-hub-card {
+        text-decoration: none;
+        color: inherit;
+        border-radius: 12px;
+        border: 1px solid rgba(71, 85, 105, 0.55);
+        background: rgba(9, 16, 32, 0.9);
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+      }
+      .slx-hub-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(56, 189, 248, 0.75);
+        background: rgba(14, 28, 54, 0.94);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="slxUnifiedHeaderMount"></div>
+
+    <main class="slx-hub-wrap">
+      <section class="slx-hub-hero">
+        <div>
+          <div style="font-size: 1.2rem; font-weight: 800; letter-spacing: -0.01em;">
+            SuperLexicon Subnet Client Suite &amp; HFS Applications
+          </div>
+          <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;">
+            Select any active subnet in the top telemetry bar (or connect a custom subnet RPC) to interact with live Haltproof WASM Subroutines at $0.00 gas.
+          </div>
+        </div>
+        <a
+          href="/explorer.html"
+          style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.6); background: rgba(14, 165, 233, 0.2); color: #e0f2fe; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700;"
+        >
+          🔎 Full-Screen Block Explorer →
+        </a>
+      </section>
+
+      <section class="slx-hub-grid">
+        <a class="slx-hub-card" href="/accounting.html">
+          <div style="font-size: 0.92rem; font-weight: 800;">📒 IFRS &amp; Confidential Accounting</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Double-entry IAS/IFRS statements, ElGamal homomorphic balances &amp; Bulletproofs</div>
+        </a>
+        <a class="slx-hub-card" href="/charter.html">
+          <div style="font-size: 0.92rem; font-weight: 800;">🏛️ CorporateCharter</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Statutory governance, board quorums &amp; 3-window ROFR/Tag-Along share auctions</div>
+        </a>
+        <a class="slx-hub-card" href="/dex.html">
+          <div style="font-size: 0.92rem; font-weight: 800;">📈 DEX Central Limit Book</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Multi-market on-chain CLOB orderbooks, batch matching &amp; corporate futures</div>
+        </a>
+        <a class="slx-hub-card" href="/commerce.html">
+          <div style="font-size: 0.92rem; font-weight: 800;">🛒 E-Commerce Storefront</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">ProductLedger inventory &amp; atomic double-entry retail settlement</div>
+        </a>
+        <a class="slx-hub-card" href="/ballot.html">
+          <div style="font-size: 0.92rem; font-weight: 800;">🗳️ CipherVote Secret Ballot</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Threshold homomorphic encrypted tallying &amp; zero-knowledge ballot validity</div>
+        </a>
+        <a class="slx-hub-card" href="/social.html">
+          <div style="font-size: 0.92rem; font-weight: 800;">📡 CommonsRF Social</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Mutual-handshake encrypted messaging, multi-topic ECIES channels &amp; guilds</div>
+        </a>
+        <a class="slx-hub-card" href="/battleship.html">
+          <div style="font-size: 0.92rem; font-weight: 800;">⚓ Phantom Fleet</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Real-time 100-player naval combat on deterministic WASM subroutines</div>
+        </a>
+        <a class="slx-hub-card" href="/cipher-noir.html">
+          <div style="font-size: 0.92rem; font-weight: 800;">🔐 Cipher Noir</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Arbiter-free mental poker &amp; zero-knowledge cryptographic deduction</div>
+        </a>
+        <a class="slx-hub-card" href="/hegemony.html">
+          <div style="font-size: 0.92rem; font-weight: 800;">⬢ Fractured Hegemony</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Simultaneous committed grand strategy &amp; verifiable diplomacy</div>
+        </a>
+        <a class="slx-hub-card" href="/lottery.html">
+          <div style="font-size: 0.92rem; font-weight: 800;">🎰 Quantum 4D Jackpot</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Validator-quorum threshold VRF provably fair draw rounds</div>
+        </a>
+      </section>
+
+      <div id="slx-explorer-section"></div>
+    </main>
+
+    <script type="module" src="/src/client-header.js"></script>
+    <script type="module" src="/src/block-explorer.js"></script>
+    <script type="module" src="/src/legal-consent.js"></script>
+  </body>
+</html>

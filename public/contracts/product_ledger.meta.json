@@ -1,0 +1,22 @@
+{
+  "artifact": "dist/product_ledger.wasm",
+  "code_hash": "0x14ecd478f6f84cf31506e0862c31901e786c1a3b5ba48047eed3996ce72643f2",
+  "exports": [
+    "memory",
+    "main"
+  ],
+  "hps": "product-ledger",
+  "imports": [
+    "env::host_state_set",
+    "env::get_calldata",
+    "env::host_call_contract",
+    "env::get_self_address",
+    "env::host_emit_event",
+    "env::get_msg_sender",
+    "env::host_state_get"
+  ],
+  "initial_memory_pages": 32,
+  "max_memory_pages": 64,
+  "optimized_wasm_bytes": 35560,
+  "raw_wasm_bytes": 35648
+}

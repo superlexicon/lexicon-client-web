@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SuperLexicon Exchange — Multi-Market Discrete-Time FIFO CLOB (dex_clob.wasm)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+  <link rel="stylesheet" href="/src/slx-inst.css" />
+</head>
+<body>
+  <div id="instHeaderMount"></div>
+
+  <main class="inst-shell">
+    <div id="dexBanner" class="inst-banner">
+      <span id="dexBannerText"></span>
+      <button class="inst-btn sm" id="dexBannerClose">✕</button>
+    </div>
+
+    <!-- ===================================================================
+         VIEW 1: EXCHANGE MARKETS DIRECTORY (Default Multi-Listing Overview)
+         =================================================================== -->
+    <div id="dexMarketsView" style="display:flex;flex-direction:column;gap:16px;">
+      <section class="dex-markets-hero">
+        <div>
+          <h1 class="dex-markets-hero-title">
+            <span>📈 SuperLexicon Institutional Exchange</span>
+            <span class="inst-badge green"><span class="dex-live-dot"></span> Live Subnet 1 Feed</span>
+            <span class="inst-badge cyan">🛡️ 100% MEV-Proof (0 Extracted)</span>
+          </h1>
+          <div class="dex-markets-hero-sub">
+            Select any listed Central Limit Orderbook (<code>dex_clob.wasm</code>) below to inspect its live AVL Bid/Ask depth, multi-block clearing prices <code>P*</code>, and submit signed limit or crossing orders settled atomically across independent <code>AssetLedger</code> HFSs in <code>SGD</code>, <code>USD</code>, and <code>EUR</code>.
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="inst-btn primary" id="btnOpenListMarketModal">
+            ➕ List New CLOB Market
+          </button>
+        </div>
+      </section>
+
+      <!-- Exchange Summary KPI Strip -->
+      <section class="inst-kpi-grid">
+        <div class="inst-kpi">
+          <span class="inst-kpi-label">Active CLOB Listings</span>
+          <span class="inst-kpi-val" id="mktKpiCount">— Markets</span>
+          <span class="inst-kpi-sub" id="mktKpiCountSub">Registered in HfsRegistry</span>
+        </div>
+        <div class="inst-kpi">
+          <span class="inst-kpi-label">Recent Matched Notional</span>
+          <span class="inst-kpi-val" id="mktKpiVol" style="color:#6ee7b7;">—</span>
+          <span class="inst-kpi-sub" id="mktKpiVolSub">SGD • USD • EUR AssetLedgers</span>
+        </div>
+        <div class="inst-kpi">
+          <span class="inst-kpi-label">Total Resting Orders</span>
+          <span class="inst-kpi-val" id="mktKpiDepth" style="color:#38bdf8;">— Orders</span>
+          <span class="inst-kpi-sub" id="mktKpiDepthSub">0 pending next-block intake</span>
+        </div>
+        <div class="inst-kpi">
+          <span class="inst-kpi-label">Recent Block Matches</span>
+          <span class="inst-kpi-val" id="mktKpiTrades">— Clears</span>
+          <span class="inst-kpi-sub" id="mktKpiTradesSub">1x/Block MEV-Proof Pro-Rata</span>
+        </div>
+        <div class="inst-kpi">
+          <span class="inst-kpi-label">Live DEX WASM Throughput</span>
+          <span class="inst-kpi-val" id="mktKpiBlock" style="color:#fcd34d;">Block #—</span>
+          <span class="inst-kpi-sub" id="mktKpiBlockSub">Measuring live Subnet 1 TPS…</span>
+        </div>
+      </section>
+
+      <!-- Markets Filter & Live Exchange Listings Table -->
+      <section class="inst-card">
+        <div class="dex-toolbar">
+          <div class="dex-filter-pills" id="dexFilterPills">
+            <button type="button" class="dex-filter-pill active" data-cat="all">All Markets</button>
+            <button type="button" class="dex-filter-pill" data-cat="equity">Spot Equities</button>
+            <button type="button" class="dex-filter-pill" data-cat="commodities">Commodities</button>
+            <button type="button" class="dex-filter-pill" data-cat="compute">Compute &amp; RF</button>
+            <button type="button" class="dex-filter-pill" data-cat="futures">Futures &amp; Bonds</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <input
+              type="search"
+              id="inpMarketSearch"
+              class="dex-search-input"
+              placeholder="Search ticker or market name…"
+            />
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="dex-listings-table">
+            <thead>
+              <tr>
+                <th>Market / Pair</th>
+                <th>Category</th>
+                <th>Last Price (P*)</th>
+                <th>Recent Trend (P* Sparkline)</th>
+                <th>Best Bid × Best Ask</th>
+                <th>Orderbook Depth</th>
+                <th>Recent Matched Vol</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="marketsTbody">
+              <tr>
+                <td colspan="8" style="color:var(--txt-2);padding:22px 12px;">
+                  Connecting to Subnet 1 <code>HfsRegistry</code> &amp; loading live CLOB listings…
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================================================================
+         VIEW 2: INDIVIDUAL MARKET TRADING TERMINAL (CLOB Detail View)
+         =================================================================== -->
+    <div id="dexTradingView" style="display:none;flex-direction:column;gap:16px;">
+      <!-- Top Navigation & Quick-Switcher Bar -->
+      <section class="dex-terminal-topbar">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <button type="button" class="inst-btn" id="btnBackToMarkets">
+            ← All Markets
+          </button>
+          <div class="dex-pair-cell">
+            <span class="dex-pair-icon" id="activeMarketIcon">📈</span>
+            <div>
+              <div class="dex-pair-ticker">
+                <span id="activeMarketPairTitle">NVDAX-EQ / SGD-FIAT</span>
+                <span class="inst-badge cyan" id="activeMarketCategoryBadge">SPOT CLOB</span>
+              </div>
+              <div class="dex-pair-name" id="activeMarketNameSub">Nvidya NVDAX-EQ / SGD-FIAT CLOB [SIM-BOT]</div>
+            </div>
+          </div>
+        </div>
+        <div class="dex-quick-strip" id="quickMarketsStrip"></div>
+      </section>
+
+      <!-- Top KPI Strip -->
+      <section class="inst-kpi-grid">
+        <div class="inst-kpi">
+          <span class="inst-kpi-label">Pair (AssetLedgers)</span>
+          <span class="inst-kpi-val" id="kpiPairVal">NVDAX-EQ / SGD-FIAT</span>
+          <span class="inst-kpi-sub" id="kpiDexAddr">dex_clob.wasm • 34.4 KB</span>
+        </div>
+        <div class="inst-kpi" id="kpiLastPriceCard">
+          <span class="inst-kpi-label">Last Clearing Price (P*)</span>
+          <span class="inst-kpi-val" id="kpiLastPrice" style="color:#6ee7b7;">— SGD</span>
+          <span class="inst-kpi-sub" id="kpiLastBlock">Cleared Block —</span>
+        </div>
+        <div class="inst-kpi">
+          <span class="inst-kpi-label">Last Block Matched Qty</span>
+          <span class="inst-kpi-val" id="kpiLastVol" style="color:#38bdf8;">—</span>
+          <span class="inst-kpi-sub" id="kpiLastFills">0 Bid / 0 Ask fills</span>
+        </div>
+        <div class="inst-kpi">
+          <span class="inst-kpi-label">Best Bid × Best Ask</span>
+          <span class="inst-kpi-val" id="kpiSpread">— × —</span>
+          <span class="inst-kpi-sub" id="kpiSpreadSub">AVL Tree O(1) Top-of-Book</span>
+        </div>
+        <div class="inst-kpi">
+          <span class="inst-kpi-label">Your Wallet Balances</span>
+          <span class="inst-kpi-val" id="kpiMyFiat">0 SGD</span>
+          <span class="inst-kpi-sub" id="kpiMyShare">0 • Identity unbound</span>
+        </div>
+      </section>
+
+      <!-- Live IAS / IFRS Fundamental Fair-Value vs Clearing Price Strip (Auto-shown for IFRS-linked Equities) -->
+      <section class="inst-card" id="dexIfrsValuationBar" style="display:none;border-color:rgba(34,211,238,0.42);background:linear-gradient(145deg,rgba(8,22,42,0.96),rgba(12,16,36,0.96));">
+        <div id="dexIfrsValuationBody"></div>
+      </section>
+
+      <!-- 1. TOP PANEL: Last Trade Prices & Matched Qty Per Block -->
+      <section class="inst-card">
+        <div class="inst-card-head">
+          <div>
+            <h2 class="inst-card-title">📊 Last Trade Prices &amp; Matched Qty per Block</h2>
+            <div class="inst-card-meta">
+              Single clearing price <code>P*</code> per block • Strict prior-block cutoff (zero intra-block MEV front-running) • Cohort pro-rata fairness
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="inst-badge cyan" id="pendingIntakeBadge">Pending Intake: 0 orders</span>
+            <span class="inst-badge green" id="simMatcherBadge">🤖 Simulator Auto-Matcher • 1x/Block Guard</span>
+          </div>
+        </div>
+
+        <div id="blockChartWrap" style="width:100%;overflow-x:auto;"></div>
+        <div id="blockHistoryPills" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </section>
+
+      <!-- 1B. LIVE MEV-PROOF DEFENSE & VALIDATOR SANDWICH FORENSICS -->
+      <section class="mev-shield-card" id="mevMonitorSection">
+        <div class="inst-card-head">
+          <div>
+            <h2 class="inst-card-title" style="color:#6ee7b7;">
+              🛡️ Live MEV-Proof Defense &amp; Validator-Sequenced Exploit Forensics
+            </h2>
+            <div class="inst-card-meta">
+              Detected 100% on-chain from <code>getOrder()</code> intra-block <code>orderId</code> execution sequences &amp; <code>BlockMatched</code> uniform clearing price <code>P*</code> (zero off-chain tagging)
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="inst-badge red" id="mevBotStatusBadge">🤖 Adversaries Active: Sammy Bankmann &amp; Bill Hwangg [SIM-BOT]</span>
+            <span class="inst-badge green">✅ Sandwich &amp; Front-Run Profit = 0</span>
+          </div>
+        </div>
+
+        <div class="mev-kpi-strip">
+          <div class="mev-kpi-box">
+            <span class="inst-kpi-label">Exploit Attempts Detected</span>
+            <span class="inst-kpi-val" id="mevKpiAttempts" style="font-size:17px;color:#fda4af;">0 Attempts</span>
+            <span class="inst-kpi-sub" id="mevKpiAttemptsSub">Scanning intra-block cohorts…</span>
+          </div>
+          <div class="mev-kpi-box">
+            <span class="inst-kpi-label">Counterfactual Sequential Loss Saved</span>
+            <span class="inst-kpi-val" id="mevKpiSaved" style="font-size:17px;color:#fcd34d;">0 SGD</span>
+            <span class="inst-kpi-sub" id="mevKpiSavedSub">Would be extracted on sequential DEX</span>
+          </div>
+          <div class="mev-kpi-box">
+            <span class="inst-kpi-label">Actual MEV Extracted on SuperLexicon</span>
+            <span class="inst-kpi-val" id="mevKpiExtracted" style="font-size:17px;color:#6ee7b7;">0 SGD</span>
+            <span class="inst-kpi-sub">Uniform P* + Prior-Block Cutoff</span>
+          </div>
+          <div class="mev-kpi-box">
+            <span class="inst-kpi-label">Validator Ordering Simulation</span>
+            <span class="inst-kpi-val" style="font-size:14.5px;color:#7dd3fc;">0x000a… → Victims → 0xfffe…</span>
+            <span class="inst-kpi-sub">Deterministic front/back EOA bounds</span>
+          </div>
+        </div>
+
+        <div id="mevFeaturedWrap"></div>
+        <div id="mevAttackHistoryPills" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </section>
+
+      <!-- 2. MAIN SPLIT: Side-by-Side Bids/Asks + Order Ticket -->
+      <div class="dex-main-grid">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <!-- Side-by-Side Bids & Asks -->
+          <div class="dex-books-split">
+            <section class="inst-card">
+              <div class="inst-card-head">
+                <h3 class="inst-card-title" style="color:#6ee7b7;" id="bidsCardTitle">🟢 Bids (Buy)</h3>
+                <span class="inst-card-meta" id="bidBookMeta">0 resting orders</span>
+              </div>
+              <table class="inst-table">
+                <thead>
+                  <tr>
+                    <th id="bidsPriceTh">Price (SGD)</th>
+                    <th id="bidsQtyTh">Qty</th>
+                    <th id="bidsTotalTh">Total (SGD)</th>
+                    <th>Queue</th>
+                  </tr>
+                </thead>
+                <tbody id="bidsTbody"></tbody>
+              </table>
+            </section>
+
+            <section class="inst-card">
+              <div class="inst-card-head">
+                <h3 class="inst-card-title" style="color:#fda4af;" id="asksCardTitle">🔴 Asks (Sell)</h3>
+                <span class="inst-card-meta" id="askBookMeta">0 resting orders</span>
+              </div>
+              <table class="inst-table">
+                <thead>
+                  <tr>
+                    <th id="asksPriceTh">Price (SGD)</th>
+                    <th id="asksQtyTh">Qty</th>
+                    <th id="asksTotalTh">Total (SGD)</th>
+                    <th>Queue</th>
+                  </tr>
+                </thead>
+                <tbody id="asksTbody"></tbody>
+              </table>
+            </section>
+          </div>
+
+          <!-- Recent / My Orders & Cancellations -->
+          <section class="inst-card">
+            <div class="inst-card-head">
+              <h3 class="inst-card-title">🧾 Live Order Tape &amp; Next-Block Intake Queue</h3>
+              <span class="inst-card-meta">Orders placed in Block #N escrow immediately &amp; clear in Block #N+1</span>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="inst-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Block</th>
+                    <th>Trader Identity</th>
+                    <th>Side</th>
+                    <th>Price</th>
+                    <th>Rem / Orig Qty</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="recentOrdersTbody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT COLUMN: Faucet + Limit Order Form -->
+        <aside class="inst-card" style="position:sticky;top:72px;">
+          <div class="inst-card-head">
+            <h3 class="inst-card-title">💧 Test Asset Faucet</h3>
+            <span class="inst-badge amber" id="faucetSymbolsBadge">SGD-FIAT &amp; NVDAX-EQ</span>
+          </div>
+          <div style="font-size:12px;color:var(--txt-2);line-height:1.45;">
+            Orders escrow real balances in <code>AssetLedger</code> HFSs. Top up anytime or leave auto-top-up enabled:
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button class="inst-btn faucet" id="btnFaucetFiat">+25,000 SGD</button>
+            <button class="inst-btn faucet" id="btnFaucetShare">+500 NVDAX-EQ</button>
+          </div>
+          <div id="faucetFuturesNote" style="display:none;font-size:11.5px;color:#fcd34d;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:7px 9px;line-height:1.4;">
+            🏛️ Corporate Futures are minted by Shareholders on <a href="/charter.html">CorporateCharter</a> — buy units directly on this CLOB or underwrite via Charter!
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt-1);cursor:pointer;">
+            <input type="checkbox" id="chkAutoTopUp" checked />
+            Auto-credit test balance if wallet is short
+          </label>
+
+          <hr style="border:none;border-top:1px solid var(--line);margin:2px 0;" />
+
+          <div class="inst-card-head">
+            <h3 class="inst-card-title">📝 Place Limit Order</h3>
+            <span class="inst-card-meta" id="orderWalletTag">secp256k1 signed</span>
+          </div>
+
+          <div class="dex-side-tabs">
+            <button type="button" class="dex-side-tab active-bid" id="tabSideBid">BUY (Bid)</button>
+            <button type="button" class="dex-side-tab" id="tabSideAsk">SELL (Ask)</button>
+          </div>
+
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="inst-btn sm" id="btnCrossBest">⚡ Cross Top-of-Book</button>
+            <button type="button" class="inst-btn sm" id="btnJoinBest">📌 Join Best Level</button>
+          </div>
+
+          <form id="dexOrderForm" style="display:flex;flex-direction:column;gap:10px;">
+            <div class="inst-field">
+              <label for="inpOrderPrice" id="lblOrderPrice">Limit Price (SGD per Unit)</label>
+              <input class="inst-input" id="inpOrderPrice" type="number" min="1" step="1" value="103" required />
+            </div>
+            <div class="inst-field">
+              <label for="inpOrderQty" id="lblOrderQty">Quantity (Units)</label>
+              <input class="inst-input" id="inpOrderQty" type="number" min="1" step="1" value="50" required />
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-family:var(--mono);padding:8px 10px;border-radius:8px;background:rgba(7,13,26,0.75);border:1px solid var(--line);">
+              <span style="color:var(--txt-2);" id="orderEscrowLabel">Escrow Required:</span>
+              <strong id="orderEscrowVal" style="color:var(--txt-0);">5,150 SGD</strong>
+            </div>
+            <div style="font-size:11.5px;color:var(--txt-2);line-height:1.4;">
+              🤖 Crossing cohorts &amp; prior-block intake are matched automatically by the backend Rust simulator (<code>matchBlock()</code>, once-per-block guarded).
+            </div>
+            <button type="submit" class="inst-btn buy" id="btnSubmitOrder" style="padding:11px;font-size:13px;">
+              🟢 Submit Signed BUY Order
+            </button>
+          </form>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/src/dex.js"></script>
+  <script type="module" src="/src/legal-consent.js"></script>
+</body>
+</html>

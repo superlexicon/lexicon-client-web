@@ -1,0 +1,23 @@
+{
+  "artifact": "dist/social_events.wasm",
+  "code_hash": "0x0ec1707ec40e134459ad196f213827bfb1ec329c08bc57c3a9f659ac80c3083f",
+  "exports": [
+    "memory",
+    "main"
+  ],
+  "hps": "social-events",
+  "imports": [
+    "env::get_self_address",
+    "env::host_state_set",
+    "env::get_calldata",
+    "env::get_block_number",
+    "env::host_call_contract",
+    "env::host_emit_event",
+    "env::get_msg_sender",
+    "env::host_state_get"
+  ],
+  "initial_memory_pages": 32,
+  "max_memory_pages": 64,
+  "optimized_wasm_bytes": 15687,
+  "raw_wasm_bytes": 15710
+}

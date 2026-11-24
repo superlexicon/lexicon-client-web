@@ -1,0 +1,21 @@
+{
+  "chainId": 1337,
+  "messaging": "0xb3610dd0b55473bfbf3d23d4ace77cf2ee2de791",
+  "repeaterRpcUrl": "http://192.168.50.4:8545",
+  "repeaterWsUrl": "ws://192.168.50.4:8566",
+  "rpcUrls": [
+    "http://192.168.50.91:18545",
+    "http://192.168.50.92:18545",
+    "http://192.168.50.94:18545"
+  ],
+  "subnet1Id": "00000001",
+  "subnet1Messaging": "0x4e9bc36f233ccb81d00ccceb892fdf08e28196fb",
+  "subnetId": "6eaa3da4",
+  "transport": "tcp",
+  "updatedAtMs": 1795495323367,
+  "wsUrls": [
+    "ws://192.168.50.91:18566",
+    "ws://192.168.50.92:18566",
+    "ws://192.168.50.94:18566"
+  ]
+}

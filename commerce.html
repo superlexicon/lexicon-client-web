@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SuperLexicon Storefront — Retail Hardware &amp; B2B Bulk Deals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+  <link rel="stylesheet" href="/src/slx-inst.css" />
+</head>
+<body>
+  <div id="instHeaderMount"></div>
+
+  <main class="inst-shell">
+    <div id="shopBanner" class="inst-banner">
+      <span id="shopBannerText"></span>
+      <button class="inst-btn sm" id="shopBannerClose">✕</button>
+    </div>
+
+    <!-- Clean Wallet Balance & Top-Up Bar -->
+    <section class="inst-card" style="background:rgba(12,24,46,0.92);border-color:rgba(56,189,248,0.28);padding:14px 18px;">
+      <div class="inst-card-head" style="margin-bottom:0;">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--txt-2);font-weight:700;">
+            Your Spending Balance (<code>SGD</code>)
+          </div>
+          <div style="display:flex;align-items:baseline;gap:12px;margin-top:3px;flex-wrap:wrap;">
+            <span id="myFiatHero" style="font-size:26px;font-weight:800;font-family:var(--mono);color:#6ee7b7;">0 SGD</span>
+            <span id="myIdentityHero" style="font-size:12px;color:var(--txt-2);">Connect or top up to shop</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button class="inst-btn sm faucet" id="btnTopUp5k">+5,000 SGD</button>
+          <button class="inst-btn sm faucet" id="btnTopUp25k">+50,000 SGD</button>
+          <button class="inst-btn sm emerald" id="btnTopUp250k">+250,000 SGD (B2B)</button>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt-1);margin-left:4px;cursor:pointer;">
+            <input type="checkbox" id="chkShopAutoTopUp" checked />
+            Auto-top-up
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Compact 1-Line Defense & Custom R&D Callout -->
+    <section class="inst-card" style="background:rgba(20,24,48,0.88);border-color:rgba(167,139,250,0.32);padding:12px 18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="font-size:13px;color:#e2e8f0;">
+          <strong>🛡️ Sovereign Defense &amp; Multi-Month R&amp;D Contracts (680k – 2.16M SGD):</strong>
+          <span style="color:#94a3b8;">Co-signed in Corporate Charter and billed on monthly milestones.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <a href="/charter.html?action=serviceContract" class="inst-btn sm primary" style="text-decoration:none;">🏛️ Sign Contract in Charter →</a>
+          <a href="/accounting.html" class="inst-btn sm" style="text-decoration:none;">📊 View Live Statements →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Clean 4-Card KPI Strip -->
+    <section class="inst-kpi-grid">
+      <div class="inst-kpi">
+        <span class="inst-kpi-label">Catalog Offerings</span>
+        <span class="inst-kpi-val" id="kpiSkuCount">9 SKUs</span>
+        <span class="inst-kpi-sub" id="kpiProdAddr">B2B Bulk &amp; Retail</span>
+      </div>
+      <div class="inst-kpi">
+        <span class="inst-kpi-label">Storefront Sales</span>
+        <span class="inst-kpi-val" id="kpiTotalRev" style="color:#6ee7b7;">0 SGD</span>
+        <span class="inst-kpi-sub" id="kpiTotalSold">0 units sold</span>
+      </div>
+      <div class="inst-kpi">
+        <span class="inst-kpi-label">Company Bank Cash</span>
+        <span class="inst-kpi-val" id="kpiMerchantBal" style="color:#38bdf8;">0 SGD</span>
+        <span class="inst-kpi-sub">Verified Treasury Custody</span>
+      </div>
+      <div class="inst-kpi">
+        <span class="inst-kpi-label">Your Purchases</span>
+        <span class="inst-kpi-val" id="kpiMySpent">0 SGD</span>
+        <span class="inst-kpi-sub" id="kpiMyUnits">0 items bought</span>
+      </div>
+    </section>
+
+    <!-- Product Listing Grid -->
+    <section class="inst-card">
+      <div class="inst-card-head" style="flex-wrap:wrap;gap:12px;">
+        <div>
+          <h2 class="inst-card-title">🛍️ Hardware &amp; B2B Bulk Catalog</h2>
+          <div class="inst-card-meta">Select any item below to purchase immediately or preview how it posts to the General Ledger.</div>
+        </div>
+        <div id="catalogSegmentBar" style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button type="button" class="inst-btn sm primary" data-cat-seg="all">All</button>
+          <button type="button" class="inst-btn sm" data-cat-seg="b2b">📦 B2B Bulk</button>
+          <button type="button" class="inst-btn sm" data-cat-seg="b2c">🛍️ Retail</button>
+        </div>
+      </div>
+      <div class="shop-grid" id="productGrid"></div>
+    </section>
+
+    <!-- Clean Plain-English Accounting Preview -->
+    <section class="inst-card" id="shopGlSection">
+      <div class="inst-card-head" style="flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 class="inst-card-title">📖 Accounting Preview: What Happens on the Books?</h3>
+          <div class="inst-card-meta">See in plain English how your selected item (or a 3-stage Defense contract) updates Cash, Profit &amp; Valuation.</div>
+        </div>
+        <div id="shopGlModeBar" style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button type="button" class="inst-btn sm primary" data-gl-mode="live_sku">📦 Selected Item</button>
+          <button type="button" class="inst-btn sm" data-gl-mode="svc_stage1">🛡️ Defense ① Sign</button>
+          <button type="button" class="inst-btn sm" data-gl-mode="svc_stage2">🧾 Defense ② Invoice</button>
+          <button type="button" class="inst-btn sm" data-gl-mode="svc_stage3">🏦 Defense ③ Paid</button>
+          <button type="button" class="inst-btn sm" data-gl-mode="saas_upfront">☁️ SaaS</button>
+        </div>
+      </div>
+      <div id="shopGlSkuRow" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;">
+          <span style="font-size:12px;font-weight:700;color:var(--txt-2);">Item:</span>
+          <select class="inst-input" id="shopGlSkuSelect" style="min-width:250px;max-width:440px;padding:6px 10px;font-size:12.5px;"></select>
+        </div>
+        <a href="/accounting.html#humanGlSection" class="inst-btn sm emerald" style="text-decoration:none;">📖 Open Full Ledger &amp; Journal →</a>
+      </div>
+      <div id="shopGlPreviewMount"></div>
+    </section>
+
+    <!-- Recent Sales Table -->
+    <section class="inst-card">
+      <div class="inst-card-head">
+        <h3 class="inst-card-title">📒 Recent Storefront Sales</h3>
+        <span class="inst-card-meta" id="salesFeedMeta">0 sales</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="inst-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Block</th>
+              <th>Item</th>
+              <th>Buyer</th>
+              <th>Qty</th>
+              <th style="text-align:right;">Total Paid</th>
+            </tr>
+          </thead>
+          <tbody id="salesTbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/src/commerce.js"></script>
+  <script type="module" src="/src/legal-consent.js"></script>
+</body>
+</html>

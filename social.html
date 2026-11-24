@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CommonsRF — Modular SocialCharter &amp; Radio-Bounded Social Network (SuperLexicon HFS #14)</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/social.css" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+</head>
+<body>
+  <div id="slxUnifiedHeaderMount"></div>
+  <div id="socialExtraControls" data-uh-unhide="1" style="display:none;align-items:center;gap:0.35rem;">
+    <div style="display:inline-flex;align-items:center;gap:0.28rem;">
+      <span class="mono" style="font-size:0.65rem;color:#94a3b8;">ACT AS:</span>
+      <select id="personaSelect" class="sc-select" title="Switch active resident or test an overseas outsider!"></select>
+    </div>
+    <button id="btnToggleArch" type="button" class="sc-btn" title="Inspect the composable Haltproof Subroutines">
+      🧩 8-HFS
+    </button>
+    <select id="engineModeSelect" style="display:none;"><option value="rpc" selected>RPC</option></select>
+    <span id="subnetBlockBadge" style="display:none;"></span>
+    <button id="btnAdvanceBlock" type="button" style="display:none;"></button>
+    <button id="btnResetDemo" type="button" style="display:none;"></button>
+  </div>
+
+  <!-- Modular 6-Subroutine Architecture Inspector Drawer (Analogous to CorporateCharter!) -->
+  <section id="archDrawer" class="sc-arch-drawer">
+    <div class="sc-arch-inner">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.55rem;">
+        <div>
+          <strong style="font-size:0.84rem;color:#7dd3fc;">🧩 Full Composable HFS Architecture (Identity + Messaging + Identity-Owned ProductLedger + SocialCharter)</strong>
+          <span style="font-size:0.73rem;color:#94a3b8;margin-left:8px;">
+            Every resident acts through their verified <code>Identity</code> HFS (`IdentityRegistry`), messages persist in <code>Messaging</code> HFS, and each seller owns their own <code>ProductLedger</code> HFS:
+          </span>
+        </div>
+      </div>
+      <div class="sc-arch-grid mono" id="archModulesGrid"></div>
+    </div>
+  </section>
+
+  <!-- Live SuperLexicon Node JSON-RPC Bar -->
+  <div id="rpcDrawer" class="sc-rpc-drawer mono">
+    <strong style="color:#7dd3fc;">LIVE EDGE NODE:</strong>
+    <input id="rpcUrlInput" class="sc-input mono" style="width:190px;" value="http://127.0.0.1:8545" />
+    <button id="btnDeploySuite" type="button" class="sc-btn sc-btn-emerald">1. Deploy Identity + ProductLedger + SocialCharter Suite</button>
+    <input id="charterAddrInput" class="sc-input mono" style="width:165px;" placeholder="SocialCharter 0x..." />
+    <button id="btnSeedSuite" type="button" class="sc-btn sc-btn-primary">2. Seed Neighborhood On-Chain</button>
+    <span id="rpcStatusText" style="color:#94a3b8;">Ready — zero-balance secp256k1 radio identities active</span>
+  </div>
+
+  <!-- Protocol Enforcement & Accountability Toast Banner -->
+  <div class="sc-toast-bar">
+    <div id="toastBanner" class="sc-toast-inner">
+      <span id="toastText"></span>
+      <button id="btnDismissToast" type="button" class="sc-btn" style="padding:0.22rem 0.5rem;font-size:0.7rem;">✕</button>
+    </div>
+  </div>
+
+  <!-- Main 3-Column Facebook + Neighborhood RF Workspace -->
+  <main class="sc-grid">
+    <!-- LEFT COLUMN: Interactive Neighborhood RF Range Simulator & Quick Scenarios -->
+    <section class="sc-col-stack">
+      <div class="sc-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;">
+          <div>
+            <strong style="font-size:0.88rem;">📍 Marine Parade Subnet #01</strong>
+            <div style="font-size:0.7rem;color:#94a3b8;">Drag residents on the map to test <code>150m</code> RF &amp; <code>1.2 km</code> subnet bounds!</div>
+          </div>
+          <span id="activeCountBadge" class="sc-badge sc-badge-emerald mono">5 In-Range</span>
+        </div>
+
+        <div class="sc-radar-wrap">
+          <canvas id="rfRadarCanvas" width="380" height="380"></canvas>
+        </div>
+
+        <div class="sc-radar-legend mono">
+          <span>🟢 <strong>1.2 km</strong> Subnet</span>
+          <span>🔵 <strong>150 m</strong> 2.4 GHz RF</span>
+          <span>📍 Event Venues</span>
+        </div>
+
+        <div id="selectedRadioBox" style="margin-top:0.65rem;padding:0.58rem 0.68rem;border-radius:0.65rem;background:#091326;border:1px solid #1e355d;font-size:0.73rem;"></div>
+      </div>
+
+      <!-- 1-Click Guided Thesis Scenarios -->
+      <div class="sc-card">
+        <strong style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em;color:#7dd3fc;">
+          🧪 Interactive Thesis Demos
+        </strong>
+        <div style="display:flex;flex-direction:column;gap:0.42rem;margin-top:0.55rem;">
+          <button id="btnScenarioWalkPriya" type="button" class="sc-btn sc-btn-primary" style="justify-content:flex-start;text-align:left;">
+            🤝 1. Walk to Priya (&le;150m) → Vouch, RF Handshake &amp; DM
+          </button>
+          <button id="btnScenarioEventCheckin" type="button" class="sc-btn sc-btn-emerald" style="justify-content:flex-start;text-align:left;">
+            📍 2. Walk to Blk 29 Kopi Meetup → 2.4 GHz Event Check-In (+2 Trust)
+          </button>
+          <button id="btnScenarioToggleMarcus" type="button" class="sc-btn" style="justify-content:flex-start;text-align:left;">
+            🚗 3. Toggle Friend Marcus Out-of-Subnet (&gt;1.2 km) ↔ Return
+          </button>
+          <button id="btnScenarioSlashBot" type="button" class="sc-btn sc-btn-amber" style="justify-content:flex-start;text-align:left;">
+            ⚖️ 4. Flag Fake Seller → Slash Reckless Voucher (-18 Trust)
+          </button>
+          <button id="btnScenarioTestOutsider" type="button" class="sc-btn sc-btn-rose" style="justify-content:flex-start;text-align:left;">
+            🚫 5. Try Posting / DMing as Overseas Troll (4.2 km → Blocked!)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CENTER COLUMN: Modular Social Features (Wall Feed, Proximity Messenger, Events, Marketplace, Handshakes) -->
+    <section class="sc-col-stack">
+      <!-- Feature Navigation Bar -->
+      <div class="sc-card" style="padding:0.6rem 0.85rem;">
+        <div class="sc-tabs" style="border-bottom:none;padding-bottom:0;flex-wrap:wrap;">
+          <button type="button" class="sc-tab active" data-main-tab="feed">🌐 Wall Feed</button>
+          <button type="button" class="sc-tab" data-main-tab="messages" id="tabMessagesBtn">💬 Messenger</button>
+          <button type="button" class="sc-tab" data-main-tab="events" id="tabEventsBtn">📅 Events</button>
+          <button type="button" class="sc-tab" data-main-tab="market" id="tabMarketBtn">🛒 Marketplace</button>
+          <button type="button" class="sc-tab" data-main-tab="handshakes" id="tabHandshakesBtn">📶 Handshakes</button>
+        </div>
+      </div>
+
+      <!-- Dynamic Center View (Renders active module tab!) -->
+      <div id="centerModuleView" class="sc-col-stack"></div>
+    </section>
+
+    <!-- RIGHT COLUMN: Civic Standing, Nearby 2.4 GHz Discovery, Mutual Relationships & Audit Log -->
+    <aside class="sc-col-stack sc-right-col">
+      <div class="sc-card" id="myStandingCard"></div>
+
+      <div class="sc-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;">
+          <strong style="font-size:0.84rem;">📶 Nearby on 2.4 GHz (&le;150m)</strong>
+          <span class="sc-badge sc-badge-cyan mono" id="nearbyCountBadge">0 in range</span>
+        </div>
+        <div style="font-size:0.7rem;color:#94a3b8;margin-bottom:0.5rem;">
+          In-person <code>&le;150m</code> proximity unlocks Friend Handshakes, Vouches, &amp; Marketplace Handovers:
+        </div>
+        <div id="nearbyList" style="display:flex;flex-direction:column;gap:0.45rem;"></div>
+      </div>
+
+      <div class="sc-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;">
+          <strong style="font-size:0.84rem;">👥 RF Relationships</strong>
+          <span class="sc-badge sc-badge-blue mono" id="friendsCountBadge">0 connected</span>
+        </div>
+        <div id="friendsList" style="display:flex;flex-direction:column;gap:0.45rem;"></div>
+      </div>
+
+      <div class="sc-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;">
+          <strong style="font-size:0.76rem;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;">
+            📜 Cross-HPS Audit Log
+          </strong>
+          <span id="slashesBadge" class="sc-badge sc-badge-rose mono">0 Slashes</span>
+        </div>
+        <div id="auditLogList" class="mono" style="display:flex;flex-direction:column;gap:0.3rem;max-height:185px;overflow-y:auto;font-size:0.68rem;color:#cbd5e1;"></div>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module" src="/src/social.js"></script>
+  <script type="module" src="/src/legal-consent.js"></script>
+</body>
+</html>

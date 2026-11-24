@@ -1,0 +1,23 @@
+{
+  "artifact": "dist/identity_registry.wasm",
+  "code_hash": "0x6e10c61e55dfdbd777eb9c5c64771a6064263380a3c526dbe19d6ea4848b333d",
+  "exports": [
+    "memory",
+    "main"
+  ],
+  "hps": "identity-registry",
+  "imports": [
+    "env::get_msg_sender",
+    "env::get_calldata",
+    "env::host_call_contract",
+    "env::get_self_address",
+    "env::host_emit_event",
+    "env::host_get_code_hash",
+    "env::host_state_get",
+    "env::host_state_set"
+  ],
+  "initial_memory_pages": 32,
+  "max_memory_pages": 64,
+  "optimized_wasm_bytes": 19209,
+  "raw_wasm_bytes": 19297
+}
