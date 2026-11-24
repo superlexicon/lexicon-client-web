@@ -497,8 +497,20 @@ export function mountSubnetBlockExplorer() {
     });
   }
 
-  function renderBlocksFeed() {
-    if (!recentBlocks.length) return;
+  function isExplorerVisible() {
+    return Boolean(root && root.clientWidth > 0 && root.clientHeight > 0);
+  }
+
+  let _blocksRaf = 0;
+  let _blocksDirtyWhileHidden = false;
+  function renderBlocksFeedNow() {
+    _blocksRaf = 0;
+    if (!recentBlocks.length || !elBlocksList) return;
+    if (!isExplorerVisible()) {
+      _blocksDirtyWhileHidden = true;
+      return;
+    }
+    _blocksDirtyWhileHidden = false;
     elBlocksList.innerHTML = recentBlocks
       .slice(0, 14)
       .map(
@@ -521,11 +533,28 @@ export function mountSubnetBlockExplorer() {
     bindJumpLinks(elBlocksList);
   }
 
-  function renderTxsFeed() {
+  function renderBlocksFeed() {
+    if (!isExplorerVisible()) {
+      _blocksDirtyWhileHidden = true;
+      return;
+    }
+    if (_blocksRaf) return;
+    _blocksRaf = requestAnimationFrame(renderBlocksFeedNow);
+  }
+
+  let _txsRaf = 0;
+  let _txsDirtyWhileHidden = false;
+  function renderTxsFeedNow() {
+    _txsRaf = 0;
     const items = Array.from(recentTxs.values())
       .sort((a, b) => b.blockNumber - a.blockNumber || b.txIndex - a.txIndex)
       .slice(0, 22);
-    if (!items.length) return;
+    if (!items.length || !elTxsList) return;
+    if (!isExplorerVisible()) {
+      _txsDirtyWhileHidden = true;
+      return;
+    }
+    _txsDirtyWhileHidden = false;
     elTxsList.innerHTML = items
       .map((tx) => {
         const firstLog = tx.logs[0];
@@ -552,6 +581,31 @@ export function mountSubnetBlockExplorer() {
       })
       .join('');
     bindJumpLinks(elTxsList);
+  }
+
+  function renderTxsFeed() {
+    if (!isExplorerVisible()) {
+      _txsDirtyWhileHidden = true;
+      return;
+    }
+    if (_txsRaf) return;
+    _txsRaf = requestAnimationFrame(renderTxsFeedNow);
+  }
+
+  let _expWasVis = false;
+  if (typeof ResizeObserver !== 'undefined') {
+    const expRo = new ResizeObserver(() => {
+      const vis = isExplorerVisible();
+      if (vis && !_expWasVis) {
+        _expWasVis = true;
+        if (_blocksDirtyWhileHidden) renderBlocksFeedNow();
+        if (_txsDirtyWhileHidden) renderTxsFeedNow();
+        if (typeof refreshDualSubnetBridge === 'function') refreshDualSubnetBridge();
+      } else if (!vis) {
+        _expWasVis = false;
+      }
+    });
+    expRo.observe(root);
   }
 
   function ingestLogEntry(lg) {
@@ -1431,7 +1485,7 @@ export function mountSubnetBlockExplorer() {
   }
 
   async function refreshDualSubnetBridge() {
-    if (!elDualPanel) return;
+    if (!elDualPanel || !isExplorerVisible()) return;
     const isHttps =
       typeof window !== 'undefined' &&
       (window.location?.protocol === 'https:' ||
