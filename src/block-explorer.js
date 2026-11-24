@@ -1586,6 +1586,7 @@ export function mountSubnetBlockExplorer() {
         inFlightCrossTxns:
           Number(repSt?.pending_foreign_txns || 0) + Number(repSt?.pending_foreign_responses || 0),
         lane,
+        rows,
       });
     }
 
