@@ -2135,7 +2135,11 @@ async function createOrJoinOnChainBattle() {
         : `<div style="color:#6ee7b7;">⚓ <strong>${idRec?.nickname || 'Captain'} · ${truncAddr4(myWallet.addr)}</strong> deployed fleet on Subnet 1!</div>`
     );
   } catch (e) {
-    el.rpcStatusText.textContent = `RPC error: ${e.message}`;
+    if (e?.isIdentityPromptCanceled) {
+      el.rpcStatusText.textContent = '👁️ Spectating Live Naval Battle — Click "Join Battle" anytime to deploy your fleet!';
+    } else {
+      el.rpcStatusText.textContent = `RPC error: ${e.message}`;
+    }
   } finally {
     app.rpcBusy = false;
     if (el.btnLaunchBattle) {
@@ -2429,10 +2433,16 @@ async function runCommsRoundAction(label, execCallback) {
     }
     return false;
   }
-  const idRec = await slxWallet.ensureIdentityWithPrompt({
-    rpcUrl: app.rpcUrl,
-    appName: 'Phantom Fleet Comms',
-  });
+  let idRec = null;
+  try {
+    idRec = await slxWallet.ensureIdentityWithPrompt({
+      rpcUrl: app.rpcUrl,
+      appName: 'Phantom Fleet Comms',
+    });
+  } catch (err) {
+    if (err?.isIdentityPromptCanceled) return false;
+    throw err;
+  }
   if (!idRec?.identityAddr) return false;
 
   app.pendingActions.set('comms', { actionType: 'comms', label });
@@ -3364,14 +3374,22 @@ function renderRoundActionDeck(viewArg = null) {
   const v = viewArg || getActiveView();
   if (!v || !v.me.joined) {
     el.roundActionDeck.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <strong class="mono" style="font-size:0.74rem;color:#7dd3fc;">⚡ ROUND ACTION DECK</strong>
-        <span class="mono" style="font-size:0.62rem;color:#94a3b8;">Deploy Fleet to Unlock</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+        <strong class="mono" style="font-size:0.74rem;color:#7dd3fc;">👁️ SPECTATING LIVE BATTLE</strong>
+        <span class="mono" style="font-size:0.62rem;color:#6ee7b7;">0 Identity Required to Watch</span>
       </div>
-      <div style="font-size:0.68rem;color:#94a3b8;line-height:1.4;">
-        Deploy your starter squadron to unlock parallel per-round commands (Move + Fire + Repair + Upgrade + Commission in the same block!).
+      <div style="font-size:0.69rem;color:#cbd5e1;line-height:1.42;">
+        Watching live on-chain salvos in real time. Ready to command your own 3-vessel squadron?
       </div>
+      <button type="button" data-deck-open-join="1" class="nv-btn nv-btn-emerald mono" style="width:100%;justify-content:center;padding:0.46rem 0.65rem;font-weight:800;font-size:0.74rem;margin-top:0.2rem;">
+        🚀 Join Battle &amp; Deploy Squadron →
+      </button>
     `;
+    el.roundActionDeck.querySelector('[data-deck-open-join]')?.addEventListener('click', () => {
+      app.joinModalOpen = true;
+      el.joinModal.classList.add('open');
+      renderJoinModal();
+    });
     return;
   }
 
@@ -4836,11 +4854,11 @@ if (hasDom) {
       fitBoardToWidget();
       renderSidebarAndHud();
 
-      // Step 1: Ensure user has deployed their cross-app Identity HFS + Nickname FIRST!
-      const idRec = await slxWallet.ensureIdentityWithPrompt({
-        rpcUrl: app.rpcUrl,
-        appName: 'Phantom Fleet',
-      });
+      // Spectator-first boot: passively check if this keypair already owns an on-chain Identity HFS
+      // without forcing a deployment modal until the user clicks "Join Battle & Deploy Squadron"!
+      const idRec =
+        (await slxWallet.resolveVerifiedIdentity?.(app.rpcUrl).catch(() => null)) ||
+        slxWallet.getIdentityRecord();
       if (idRec?.identityAddr && idRec?.nickname) {
         app.identityNicknames.set(idRec.identityAddr.toLowerCase(), idRec.nickname);
       }
@@ -4851,7 +4869,6 @@ if (hasDom) {
       if (myRec) {
         app.joinModalOpen = false;
         el.joinModal.classList.remove('open');
-        // If user was already joined without identityAddr bound, bind it automatically!
         if (!myRec.identityAddr && idRec?.identityAddr) {
           sendRpcTxWithNonceQueue(
             NavalAbi.setPlayerIdentity(app.battleId, idRec.identityAddr),
@@ -4861,12 +4878,11 @@ if (hasDom) {
         }
         el.rpcStatusText.textContent = `✓ Live Captain ${idRec?.nickname || `#${myRec.pid}`} · ${truncAddr4(myWallet.addr)} (${myRec.credits} CR)`;
       } else {
-        if (hasSeenGameWelcome('battleship')) {
-          app.joinModalOpen = true;
-          el.joinModal.classList.add('open');
-          renderJoinModal();
-        }
-        el.rpcStatusText.textContent = `✓ Identity "${idRec?.nickname}" (${truncAddr4(myWallet.addr)}) ready — Deploy your Starter Squadron!`;
+        app.joinModalOpen = false;
+        el.joinModal.classList.remove('open');
+        el.rpcStatusText.textContent = idRec?.nickname
+          ? `👁️ Spectating as "${idRec.nickname}" (${truncAddr4(myWallet.addr)}) — Click "Join Battle" to deploy your Squadron!`
+          : `👁️ Spectating Live Naval Battle — Click "Join Battle" anytime to deploy your Squadron!`;
       }
       renderSidebarAndHud();
       pollFleetSocialState();

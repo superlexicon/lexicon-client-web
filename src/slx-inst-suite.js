@@ -1544,13 +1544,8 @@ export class SlxInstSession {
         }
         this.walletUi?.refresh();
 
-        // Step-1 Prompt if the user does not yet have a deployed unified Identity HFS!
-        if (!this.myIdentityAddr && typeof document !== 'undefined') {
-          this.ensureMyIdentity().then(() => {
-            this.walletUi?.refresh();
-            if (this.onRefresh) this.onRefresh();
-          }).catch(() => {});
-        }
+        // Spectator-first boot: do NOT force Identity HFS deployment on page load.
+        // Action handlers call `ensureMyIdentity()` lazily when the user initiates a write action.
         if (this.onRefresh && !this._bootUrlRefreshed) await this.onRefresh();
         if (this.autoCompleteBootLoader && this.bootLoader) {
           this.bootLoader.complete(
@@ -1891,6 +1886,7 @@ export class SlxInstSession {
     if (curEoa && createdLow) {
       this._verifiedBindingCache.set(`${curEoa}:${createdLow}`, { ok: true, at: Date.now() });
     }
+    this.walletUi?.refresh();
     return this.myIdentityAddr;
   }
 

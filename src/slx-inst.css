@@ -2791,6 +2791,96 @@ details.chr-inspector-drawer[open] > summary {
   border: 1px solid rgba(51, 65, 85, 0.55);
 }
 
+/* =========================================================================
+   Mobile & Small-Viewport Responsive Polish (DEX, Charter, Commerce, IFRS)
+   ========================================================================= */
+
+@media (max-width: 768px) {
+  .inst-shell {
+    padding: 10px 10px 36px;
+    gap: 12px;
+  }
+
+  .inst-card {
+    padding: 12px;
+    border-radius: 12px;
+    min-width: 0;
+  }
+
+  .inst-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .inst-kpi {
+    padding: 10px 11px;
+  }
+
+  .inst-kpi-val {
+    font-size: 16px;
+  }
+
+  .cap-hero-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .legal-folio-box,
+  .legal-scroll-box {
+    padding: 12px 13px;
+    font-size: 11px;
+  }
+
+  .legal-param-bar > .inst-field {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .chr-seg-toggle {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .chr-seg-btn {
+    white-space: nowrap;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 680px) {
+  /* Collapse inline multi-column form/action grids in charter/commerce/accounting to 1 clean column */
+  .inst-shell [style*='grid-template-columns'] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .inst-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .action-pick-grid,
+  .auc-stepper {
+    grid-template-columns: 1fr;
+  }
+
+  .inst-input,
+  .inst-select,
+  .inst-shell textarea {
+    font-size: 16px !important;
+    min-width: 0;
+  }
+
+  .inst-table,
+  .chr-actions-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+
 
 
 

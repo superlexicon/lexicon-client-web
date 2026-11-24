@@ -47,7 +47,7 @@ body {
 
 @media (max-width: 1100px) {
   .lot-main {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -563,7 +563,40 @@ body {
   padding: 8px 10px;
   border-radius: 8px;
   background: rgba(16, 185, 129, 0.09);
-  border: 1px solid rgba(52, 211, 153, 0.35);
+  border: 1px solid rgba(52, 211, 129, 0.35);
   margin-bottom: 8px;
   word-break: break-all;
+}
+
+@media (max-width: 640px) {
+  .lot-main {
+    padding: 10px 10px 32px;
+    gap: 12px;
+  }
+  .lot-hero-card,
+  .lot-panel {
+    padding: 12px 13px;
+  }
+  .lot-countdown-box {
+    min-width: 0;
+    width: 100%;
+    align-items: flex-start;
+  }
+  .lot-reels-wrap {
+    gap: 8px;
+  }
+  .lot-reel-step,
+  .lot-reel-digit {
+    width: 52px;
+  }
+  .lot-modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .lot-modal {
+    max-width: 100%;
+    max-height: 92dvh;
+    border-radius: 14px 14px 0 0;
+    padding: 14px 14px calc(16px + env(safe-area-inset-bottom));
+  }
 }

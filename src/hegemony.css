@@ -562,3 +562,22 @@ html, body {
   color: #cbd5e1;
   margin: 8px 0;
 }
+
+@media (max-width: 640px) {
+  .heg-main {
+    padding: 8px 9px 24px;
+    gap: 10px;
+  }
+  .heg-status-ribbon {
+    padding: 6px 9px;
+  }
+  .heg-modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .heg-modal {
+    max-width: 100%;
+    border-radius: 12px 12px 0 0;
+    padding: 14px 14px calc(16px + env(safe-area-inset-bottom));
+  }
+}

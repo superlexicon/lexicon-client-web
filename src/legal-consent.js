@@ -417,6 +417,9 @@ function injectStyles() {
       font-size: 11px;
       color: #94a3b8;
     }
+    .slx-legal-mobile-prose {
+      display: none;
+    }
     .slx-legal-modal-ftr {
       display: flex;
       align-items: center;
@@ -428,6 +431,65 @@ function injectStyles() {
       border-top: 1px solid rgba(148, 163, 184, 0.2);
       font-size: 11.5px;
       color: #94a3b8;
+    }
+    @media (max-width: 680px) {
+      .slx-legal-banner {
+        width: calc(100vw - 14px);
+        padding: 9px 11px;
+        border-radius: 12px;
+        bottom: max(10px, env(safe-area-inset-bottom));
+      }
+      .slx-legal-banner.slx-has-mobile-nav {
+        bottom: calc(58px + env(safe-area-inset-bottom));
+      }
+      .slx-legal-banner-inner {
+        gap: 8px;
+      }
+      .slx-legal-banner-copy {
+        min-width: 0;
+        flex: 1 1 100%;
+        font-size: 11px;
+        line-height: 1.38;
+      }
+      .slx-legal-pill-cookie,
+      .slx-legal-desktop-prose {
+        display: none;
+      }
+      .slx-legal-mobile-prose {
+        display: inline;
+      }
+      .slx-legal-banner-actions {
+        width: 100%;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+      .slx-legal-banner-actions .slx-legal-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+        flex: 1;
+        text-align: center;
+      }
+      .slx-legal-modal-backdrop {
+        padding: 0;
+        align-items: flex-end;
+      }
+      .slx-legal-modal {
+        width: 100vw;
+        max-height: 92dvh;
+        border-radius: 15px 15px 0 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+      }
+      .slx-legal-modal-hdr,
+      .slx-legal-tabs,
+      .slx-legal-modal-body {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+      .slx-legal-modal-ftr {
+        padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      }
     }
   `;
   document.head.appendChild(style);
@@ -567,8 +629,13 @@ function mountLegalConsent() {
           <span class="slx-legal-pill-cookie">🍪 0 Tracking Cookies &bull; Functional Storage Only</span>
         </div>
         <div>
-          <strong>Cheeky reality check:</strong> Firing Sub-GHz mesh bursts, trading on zero-gas DEXs, and playing on-chain games on SuperLexicon might seem <em>very fun</em> — but don&rsquo;t let that fool you: early-stage hardware/crypto startups and experimental protocols are <strong>extremely risky</strong> and can result in <strong>heavy or total (100%) losses</strong>. Nothing here is an offer or solicitation to invest, all live dApps run on <strong>$0.00 testnet state</strong>, and we use strictly necessary browser <code>localStorage</code>/<code>sessionStorage</code> only (zero ad/analytics cookies).
-          <button type="button" class="slx-legal-inline-link" id="slxBannerReadMoreLink">Read full Legal, Risk &amp; Cookie Policy</button>.
+          <span class="slx-legal-desktop-prose">
+            <strong>Cheeky reality check:</strong> Firing Sub-GHz mesh bursts, trading on zero-gas DEXs, and playing on-chain games on SuperLexicon might seem <em>very fun</em> — but don&rsquo;t let that fool you: early-stage hardware/crypto startups and experimental protocols are <strong>extremely risky</strong> and can result in <strong>heavy or total (100%) losses</strong>. Nothing here is an offer or solicitation to invest, all live dApps run on <strong>$0.00 testnet state</strong>, and we use strictly necessary browser <code>localStorage</code>/<code>sessionStorage</code> only (zero ad/analytics cookies).
+          </span>
+          <span class="slx-legal-mobile-prose">
+            <strong>Experimental $0-testnet demo:</strong> High-risk R&amp;D protocol (not an offer to invest) &bull; Functional storage only (0 ad/tracking cookies).
+          </span>
+          <button type="button" class="slx-legal-inline-link" id="slxBannerReadMoreLink">Full Policy</button>.
         </div>
       </div>
       <div class="slx-legal-banner-actions">

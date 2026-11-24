@@ -926,6 +926,58 @@ function injectGuideStyles() {
       font-size: 11.5px;
       color: #94a3b8;
     }
+    @media (max-width: 768px) {
+      .slx-gg-welcome {
+        padding: 10px 12px !important;
+        gap: 8px !important;
+      }
+      .slx-gg-welcome-steps,
+      .slx-gg-welcome-note,
+      .slx-gg-welcome-sub {
+        display: none !important;
+      }
+      .slx-gg-welcome-title {
+        font-size: 13.5px !important;
+        margin: 2px 0 0 !important;
+      }
+      .slx-gg-coach {
+        padding: 7px 10px !important;
+        font-size: 11.5px !important;
+      }
+    }
+    @media (max-width: 640px) {
+      .slx-gg-hdr-btn {
+        padding: 4px 8px !important;
+        font-size: 11px !important;
+      }
+      .slx-gg-backdrop {
+        padding: 0 !important;
+        align-items: flex-end !important;
+      }
+      .slx-gg-modal {
+        max-width: 100% !important;
+        width: 100% !important;
+        max-height: 92dvh !important;
+        border-radius: 14px 14px 0 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+      }
+      .slx-gg-modal-hdr,
+      .slx-gg-tabs,
+      .slx-gg-body {
+        padding-left: 13px !important;
+        padding-right: 13px !important;
+      }
+      .slx-gg-modal-ftr {
+        padding: 10px 13px calc(10px + env(safe-area-inset-bottom)) !important;
+      }
+      .slx-gg-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
   `;
   document.head.appendChild(style);
 }

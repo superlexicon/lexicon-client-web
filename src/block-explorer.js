@@ -205,11 +205,98 @@ export function mountSubnetBlockExplorer() {
     )
     .join('');
 
+  if (typeof document !== 'undefined' && !document.getElementById('slx-block-explorer-styles')) {
+    const st = document.createElement('style');
+    st.id = 'slx-block-explorer-styles';
+    st.textContent = `
+      .slx-exp-shell {
+        border-radius: 16px;
+        border: 1.5px solid rgba(56, 189, 248, 0.42);
+        background: linear-gradient(180deg, rgba(8, 15, 30, 0.96) 0%, rgba(11, 20, 38, 0.94) 100%);
+        padding: 18px 20px;
+        box-shadow: 0 16px 42px rgba(0, 0, 0, 0.42);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-width: 100%;
+        min-width: 0;
+      }
+      .slx-exp-dual-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 14px;
+        align-items: start;
+      }
+      .slx-exp-contracts-grid {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 8px;
+      }
+      .slx-exp-bridge-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+      }
+      @media (max-width: 680px) {
+        .slx-exp-shell {
+          padding: 12px !important;
+          gap: 12px !important;
+          border-radius: 13px !important;
+        }
+        #slxExpTitleText {
+          font-size: 0.96rem !important;
+        }
+        .slx-exp-hdr-actions {
+          width: 100%;
+        }
+        .slx-exp-hdr-actions > label,
+        #slxExpBtnLiveProof {
+          width: 100%;
+          justify-content: center;
+        }
+        #slxExpSubnetSelect {
+          max-width: 100%;
+          min-width: 0;
+          flex: 1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        #slxExpSearchForm {
+          flex-direction: column;
+          align-items: stretch !important;
+        }
+        #slxExpSearchInput {
+          min-width: 0 !important;
+          width: 100% !important;
+          font-size: 16px !important;
+        }
+        #slxExpSearchForm > button {
+          width: 100%;
+        }
+        .slx-exp-dual-grid,
+        .slx-exp-contracts-grid,
+        .slx-exp-bridge-grid {
+          grid-template-columns: minmax(0, 1fr) !important;
+        }
+        #slxExpInspector,
+        #slxExpBlocksList,
+        #slxExpTxsList,
+        #slxExpContractsGrid {
+          min-width: 0;
+          word-break: break-word;
+          overflow-wrap: anywhere;
+        }
+      }
+    `;
+    document.head.appendChild(st);
+  }
+
   root.innerHTML = `
-    <div style="border-radius:16px;border:1.5px solid rgba(56,189,248,0.42);background:linear-gradient(180deg,rgba(8,15,30,0.96) 0%,rgba(11,20,38,0.94) 100%);padding:18px 20px;box-shadow:0 16px 42px rgba(0,0,0,0.42);display:flex;flex-direction:column;gap:16px;">
+    <div class="slx-exp-shell">
       <!-- Top Header + Subnet Selector + Live Proof CTA -->
       <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
-        <div>
+        <div style="min-width:0;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span id="slxExpTitleText" style="font-size:1.15rem;font-weight:800;color:#f8fafc;letter-spacing:-0.01em;">🔎 ${esc(activeSubnetInit?.shortLabel || 'Subnet 1')} Cryptographic Block Explorer &amp; Quorum Verifier</span>
             <span style="padding:2px 9px;border-radius:999px;background:rgba(16,185,129,0.18);border:1px solid rgba(52,211,153,0.55);color:#6ee7b7;font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:700;">Direct Validator RPC • Zero Cloud DB</span>
@@ -219,8 +306,8 @@ export function mountSubnetBlockExplorer() {
           </div>
         </div>
 
-        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
-          <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:10px;border:1px solid rgba(56,189,248,0.55);background:#050b16;font-family:'JetBrains Mono',monospace;font-size:0.73rem;color:#bae6fd;">
+        <div class="slx-exp-hdr-actions" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+          <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:10px;border:1px solid rgba(56,189,248,0.55);background:#050b16;font-family:'JetBrains Mono',monospace;font-size:0.73rem;color:#bae6fd;max-width:100%;">
             <span style="font-weight:700;color:#7dd3fc;">Subnet:</span>
             <select id="slxExpSubnetSelect" style="background:#050b16;color:#f8fafc;border:none;outline:none;font-family:'JetBrains Mono',monospace;font-size:0.74rem;font-weight:700;cursor:pointer;">
               ${subnetOptionsHtml}
@@ -243,7 +330,7 @@ export function mountSubnetBlockExplorer() {
           id="slxExpSearchInput"
           type="text"
           placeholder="Paste Tx Hash (0x…64), Block # (e.g. 60580), or EOA / HFS Contract Address (0x…40)…"
-          style="flex:1;min-width:260px;padding:10px 14px;border-radius:10px;border:1px solid rgba(56,189,248,0.48);background:#050b16;color:#f8fafc;font-family:'JetBrains Mono',monospace;font-size:0.78rem;outline:none;"
+          style="flex:1;min-width:220px;padding:10px 14px;border-radius:10px;border:1px solid rgba(56,189,248,0.48);background:#050b16;color:#f8fafc;font-family:'JetBrains Mono',monospace;font-size:0.78rem;outline:none;"
         />
         <button
           type="submit"
@@ -269,10 +356,10 @@ export function mountSubnetBlockExplorer() {
           </div>
         </div>
 
-        <div id="slxExpBridgeTopology" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;"></div>
+        <div id="slxExpBridgeTopology" class="slx-exp-bridge-grid"></div>
 
         <div style="border-radius:10px;border:1px solid rgba(71,85,105,0.5);background:#050a15;padding:10px 12px;display:flex;flex-direction:column;gap:6px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
             <strong style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#c084fc;text-transform:uppercase;letter-spacing:0.04em;">⇄ Bidirectional Cross-Subnet Transactions &amp; ForeignSubnetTxnResponse Receipts</strong>
             <span id="slxExpCrossSummary" style="font-family:'JetBrains Mono',monospace;font-size:0.66rem;color:#94a3b8;">Polling live relay pools…</span>
           </div>
@@ -281,12 +368,12 @@ export function mountSubnetBlockExplorer() {
       </div>
 
       <!-- Dual Live Feeds: Finalized Blocks + Confirmed Transactions -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start;">
+      <div class="slx-exp-dual-grid">
         <!-- Left: Latest Finalized Blocks -->
-        <div style="border-radius:12px;border:1px solid rgba(71,85,105,0.5);background:rgba(9,16,32,0.9);padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="min-width:0;border-radius:12px;border:1px solid rgba(71,85,105,0.5);background:rgba(9,16,32,0.9);padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;">
             <strong style="font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:#7dd3fc;text-transform:uppercase;letter-spacing:0.04em;">🧱 Latest Finalized Blocks</strong>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:#64748b;">Click block to inspect</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:#64748b;">Tap block to inspect</span>
           </div>
           <div id="slxExpBlocksList" style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;">
             <div style="color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:0.73rem;padding:12px 4px;">Subscribing to live Subnet 1 newHeads…</div>
@@ -294,10 +381,10 @@ export function mountSubnetBlockExplorer() {
         </div>
 
         <!-- Right: Latest Confirmed Transactions -->
-        <div style="border-radius:12px;border:1px solid rgba(71,85,105,0.5);background:rgba(9,16,32,0.9);padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="min-width:0;border-radius:12px;border:1px solid rgba(71,85,105,0.5);background:rgba(9,16,32,0.9);padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;">
             <strong style="font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:#6ee7b7;text-transform:uppercase;letter-spacing:0.04em;">⚡ Live Confirmed HFS Transactions</strong>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:#64748b;">Click txHash for quorum receipt</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:#64748b;">Tap txHash for receipt</span>
           </div>
           <div id="slxExpTxsList" style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;">
             <div style="color:#94a3b8;font-family:'JetBrains Mono',monospace;font-size:0.73rem;padding:12px 4px;">Backfilling recent finalized transactions…</div>
@@ -306,12 +393,12 @@ export function mountSubnetBlockExplorer() {
       </div>
 
       <!-- Registered On-Chain HFS Smart Contracts Directory -->
-      <details open id="slxExpContractsDrawer" style="border-radius:12px;border:1px solid rgba(71,85,105,0.48);background:rgba(9,16,32,0.85);padding:10px 14px;">
-        <summary style="cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.76rem;font-weight:800;color:#fcd34d;display:flex;align-items:center;justify-content:space-between;list-style:none;">
-          <span>🗂️ Live Deployed HFS Smart Contracts on <span id="slxExpContractsSubnetLbl">${esc(activeSubnetInit?.shortLabel || 'Subnet 1')}</span> (<span id="slxExpContractCount">0</span> Active Instances)</span>
-          <span style="font-size:0.68rem;color:#94a3b8;">Click to toggle &amp; inspect contracts ▾</span>
+      <details open id="slxExpContractsDrawer" style="border-radius:12px;border:1px solid rgba(71,85,105,0.48);background:rgba(9,16,32,0.85);padding:10px 14px;min-width:0;">
+        <summary style="cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.76rem;font-weight:800;color:#fcd34d;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;list-style:none;">
+          <span>🗂️ Live Deployed HFS Smart Contracts on <span id="slxExpContractsSubnetLbl">${esc(activeSubnetInit?.shortLabel || 'Subnet 1')}</span> (<span id="slxExpContractCount">0</span> Active)</span>
+          <span style="font-size:0.68rem;color:#94a3b8;">Toggle &amp; inspect ▾</span>
         </summary>
-        <div id="slxExpContractsGrid" style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:8px;"></div>
+        <div id="slxExpContractsGrid" class="slx-exp-contracts-grid"></div>
       </details>
     </div>
   `;

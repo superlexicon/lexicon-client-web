@@ -3400,24 +3400,26 @@ async function preloadSocialFromCachedNode() {
       }
     } else {
       const tag = slxWallet.keypair.address.slice(2, 6).toUpperCase();
-      const idRec = await slxWallet.ensureIdentityWithPrompt({
-        rpcUrl: app.rpcUrl,
-        appName: 'CommonsRF Social',
-      });
-      const chosenNick = idRec?.nickname || `Citizen ${tag}`;
+      // Spectator-first boot: passively check for an existing Identity without forcing a modal on page load.
+      const idRec =
+        (await slxWallet.resolveVerifiedIdentity?.(app.rpcUrl).catch(() => null)) ||
+        slxWallet.getIdentityRecord();
+      const chosenNick = idRec?.nickname || `Spectator ${tag}`;
       app.personas[0].priv = slxWallet.keypair.privateKey;
       app.personas[0].eoa = slxWallet.keypair.address;
       app.personas[0].identityAddr = idRec?.identityAddr || '';
       app.personas[0].productLedgerAddr = '';
       app.personas[0].handle = `@${idRec?.handle || `wallet_${tag.toLowerCase()}`}`;
       app.personas[0].shortName = chosenNick;
-      app.personas[0].name = `${chosenNick} (You)`;
-      app.personas[0].role = 'New Local Radio Wallet';
+      app.personas[0].name = idRec?.nickname ? `${chosenNick} (You)` : `${chosenNick} (Spectating)`;
+      app.personas[0].role = idRec?.nickname ? 'New Local Radio Wallet' : 'Spectator Mode';
       app.personas[0].device = 'Web Radio Client';
       app.personas[0].xM = 1525;
       app.personas[0].yM = 1490;
       if (el.rpcStatusText) {
-        el.rpcStatusText.textContent = `Preloaded live SocialCharter @ ${app.suiteAddrs.charter.slice(0, 10)}.. — post or handshake to onboard ${app.personas[0].handle}!`;
+        el.rpcStatusText.textContent = idRec?.nickname
+          ? `Preloaded live SocialCharter @ ${app.suiteAddrs.charter.slice(0, 10)}.. — post or handshake to onboard ${app.personas[0].handle}!`
+          : `👁️ Spectating live SocialCharter @ ${app.suiteAddrs.charter.slice(0, 10)}.. — post, react or handshake anytime to create your Identity!`;
       }
     }
 
@@ -3428,9 +3430,11 @@ async function preloadSocialFromCachedNode() {
   }
 }
 
-// Boot (Strictly Live Subnet 1 RPC)
+// Boot (Strictly Live Subnet 1 RPC — keep developer RPC drawer collapsed on mobile so content sits above the fold)
 if (el.engineModeSelect) el.engineModeSelect.value = 'rpc';
-if (el.rpcDrawer) el.rpcDrawer.classList.add('open');
+if (el.rpcDrawer && typeof window !== 'undefined' && window.innerWidth > 960) {
+  el.rpcDrawer.classList.add('open');
+}
 renderAll();
 let socialWatcher = null;
 const extraSocialEl = document.getElementById('socialExtraControls');
