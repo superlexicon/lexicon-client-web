@@ -127,6 +127,9 @@ const EVENT_SPECS = [
   ['IFRS Ledger', '📘', '#22d3ee', 'IfrsJournalPosted(uint64,address,bytes32,bytes)'],
   ['IFRS Ledger', '🗂️', '#34d399', 'IfrsSubledgerUpdated(uint64,bytes32,bytes)'],
   ['IFRS Ledger', '🔒', '#a78bfa', 'IfrsFiscalPeriodClosed(uint64,int64,uint64,address)'],
+  ['SubnetRegistry', '⛓️', '#38bdf8', 'SubnetUpserted(bytes32,address,address,uint64,uint64)'],
+  ['SubnetRegistry', '⚙️', '#fbbf24', 'SubnetStatusChanged(bytes32,uint64,uint64)'],
+  ['SubnetRegistry', '🔑', '#6ee7b7', 'SubnetOwnershipTransferred(bytes32,address,address)'],
 ];
 
 const TOPIC_MAP = new Map();
@@ -1174,21 +1177,23 @@ export function mountSubnetBlockExplorer() {
       'QUANTUM_LOTTERY',
       'SECRET_BALLOT',
       'IFRS_LEDGER',
+      'SUBNET_REGISTRY',
     ];
     let allContracts = [];
-    if (manifest?.hfsRegistry) {
+    const effHfsReg = manifest?.hfsRegistry || activeProf?.hfsRegistry || '';
+    if (effHfsReg) {
       const groups = await Promise.all(
         types.map((t) =>
           fetchRegisteredHfsByType(t, {
             rpcUrl: primaryRpc,
-            registryAddr: manifest.hfsRegistry,
+            registryAddr: effHfsReg,
           }).catch(() => [])
         )
       );
       allContracts = groups.flat();
     }
 
-    // Also include core manifest-deployed HFSes on this subnet (e.g. Messaging, HfsRegistry, IdentityRegistry)
+    // Also include core manifest-deployed HFSes on this subnet (e.g. Messaging, HfsRegistry, SubnetRegistry, IdentityRegistry)
     const addManifestContract = (addr, label, typeName, codeHash = '') => {
       if (!addr || !/^0x[0-9a-fA-F]{40}$/.test(addr)) return;
       const low = addr.toLowerCase();
@@ -1201,7 +1206,13 @@ export function mountSubnetBlockExplorer() {
       });
     };
 
-    addManifestContract(manifest?.hfsRegistry, 'HfsRegistry Directory', 'HFS_REGISTRY', manifest?.codeHashes?.hfs_registry);
+    addManifestContract(effHfsReg, 'HfsRegistry Directory', 'HFS_REGISTRY', manifest?.codeHashes?.hfs_registry);
+    addManifestContract(
+      manifest?.subnetRegistry || activeProf?.contracts?.subnetRegistry || activeProf?.onChainRegistryAddr,
+      'Global Subnet & Node Stats Registry HFS',
+      'SUBNET_REGISTRY',
+      manifest?.codeHashes?.subnet_registry
+    );
     addManifestContract(
       manifest?.messaging || manifest?.commonsRf?.messaging,
       'Cross-Subnet & ECIES Messaging HFS',

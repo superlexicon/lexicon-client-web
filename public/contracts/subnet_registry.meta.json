@@ -1,0 +1,21 @@
+{
+  "artifact": "dist/subnet_registry.wasm",
+  "code_hash": "0x5365ed423586cdd689b264c188f9230b2ba4e1562d8d1a76f802e04ff6547e0f",
+  "exports": [
+    "memory",
+    "main"
+  ],
+  "hps": "subnet-registry",
+  "imports": [
+    "env::get_calldata",
+    "env::host_state_set",
+    "env::host_emit_event",
+    "env::get_msg_sender",
+    "env::get_block_number",
+    "env::host_state_get"
+  ],
+  "initial_memory_pages": 32,
+  "max_memory_pages": 64,
+  "optimized_wasm_bytes": 13790,
+  "raw_wasm_bytes": 13793
+}

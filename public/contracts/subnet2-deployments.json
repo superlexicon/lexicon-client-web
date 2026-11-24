@@ -1,5 +1,12 @@
 {
   "chainId": 1337,
+  "codeHashes": {
+    "hfs_registry": "0x2ec51fe027c2cf006ce58658068b6bfb06deb4ec8a923872893d3651cba4b18d",
+    "subnet_registry": "0x5365ed423586cdd689b264c188f9230b2ba4e1562d8d1a76f802e04ff6547e0f",
+    "messaging": "0xe5eb6cbc561a2e6b84ac8047d86492b942e63c3f9a43ce6fe527d600ed1fac63"
+  },
+  "hfsRegistry": "0xd7983d631634bb6d1dea4318a25dd413066ad5fc",
+  "subnetRegistry": "0x160c3cb57486da472efeb15f3f637cc7d6a3d58a",
   "messaging": "0x07fd8feb5638a3b33a24dc6acf7fe9839ce5c92f",
   "publicRpcUrls": [
     "wss://node21.superlexicon.com/rpc",

@@ -23,7 +23,8 @@
     "cipher_noir": "0x09dc9c499c3a1e6ed78562e0c26a44bb3b5ce7a259a946796e32142bf57e0826",
     "vrf_beacon": "0xbe906042cf5412ca0ddd9c6a861f1f8cd1e024c3edac5bcb42f1809fdb558a79",
     "lottery": "0x47ad30cec9bea929e83508ac042394ce0bce98caa120afe871bd79e3850bd354",
-    "secret_ballot": "0x1817db8449f5166890989a1c56c5552fd21a9af39dfa4c963073a7dfc85adf8f"
+    "secret_ballot": "0x1817db8449f5166890989a1c56c5552fd21a9af39dfa4c963073a7dfc85adf8f",
+    "subnet_registry": "0x5365ed423586cdd689b264c188f9230b2ba4e1562d8d1a76f802e04ff6547e0f"
   },
   "battleship": {
     "contractAddr": "0xabb7f6c0ea97ed6f946a51b5d0a944f98226cab1",
@@ -505,6 +506,7 @@
     "treasuryIdentity": "0x8a7fd72cc6a828f68d22cb6bf18039fbfc79c5b1"
   },
   "hfsRegistry": "0xe1dc7648205c3704eba81797325e6163a9404d64",
+  "subnetRegistry": "0xd7983d631634bb6d1dea4318a25dd413066ad5fc",
   "secondaryDeployments": {
     "techDex": {
       "dexClob": "0x0af24ca472ded127a172cde227b356ec60e836a6",
