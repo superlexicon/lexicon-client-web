@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SLXR Hardware Voucher, 3-Month Validator Maturity &amp; Cash-Back Redemption — SuperLexicon</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 18% 0%, #0b1930 0%, #050a14 55%, #03060d 100%);
+      color: #f8fafc;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+    }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .rv-wrap { max-width: 1280px; margin: 0 auto; padding: 18px 20px 56px; display: flex; flex-direction: column; gap: 18px; }
+    .rv-hero {
+      border-radius: 16px;
+      border: 1px solid rgba(52, 211, 153, 0.45);
+      background: linear-gradient(135deg, rgba(6, 24, 38, 0.92), rgba(7, 15, 29, 0.95));
+      padding: 20px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .rv-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(52, 211, 153, 0.45);
+      color: #6ee7b7;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .rv-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .rv-col-4 { grid-column: span 4; }
+    .rv-col-6 { grid-column: span 6; }
+    .rv-col-8 { grid-column: span 8; }
+    .rv-col-12 { grid-column: span 12; }
+    @media (max-width: 1024px) {
+      .rv-col-4, .rv-col-6, .rv-col-8 { grid-column: span 12; }
+    }
+    .rv-card {
+      border-radius: 14px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: rgba(6, 12, 24, 0.94);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .rv-card h2 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 9px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.95);
+    }
+    .rv-stat-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 860px) {
+      .rv-stat-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+    .rv-kpi {
+      border-radius: 12px;
+      border: 1px solid rgba(51, 65, 85, 0.8);
+      background: #060d1b;
+      padding: 13px 15px;
+      border-left: 4px solid #38bdf8;
+    }
+    .rv-kpi-lbl { font-size: 0.68rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
+    .rv-kpi-val { font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin-top: 4px; }
+    .rv-kpi-sub { font-size: 0.68rem; color: #64748b; margin-top: 3px; }
+    label.rv-lbl { display: flex; flex-direction: column; gap: 5px; font-size: 0.72rem; font-weight: 700; color: #cbd5e1; }
+    input.rv-in, select.rv-in, textarea.rv-in {
+      width: 100%;
+      padding: 8px 11px;
+      border-radius: 8px;
+      border: 1px solid rgba(71, 85, 105, 0.8);
+      background: #030813;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      outline: none;
+    }
+    .rv-btn {
+      padding: 9px 14px;
+      border-radius: 9px;
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      background: rgba(14, 165, 233, 0.18);
+      color: #e0f2fe;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+    .rv-btn:hover { background: rgba(14, 165, 233, 0.3); }
+    .rv-btn-emerald { border-color: rgba(52, 211, 153, 0.6); background: rgba(16, 185, 129, 0.2); color: #d1fae5; }
+    .rv-btn-emerald:hover { background: rgba(16, 185, 129, 0.32); }
+    .rv-btn-amber { border-color: rgba(251, 191, 36, 0.6); background: rgba(245, 158, 11, 0.18); color: #fef3c7; }
+    .rv-progress-track {
+      width: 100%;
+      height: 14px;
+      border-radius: 999px;
+      background: #0f172a;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      overflow: hidden;
+    }
+    .rv-progress-bar {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #0ea5e9, #10b981);
+      transition: width 0.35s ease;
+    }
+    .rv-codebox {
+      border-radius: 9px;
+      border: 1px solid rgba(51, 65, 85, 0.8);
+      background: #030711;
+      padding: 10px 12px;
+      font-size: 0.72rem;
+      color: #bae6fd;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+    .rv-toast {
+      display: none;
+      padding: 9px 12px;
+      border-radius: 9px;
+      font-size: 0.73rem;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: rgba(14, 165, 233, 0.14);
+      color: #bae6fd;
+    }
+  </style>
+</head>
+<body>
+  <div id="slxUnifiedHeaderMount"></div>
+
+  <div class="rv-wrap">
+    <section class="rv-hero">
+      <div style="max-width:820px;">
+        <div class="rv-pill mono">⛓️ RewardVoucher HFS (#25) • Banking Oracle + 90-Day Validator Gate</div>
+        <h1 style="margin:8px 0 6px;font-size:1.55rem;font-weight:900;letter-spacing:-0.02em;">
+          Hardware-Gated <code class="mono" style="color:#6ee7b7;">SLXR</code> Voucher, 3-Month Validator Maturity &amp; Cash-Back Pool
+        </h1>
+        <p style="margin:0;font-size:0.86rem;color:#cbd5e1;line-height:1.55;">
+          Zero factory key escrow &amp; zero customer PII on-chain: our <strong>Banking &amp; Payments Oracle</strong> issues a blinded
+          <code>voucherCommitment</code> strictly on settled Stripe / Bank Wire / Kickstarter payment, and your device unlocks
+          <code>SLXR</code> only after completing <strong>90 active validator days (3 months • ~1.8M blocks)</strong> on a &ge;3-peer mesh subnet.
+        </p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <a href="/dex.html" class="rv-btn mono" style="text-decoration:none;">📈 Trade SLXR on 0-MEV DEX →</a>
+        <span id="rvContractBadge" class="mono" style="font-size:0.68rem;color:#94a3b8;">RewardVoucher HFS: Ready</span>
+      </div>
+    </section>
+
+    <!-- KPI Strip -->
+    <div class="rv-stat-strip mono">
+      <div class="rv-kpi" style="border-left-color:#34d399;">
+        <div class="rv-kpi-lbl">Anti-Hoarding Maturity Gate</div>
+        <div class="rv-kpi-val" id="kpiTargetDays">90 Active Days</div>
+        <div class="rv-kpi-sub">3 Months • 1,800,000 Blocks (~4.3s/blk)</div>
+      </div>
+      <div class="rv-kpi" style="border-left-color:#38bdf8;">
+        <div class="rv-kpi-lbl">Local Validator Progress</div>
+        <div class="rv-kpi-val" id="kpiNodeProgress">— / 90 Days</div>
+        <div class="rv-kpi-sub" id="kpiNodeSub">Probing local validator RPC…</div>
+      </div>
+      <div class="rv-kpi" style="border-left-color:#fbbf24;">
+        <div class="rv-kpi-lbl">Prevailing Cash-Back Rate</div>
+        <div class="rv-kpi-val" id="kpiCashBackRate">$0.00 / 1M SLXR</div>
+        <div class="rv-kpi-sub" id="kpiVaultSub">Audited COGS/Buffer Savings Pool</div>
+      </div>
+      <div class="rv-kpi" style="border-left-color:#c084fc;">
+        <div class="rv-kpi-lbl">1 Validator ⇄ 1 Device Rule</div>
+        <div class="rv-kpi-val">Strict 1:1</div>
+        <div class="rv-kpi-sub">Zero Factory Key Escrow • Schnorr Bound</div>
+      </div>
+    </div>
+
+    <div class="rv-grid">
+      <!-- Step 1: Checkout Commitment Generator -->
+      <div class="rv-card rv-col-6">
+        <h2 class="mono">
+          <span style="color:#7dd3fc;">1. Checkout Blinded Voucher Generator</span>
+          <span style="font-size:0.68rem;color:#6ee7b7;">Zero PII On-Chain</span>
+        </h2>
+        <p style="margin:0;font-size:0.78rem;color:#94a3b8;line-height:1.5;">
+          Generated locally in your browser at purchase. Only <code>voucherCommitment</code> is attached to your Stripe / Bank Wire / Kickstarter order so the <strong>Banking &amp; Payments Oracle</strong> can issue your paid voucher without knowing your validator or wallet identity.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <label class="rv-lbl mono">
+            <span>Hardware SKU</span>
+            <select id="selSku" class="rv-in">
+              <option value="3">Multi-Radio Slate Pro ($1,198)</option>
+              <option value="2">Watch Ultra ($688)</option>
+              <option value="1">Dual-RF Dongle ($178)</option>
+            </select>
+          </label>
+          <label class="rv-lbl mono">
+            <span>Purchase Tier</span>
+            <select id="selTier" class="rv-in">
+              <option value="2000">Kickstarter Backer (20% SLXR)</option>
+              <option value="500">Standard Retail (5% SLXR)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="rv-codebox mono" id="entitlementPreview">
+          Expected Entitlement: <strong>239,600,000 SLXR</strong> (20% × $1,198 × 1,000,000 — Locked until 90 Active Validator Days)
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" id="btnGenVoucher" class="rv-btn rv-btn-emerald">🔑 Generate Local Voucher Secret &amp; Commitment</button>
+          <button type="button" id="btnDownloadBackup" class="rv-btn">💾 Download Backup JSON</button>
+        </div>
+
+        <label class="rv-lbl mono">
+          <span>Checkout Metadata `voucher_commitment` (Sent to Stripe / Bank / Kickstarter)</span>
+          <input id="outCommitment" class="rv-in" readonly placeholder="Click Generate above…" />
+        </label>
+        <label class="rv-lbl mono">
+          <span>Private `voucherSecretLeHex` (Keep Secret — Signs Claim After 90 Days)</span>
+          <input id="outSecretHex" class="rv-in" readonly placeholder="Never leaves your browser…" />
+        </label>
+      </div>
+
+      <!-- Step 2: 3-Month (90-Day) Active Validator Maturity & Claim -->
+      <div class="rv-card rv-col-6">
+        <h2 class="mono">
+          <span style="color:#fcd34d;">2. 90-Day Validator Maturity &amp; Front-Run-Proof Claim</span>
+          <span style="font-size:0.68rem;color:#fbbf24;">Policy 3 Anti-Hoarding</span>
+        </h2>
+        <p style="margin:0;font-size:0.78rem;color:#94a3b8;line-height:1.5;">
+          Each paid voucher unlocks only when bound to a unique physical validator node (<code>validatorUsed == false</code>) that has completed <strong>&ge; 90 active daily epochs</strong> in a &ge;3-validator BFT subnet.
+        </p>
+
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-bottom:5px;" class="mono">
+            <span id="matLabelLeft" style="color:#cbd5e1;">Active Mesh Maturity: 0 / 90 Days (0%)</span>
+            <span id="matLabelRight" style="color:#6ee7b7;">Target: 1,800,000 Blocks</span>
+          </div>
+          <div class="rv-progress-track">
+            <div class="rv-progress-bar" id="matProgressBar" style="width:0%;"></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <label class="rv-lbl mono">
+            <span>Oracle `paymentRefHash` (0x…)</span>
+            <input id="inPaymentRef" class="rv-in" placeholder="0x… (from settled order receipt)" />
+          </label>
+          <label class="rv-lbl mono">
+            <span>Active Validator Ed25519 PubKey (0x…)</span>
+            <input id="inValidatorPk" class="rv-in" placeholder="Auto-filled from local node…" />
+          </label>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <label class="rv-lbl mono">
+            <span>L1 Recipient Identity / Wallet (0x…)</span>
+            <input id="inRecipientId" class="rv-in" placeholder="0x…" />
+          </label>
+          <label class="rv-lbl mono">
+            <span>Optional Ethereum Mainnet Address (0x…)</span>
+            <input id="inEthRecipient" class="rv-in" placeholder="0x… (for SlxrRewardVault.sol)" />
+          </label>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" id="btnSignClaim" class="rv-btn rv-btn-amber">✍️ Sign MEV-Proof Schnorr Claim Payload</button>
+          <button type="button" id="btnProbeValidator" class="rv-btn">📡 Refresh Local Validator (:8545)</button>
+        </div>
+
+        <div id="claimStatusToast" class="rv-toast mono"></div>
+        <div id="signedClaimOutput" class="rv-codebox mono" style="display:none;"></div>
+      </div>
+
+      <!-- Step 3: Dual Usage Paths — Direct Cash-Back Redemption vs DiscreteTimeCLOB DEX -->
+      <div class="rv-card rv-col-12">
+        <h2 class="mono">
+          <span style="color:#c084fc;">3. Dual Usage Channels: Audited Cash-Back Redemption OR MEV-Proof Batch CLOB DEX</span>
+          <span style="font-size:0.68rem;color:#a7f3d0;">L1 HFS ($0.00 Gas) + Ethereum Mainnet Ready</span>
+        </h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;font-size:0.79rem;color:#cbd5e1;line-height:1.55;">
+          <div class="rv-codebox">
+            <strong class="mono" style="color:#6ee7b7;">Channel A • Direct Company Cash-Back (`RewardVoucher` HFS &amp; `SlxrRedemptionPool.sol`)</strong><br />
+            Realized post-batch savings across EMS yield, `LR2021` COGS, freight, and tariffs are deposited into the on-chain reserve. Burning `SLXR` pays out pro-rata `USD`/`USDC` at `Rate = PoolBalance ÷ UnredeemedActiveSLXR` (worst-case floor = `$0.00`).
+          </div>
+          <div class="rv-codebox">
+            <strong class="mono" style="color:#e9d5ff;">Channel B • Secondary Market Sale (`DexClob` HFS &amp; `DiscreteTimeCLOB.sol`)</strong><br />
+            Non-hardware buyers can only acquire `SLXR` from validated device owners. Crossing limit orders settle in discrete time windows (`Δt`) at a single uniform clearing price `P*`—zero front-running and zero sandwich MEV.
+          </div>
+          <div class="rv-codebox">
+            <strong class="mono" style="color:#fde68a;">Banking &amp; Payments Oracle (`banking-oracle`)</strong><br />
+            Verifies `Stripe-Signature` &amp; `X-Bank-Signature` HMAC-SHA256 webhooks (`checkout.session.completed`, PayNow/SWIFT wires, Kickstarter pledges) and auto-revokes unclaimed vouchers on pre-activation refunds (`charge.refunded`).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/rewards.js"></script>
+</body>
+</html>

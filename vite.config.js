@@ -40,6 +40,7 @@ export default defineConfig({
         lottery: resolve(__dirname, 'lottery.html'),
         ballot: resolve(__dirname, 'ballot.html'),
         accounting: resolve(__dirname, 'accounting.html'),
+        rewards: resolve(__dirname, 'rewards.html'),
       },
     },
   },
