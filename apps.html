@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧩 HFS App Store &amp; Zero-Redeploy Publisher Studio — SuperLexicon</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 0%, #0d1f3c 0%, #050a14 60%, #03060c 100%);
+      color: #f8fafc;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+    }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .as-wrap { max-width: 1400px; margin: 0 auto; padding: 18px 20px 64px; display: flex; flex-direction: column; gap: 16px; }
+
+    .as-hero {
+      border-radius: 16px;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: linear-gradient(135deg, rgba(8, 24, 48, 0.95), rgba(6, 12, 24, 0.96));
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .as-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.69rem;
+      font-weight: 800;
+      background: rgba(14, 165, 233, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #7dd3fc;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .as-btn {
+      padding: 8px 13px;
+      border-radius: 9px;
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      background: rgba(14, 165, 233, 0.18);
+      color: #e0f2fe;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.73rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .as-btn:hover:not(:disabled) { background: rgba(14, 165, 233, 0.32); }
+    .as-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .as-btn-emerald { border-color: rgba(52, 211, 153, 0.65); background: rgba(16, 185, 129, 0.22); color: #d1fae5; }
+    .as-btn-emerald:hover:not(:disabled) { background: rgba(16, 185, 129, 0.36); }
+    .as-btn-amber { border-color: rgba(251, 191, 36, 0.65); background: rgba(245, 158, 11, 0.2); color: #fef3c7; }
+    .as-btn-rose { border-color: rgba(244, 63, 94, 0.65); background: rgba(225, 29, 72, 0.2); color: #ffe4e6; }
+
+    .as-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.85);
+      padding-bottom: 10px;
+    }
+    .as-tab {
+      padding: 9px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(71, 85, 105, 0.75);
+      background: rgba(8, 15, 30, 0.9);
+      color: #cbd5e1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .as-tab.active {
+      border-color: #38bdf8;
+      background: rgba(14, 165, 233, 0.24);
+      color: #f8fafc;
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3);
+    }
+
+    .as-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .as-cat-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+    .as-cat-pill {
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(71, 85, 105, 0.75);
+      background: #071020;
+      color: #94a3b8;
+      font-size: 0.71rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .as-cat-pill.active {
+      border-color: rgba(52, 211, 153, 0.7);
+      background: rgba(16, 185, 129, 0.2);
+      color: #d1fae5;
+    }
+
+    .as-in {
+      padding: 8px 11px;
+      border-radius: 9px;
+      border: 1px solid rgba(71, 85, 105, 0.85);
+      background: #030813;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      outline: none;
+    }
+
+    .as-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      gap: 14px;
+    }
+    .as-card {
+      border-radius: 14px;
+      border: 1px solid rgba(51, 65, 85, 0.88);
+      background: rgba(6, 13, 26, 0.94);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      transition: border-color 0.16s ease, transform 0.14s ease;
+    }
+    .as-card:hover {
+      border-color: rgba(56, 189, 248, 0.65);
+      transform: translateY(-2px);
+    }
+    .as-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.63rem;
+      font-weight: 800;
+    }
+    .as-badge-emerald { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(52, 211, 153, 0.5); }
+    .as-badge-sky { background: rgba(14, 165, 233, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.5); }
+    .as-badge-amber { background: rgba(245, 158, 11, 0.2); color: #fde68a; border: 1px solid rgba(251, 191, 36, 0.5); }
+
+    .as-runner-shell {
+      border-radius: 16px;
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      background: #040915;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 76vh;
+    }
+    .as-runner-bar {
+      padding: 10px 15px;
+      background: rgba(8, 19, 38, 0.96);
+      border-bottom: 1px solid rgba(51, 65, 85, 0.9);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .as-runner-iframe {
+      width: 100%;
+      flex: 1;
+      min-height: 70vh;
+      border: none;
+      background: #050a14;
+    }
+
+    .as-studio-grid {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 1024px) {
+      .as-studio-grid { grid-template-columns: 1fr; }
+    }
+    .as-panel {
+      border-radius: 14px;
+      border: 1px solid rgba(51, 65, 85, 0.88);
+      background: rgba(6, 13, 26, 0.94);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+    .as-lbl { display: flex; flex-direction: column; gap: 4px; font-size: 0.71rem; font-weight: 700; color: #cbd5e1; }
+    .as-editor {
+      width: 100%;
+      min-height: 440px;
+      border-radius: 10px;
+      border: 1px solid rgba(71, 85, 105, 0.9);
+      background: #02060f;
+      color: #e2e8f0;
+      padding: 12px 14px;
+      font-size: 0.74rem;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+    }
+    .as-toast {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      background: rgba(14, 165, 233, 0.16);
+      color: #e0f2fe;
+    }
+    .as-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10090;
+      background: rgba(2, 6, 17, 0.85);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .as-modal-backdrop.open { display: flex; }
+    .as-modal-card {
+      width: 100%;
+      max-width: 540px;
+      border-radius: 15px;
+      border: 1px solid rgba(52, 211, 153, 0.55);
+      background: #060e1f;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
+    }
+  </style>
+</head>
+<body>
+  <div id="slxUnifiedHeaderMount"></div>
+
+  <main class="as-wrap">
+    <!-- Hero -->
+    <section class="as-hero">
+      <div style="max-width:820px;">
+        <div class="as-pill mono">🧩 HPS #27 • On-Chain UI Bundle CAS + Zero-Redeploy App Store</div>
+        <h1 style="margin:8px 0 6px;font-size:1.45rem;font-weight:900;letter-spacing:-0.02em;">
+          SuperLexicon HFS App Store &amp; Live Publisher Studio
+        </h1>
+        <p style="margin:0;font-size:0.81rem;color:#cbd5e1;line-height:1.52;">
+          Every application UI is packaged as a <code>gzip</code>-compressed, <code>keccak256</code>-verified HTML bundle alongside its Haltproof WASM Subroutine (<code>app_store.wasm</code>). All <strong>12 SuperLexicon flagship use-cases</strong> + community sandbox apps run from this exact pattern—publish new apps or push UI updates on-chain in 1 block without redeploying the web client.
+        </p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        <div class="mono" style="font-size:0.71rem;color:#93c5fd;">
+          AppStore HFS: <strong id="lblStoreAddr" style="color:#6ee7b7;">Probing Subnet 1…</strong>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" id="btnDeployStoreHfs" class="as-btn as-btn-amber">⛓️ Deploy AppStore HFS</button>
+          <button type="button" id="btnSyncAllCatalogOnChain" class="as-btn">📤 Sync Catalog On-Chain</button>
+          <button type="button" id="btnJumpStudio" class="as-btn as-btn-emerald">🛠️ + Publish / Edit App</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="asToast" class="as-toast mono"></div>
+
+    <!-- Navigation Tabs -->
+    <div class="as-tabs">
+      <button type="button" class="as-tab active" data-view="catalog">🏪 App Store Catalog (<span id="lblAppCount">15</span>)</button>
+      <button type="button" class="as-tab" data-view="runner">▶️ Sandboxed App Runner</button>
+      <button type="button" class="as-tab" data-view="studio">🛠️ Publish / Live Studio</button>
+    </div>
+
+    <!-- VIEW 1: CATALOG -->
+    <section id="viewCatalog" style="display:flex;flex-direction:column;gap:14px;">
+      <div class="as-toolbar">
+        <div id="catBar" class="as-cat-bar mono"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input id="inSearchApps" class="as-in" placeholder="🔍 Search apps, slugs, uiHash…" style="min-width:220px;" />
+          <div style="display:flex;gap:5px;">
+            <input id="inResolveHfsAddr" class="as-in" placeholder="0x… Run by HFS Address" style="width:205px;" />
+            <button type="button" id="btnResolveHfsAddr" class="as-btn">▶ Launch</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="appsGrid" class="as-grid"></div>
+    </section>
+
+    <!-- VIEW 2: ZERO-TRUST SANDBOXED IFRAME RUNNER -->
+    <section id="viewRunner" style="display:none;flex-direction:column;gap:12px;">
+      <div class="as-runner-shell">
+        <div class="as-runner-bar mono">
+          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
+            <button type="button" id="btnRunnerBack" class="as-btn" style="padding:5px 10px;font-size:0.68rem;">← Catalog</button>
+            <strong id="runnerTitle" style="font-size:0.86rem;color:#f8fafc;">Select an App</strong>
+            <span id="runnerVerifyBadge" class="as-badge as-badge-emerald">✓ keccak256 Verified</span>
+            <span class="as-badge as-badge-sky" title="Opaque-origin iframe sandbox: zero access to parent localStorage or private keys">🛡️ iframe sandbox="allow-scripts"</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+            <button type="button" id="btnRunnerWhitelist" class="as-btn as-btn-emerald" style="padding:5px 9px;font-size:0.67rem;">✓ Whitelist HFS</button>
+            <button type="button" id="btnRunnerFork" class="as-btn as-btn-amber" style="padding:5px 9px;font-size:0.67rem;">✏ Inspect / Fork UI</button>
+            <a id="lnkRunnerStandalone" href="#" class="as-btn" style="padding:5px 9px;font-size:0.67rem;display:none;">↗ Full Page</a>
+          </div>
+        </div>
+        <iframe
+          id="sandboxedAppIframe"
+          class="as-runner-iframe"
+          sandbox="allow-scripts allow-forms"
+          referrerpolicy="no-referrer"
+          title="SuperLexicon Zero-Trust Sandboxed HFS App"
+        ></iframe>
+      </div>
+    </section>
+
+    <!-- VIEW 3: PUBLISH / LIVE STUDIO -->
+    <section id="viewStudio" style="display:none;">
+      <div class="as-studio-grid">
+        <!-- Left Metadata & Starter Picker -->
+        <div class="as-panel">
+          <strong class="mono" style="font-size:0.84rem;color:#7dd3fc;">1. App Metadata &amp; HFS Binding</strong>
+
+          <label class="as-lbl mono">
+            <span>Load Starter Template or Existing App UI</span>
+            <select id="selStudioTemplate" class="as-in"></select>
+          </label>
+
+          <div style="display:grid;grid-template-columns:1.3fr 0.7fr;gap:8px;">
+            <label class="as-lbl mono">
+              <span>App Slug (Immutable ID) *</span>
+              <input id="inStudioSlug" class="as-in" value="my-mesh-app" maxlength="40" />
+            </label>
+            <label class="as-lbl mono">
+              <span>Version *</span>
+              <input id="inStudioVersion" class="as-in" value="1.0.0" maxlength="20" />
+            </label>
+          </div>
+
+          <div style="display:grid;grid-template-columns:0.55fr 1.45fr;gap:8px;">
+            <label class="as-lbl mono">
+              <span>Icon</span>
+              <input id="inStudioIcon" class="as-in" value="⚡" maxlength="8" />
+            </label>
+            <label class="as-lbl mono">
+              <span>App Display Title *</span>
+              <input id="inStudioTitle" class="as-in" value="My Mesh HFS App" maxlength="64" />
+            </label>
+          </div>
+
+          <label class="as-lbl mono">
+            <span>Category</span>
+            <select id="selStudioCategory" class="as-in">
+              <option value="6">⚡ RF &amp; Utility Tools</option>
+              <option value="1">📈 DeFi &amp; Markets</option>
+              <option value="2">🏛️ Governance &amp; IFRS</option>
+              <option value="3">🚀 Commerce &amp; Crowdfunding</option>
+              <option value="4">📡 Social &amp; Messaging</option>
+              <option value="5">🎮 Multiplayer Games &amp; VRF</option>
+            </select>
+          </label>
+
+          <label class="as-lbl mono">
+            <span>Short Summary (max 240 chars)</span>
+            <input id="inStudioSummary" class="as-in" value="Custom single-file HTML/JS UI bound to a Haltproof WASM Subroutine." maxlength="240" />
+          </label>
+
+          <label class="as-lbl mono">
+            <span>Optional: Attach Compiled HFS <code>.wasm</code> Binary</span>
+            <input id="inStudioWasmFile" type="file" accept=".wasm,application/wasm" class="as-in" />
+          </label>
+
+          <label class="as-lbl mono">
+            <span>Linked HFS WASM <code>codeHash</code> (bytes32)</span>
+            <input id="inStudioWasmHash" class="as-in" placeholder="0x… (optional or auto-computed)" />
+          </label>
+
+          <label class="as-lbl mono">
+            <span>Default Deployed HFS Instance (0x… optional)</span>
+            <input id="inStudioDefaultHfs" class="as-in" placeholder="0x0000… (or check Deploy below)" />
+          </label>
+
+          <label style="display:flex;align-items:center;gap:7px;font-size:0.72rem;color:#cbd5e1;cursor:pointer;">
+            <input id="chkStudioDeployInst" type="checkbox" />
+            <span>Instantiate fresh HFS instance from <code>codeHash</code> on publish</span>
+          </label>
+
+          <div id="studioBundleMeter" class="mono" style="padding:10px 12px;border-radius:10px;background:#030711;border:1px solid rgba(52,211,153,0.4);font-size:0.69rem;line-height:1.55;color:#bae6fd;"></div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" id="btnStudioPreview" class="as-btn" style="flex:1;">👁️ Preview in Sandbox</button>
+            <button type="button" id="btnStudioPublish" class="as-btn as-btn-emerald" style="flex:1.3;">🚀 Publish App Bundle</button>
+          </div>
+        </div>
+
+        <!-- Right Single-File HTML/CSS/JS Editor -->
+        <div class="as-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <strong class="mono" style="font-size:0.84rem;color:#6ee7b7;">2. Single-File HTML + CSS + JS Bundle Source</strong>
+            <label class="as-btn mono" style="padding:5px 10px;font-size:0.68rem;cursor:pointer;">
+              📂 Load .html File
+              <input id="inStudioHtmlFile" type="file" accept=".html,text/html" style="display:none;" />
+            </label>
+          </div>
+          <div style="font-size:0.72rem;color:#94a3b8;">
+            Sandboxed community apps automatically receive <code>window.slx</code> (<code>getContext()</code>, <code>callContract()</code>, <code>sendTransaction()</code>, <code>getAppStorage()</code>, <code>onNewBlock()</code>). Core verified apps can also import <code>@superlexicon/sdk</code> directly.
+          </div>
+          <textarea id="txtStudioHtml" class="as-editor mono" spellcheck="false"></textarea>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Host Wallet Transaction Confirmation Sheet for Sandboxed Iframe Apps -->
+  <div id="hostTxConfirmModal" class="as-modal-backdrop" role="dialog" aria-modal="true">
+    <div class="as-modal-card" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <strong class="mono" style="color:#6ee7b7;font-size:0.9rem;">🛡️ Host Wallet Transaction Approval</strong>
+        <span class="as-badge as-badge-sky mono">$0.00 GAS</span>
+      </div>
+      <div style="font-size:0.75rem;color:#cbd5e1;line-height:1.5;">
+        Sandboxed app <strong id="txModalAppName" style="color:#f8fafc;">App</strong> is requesting your signature via your <code>Identity</code> HFS:
+      </div>
+      <div id="txModalDetails" class="mono" style="padding:10px 12px;border-radius:9px;background:#030712;border:1px solid rgba(71,85,105,0.85);font-size:0.7rem;color:#bae6fd;word-break:break-all;line-height:1.5;"></div>
+      <label style="display:flex;align-items:center;gap:7px;font-size:0.72rem;color:#cbd5e1;cursor:pointer;">
+        <input id="chkTrustSessionTarget" type="checkbox" />
+        <span>Auto-approve subsequent calls to this HFS target for this browser session</span>
+      </label>
+      <div style="display:flex;justify-content:flex-end;gap:8px;">
+        <button type="button" id="btnRejectSandboxTx" class="as-btn as-btn-rose">✕ Reject</button>
+        <button type="button" id="btnApproveSandboxTx" class="as-btn as-btn-emerald">✍️ Sign &amp; Broadcast →</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/apps.js"></script>
+  <script type="module" src="/src/legal-consent.js"></script>
+</body>
+</html>

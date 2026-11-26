@@ -495,7 +495,7 @@ function injectStyles() {
   document.head.appendChild(style);
 }
 
-function mountLegalConsent() {
+export function mountLegalConsent() {
   if (typeof document === 'undefined' || document.getElementById('slxLegalModalBackdrop')) {
     return;
   }
@@ -777,9 +777,11 @@ function mountLegalConsent() {
   }
 }
 
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && !document.body?.hasAttribute('data-slx-app-slug')) {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', mountLegalConsent);
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!document.body?.hasAttribute('data-slx-app-slug')) mountLegalConsent();
+    });
   } else {
     mountLegalConsent();
   }

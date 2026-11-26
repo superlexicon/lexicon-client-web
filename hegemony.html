@@ -3,127 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FRACTURED HEGEMONY — Simultaneous Sovereign Conquest (SuperLexicon HFS #15)</title>
+  <title>⬢ Fractured Hegemony — SuperLexicon HFS App</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="stylesheet" href="/src/hegemony.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/src/slx-wallet.css" />
+  <link rel="stylesheet" href="/src/slx-inst.css" />
 </head>
-<body>
-  <div class="heg-shell">
-    <div id="slxUnifiedHeaderMount"></div>
-    <button id="btnHowToPlay" data-uh-unhide="1" class="heg-btn" style="display:none;">? Rules</button>
-
-    <main class="heg-main">
-      <!-- Left: 36-Sector Shattered Pangaea Interactive Map -->
-      <section class="heg-map-col">
-        <div id="hegWelcomeMount"></div>
-        <div id="hegCoachMount"></div>
-        <div class="heg-status-ribbon">
-          <div class="heg-epoch-cluster mono">
-            <span class="heg-kv">EPOCH <strong id="hudEpoch">1</strong></span>
-            <span class="heg-sep">•</span>
-            <span class="heg-kv">CYCLE <strong id="hudCycle">1</strong></span>
-            <span class="heg-sep">•</span>
-            <span class="heg-kv">GOAL <strong>24 / 36 SECTORS</strong></span>
-            <span class="heg-sep">•</span>
-            <span id="hudCycleWindow" class="heg-window-pill">Syncing Subnet 1…</span>
-          </div>
-          <div class="heg-region-legend" id="regionBonusBar"></div>
-        </div>
-        <div class="mono" style="display:flex;flex-wrap:wrap;gap:4px 14px;padding:4px 10px;font-size:0.65rem;color:#cbd5e1;background:rgba(15,23,42,0.72);border:1px solid rgba(148,163,184,0.18);border-radius:8px;margin-bottom:5px;">
-          <span><strong style="color:#f8fafc;">◎ Double Ring:</strong> Citadel (<code>+20%</code> Defense)</span>
-          <span><strong style="color:#67e8f9;">⚡ Cyan Ring:</strong> Aether Relay (<code>+2</code> Supply/Cycle)</span>
-          <span><strong style="color:#fbbf24;">◌ Dashed Gold:</strong> Attackable Neighbor</span>
-          <span><strong style="color:#a78bfa;">⤻ Dashed Arc:</strong> Trans-Oceanic Warp Lane</span>
-        </div>
-
-        <div class="heg-map-frame">
-          <svg id="hegemonySvg" viewBox="0 0 1160 652" preserveAspectRatio="xMidYMid meet"></svg>
-
-          <!-- Floating Uprising CTA when player owns 0 sectors -->
-          <div id="uprisingOverlay" class="heg-uprising-banner" style="display:none;">
-            <div>
-              <strong id="uprisingTitle">⚡ SOVEREIGN ENCLAVE READY</strong>
-              <span id="uprisingHint">Click any sector to pick a preferred landing zone, or launch immediately to claim a 3-sector Citadel enclave!</span>
-            </div>
-            <button id="btnLaunchUprising" class="heg-btn heg-btn-amber">⚔️ Launch Sovereign Uprising</button>
-          </div>
-        </div>
-
-        <!-- Bottom Tactical Order Staging Console -->
-        <div class="heg-console">
-          <div class="heg-console-left">
-            <div class="heg-my-stats mono" id="mySovereignSummary">
-              Connecting to Fractured Hegemony HFS…
-            </div>
-            <div class="heg-sector-inspector" id="sectorInspector">
-              Click one of your Sectors to deploy Supply or launch Vector Strikes into adjacent Sectors.
-            </div>
-          </div>
-
-          <div class="heg-console-staged">
-            <div class="heg-staged-hdr mono">
-              <span>STAGED DIRECTIVES (<span id="stagedCountLabel">0</span>)</span>
-              <button id="btnClearStaged" class="heg-link-btn" type="button">Clear</button>
-            </div>
-            <div id="stagedList" class="heg-staged-list mono">No directives staged for this cycle.</div>
-          </div>
-
-          <div class="heg-console-actions">
-            <button id="btnAutoStage" class="heg-btn" title="Auto-fill smart border reinforcements &amp; high-odds strikes">⚡ Auto-Plan</button>
-            <button id="btnCommitOrders" class="heg-btn heg-btn-primary">🚀 Commit Directives</button>
-            <button id="btnResolveCycle" class="heg-btn heg-btn-emerald" title="Resolve simultaneous clashes once 2 blocks have elapsed">⏱ Resolve Cycle</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Right: Hall of Sovereigns, Bilateral Diplomacy & Live Combat Wire -->
-      <aside class="heg-side-col">
-        <div class="heg-card">
-          <div class="heg-card-hdr">
-            <h2>👑 Hall of Sovereigns</h2>
-            <span id="hudSovereignCount" class="mono heg-muted">0 Active</span>
-          </div>
-          <div id="sovereignList" class="heg-sov-list"></div>
-        </div>
-
-        <div class="heg-card">
-          <div class="heg-card-hdr">
-            <h2>🤝 Non-Aggression Compacts</h2>
-            <span class="mono heg-muted">6-Cycle Treaties</span>
-          </div>
-          <div id="compactList" class="heg-compact-list"></div>
-        </div>
-
-        <div class="heg-card heg-feed-card">
-          <div class="heg-card-hdr">
-            <h2>📡 Simultaneous War Wire</h2>
-            <span class="mono heg-live-dot">● LIVE WS</span>
-          </div>
-          <div id="warFeed" class="heg-feed mono"></div>
-        </div>
-      </aside>
-    </main>
-
-    <!-- Rules Modal -->
-    <div id="rulesModal" class="heg-modal-backdrop" style="display:none;">
-      <div class="heg-modal">
-        <div class="heg-modal-hdr">
-          <h3>⬢ Fractured Hegemony — Simultaneous On-Chain Rules</h3>
-          <button id="btnCloseRules" class="heg-btn">✕</button>
-        </div>
-        <div class="heg-modal-body">
-          <p><strong>1. Zero Turn-Order Advantage:</strong> Every Sovereign stages <em>Supply Reinforcements</em> and <em>Vector Strikes</em> simultaneously during the same 2-block (~8.5s) cycle. Opposing strikes down the same corridor collide mid-transit!</p>
-          <p><strong>2. Drop-In Sovereign Uprising:</strong> Click <strong>⚔️ Launch Sovereign Uprising</strong> at any block to claim a 3-sector enclave (Citadel with <code>8</code> Legions + <code>+20%</code> Siege Defense, 2 flanking sectors with <code>5</code> Legions, and <code>8</code> Supply). Wiped out? Re-launch immediately while keeping your Epoch trophies!</p>
-          <p><strong>3. Tectonic Confederations &amp; Aether Relays:</strong> Hold all sectors in any of the 6 color-coded Confederations for <code>+3</code> to <code>+6</code> Cycle Supply, and capture the 3 <strong>⚡ Aether Relays</strong> (<em>Basalt Spire, Rivercrown, Nexus Prime</em>) for <code>+2</code> extra Supply each.</p>
-          <p><strong>4. On-Chain Compacts &amp; Oathbreakers:</strong> Sign bilateral 6-Cycle Non-Aggression Compacts with human or AI Sovereigns. Breaking a ratified treaty logs <code>OathBroken</code> on-chain and grants <code>+6</code> Emergency Supply to the betrayed Sovereign!</p>
-          <p><strong>5. Epoch Hegemony (24 / 36 Sectors):</strong> Capturing <code>24</code> Sectors crowns you <strong>Epoch Hegemon</strong> on-chain, records your victory in the Hall of Sovereigns, and fractures the world into the next Epoch.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="/src/hegemony.js"></script>
-  <script type="module" src="/src/legal-consent.js"></script>
+<body data-slx-app-slug="hegemony" style="margin:0;min-height:100vh;background:#050a14;color:#f8fafc;font-family:Inter,system-ui,-apple-system,sans-serif;">
+  <script type="module" src="/src/app-host-boot.js"></script>
 </body>
 </html>

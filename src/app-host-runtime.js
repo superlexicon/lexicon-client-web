@@ -1,0 +1,277 @@
+/**
+ * SuperLexicon Universal HFS App Host Shared Runtime (`src/app-host-runtime.js`)
+ *
+ * Bundled once by the static Host Shell so dynamically fetched & `keccak256`-verified HFS UI
+ * bundles (`app_store.wasm` / `IndexedDB` CAS / `.html.gz`) never duplicate cryptographic, RLP,
+ * WebSocket JSON-RPC, Unified Header, or IFRS/Governance libraries across apps.
+ */
+
+import * as sdk from '@superlexicon/sdk';
+import * as sdkUi from '@superlexicon/sdk/ui';
+import * as instSuite from './slx-inst-suite.js';
+import * as hfsRegistry from './slx-hfs-registry.js';
+import * as ifrsValuation from './ifrs-valuation.js';
+import * as ifrsHumanGl from './ifrs-human-gl.js';
+import * as gameGuide from './game-guide.js';
+import * as fleetSocial from './slx-fleet-social.js';
+import * as legalConsent from './legal-consent.js';
+
+export const HOST_MODULE_MAP = Object.freeze({
+  '@superlexicon/sdk': sdk,
+  '@superlexicon/sdk/ui': sdkUi,
+  './slx-inst-suite.js': instSuite,
+  '/src/slx-inst-suite.js': instSuite,
+  './slx-hfs-registry.js': hfsRegistry,
+  '/src/slx-hfs-registry.js': hfsRegistry,
+  './ifrs-valuation.js': ifrsValuation,
+  '/src/ifrs-valuation.js': ifrsValuation,
+  './ifrs-human-gl.js': ifrsHumanGl,
+  '/src/ifrs-human-gl.js': ifrsHumanGl,
+  './game-guide.js': gameGuide,
+  '/src/game-guide.js': gameGuide,
+  './slx-fleet-social.js': fleetSocial,
+  '/src/slx-fleet-social.js': fleetSocial,
+  './legal-consent.js': legalConsent,
+  '/src/legal-consent.js': legalConsent,
+});
+
+if (typeof globalThis !== 'undefined') {
+  globalThis.__SLX_HOST_MODULES__ = HOST_MODULE_MAP;
+}
+
+/**
+ * Rewrites static ES `import ... from '<hostSpecifier>'` statements inside a verified HFS UI
+ * bundle's `<script type="module">` into `globalThis.__SLX_HOST_MODULES__[...]` bindings so the
+ * bundle executes cleanly from an in-memory `blob:` ES module URL without build-time coupling.
+ */
+export function rewriteHostModuleImports(jsSource) {
+  const staticImportRe =
+    /^\s*import\s+([\s\S]*?)\s+from\s+['"]([^'"]+)['"]\s*;?/gm;
+
+  return String(jsSource || '').replace(staticImportRe, (fullMatch, clause, spec) => {
+    const cleanSpec = String(spec || '').trim();
+    if (!Object.prototype.hasOwnProperty.call(HOST_MODULE_MAP, cleanSpec)) {
+      return fullMatch;
+    }
+    const modExpr = `globalThis.__SLX_HOST_MODULES__[${JSON.stringify(cleanSpec)}]`;
+    const trimmedClause = clause
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/[^\n]*/g, '')
+      .trim();
+
+    // Form 1: `import * as ns from '...'`
+    const nsMatch = trimmedClause.match(/^\*\s+as\s+([A-Za-z_$][\w$]*)$/);
+    if (nsMatch) {
+      return `const ${nsMatch[1]} = ${modExpr};`;
+    }
+
+    // Form 2: `import { a, b as c } from '...'`
+    if (trimmedClause.startsWith('{') && trimmedClause.endsWith('}')) {
+      const inner = trimmedClause.slice(1, -1);
+      const bindings = inner
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part) => {
+          const asMatch = part.match(/^([A-Za-z_$][\w$]*)\s+as\s+([A-Za-z_$][\w$]*)$/);
+          return asMatch ? `${asMatch[1]}: ${asMatch[2]}` : part;
+        });
+      return `const { ${bindings.join(', ')} } = ${modExpr};`;
+    }
+
+    // Form 3: `import defName, { a, b as c } from '...'`
+    const comboMatch = trimmedClause.match(/^([A-Za-z_$][\w$]*)\s*,\s*\{([\s\S]*)\}$/);
+    if (comboMatch) {
+      const defIdent = comboMatch[1];
+      const bindings = comboMatch[2]
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part) => {
+          const asMatch = part.match(/^([A-Za-z_$][\w$]*)\s+as\s+([A-Za-z_$][\w$]*)$/);
+          return asMatch ? `${asMatch[1]}: ${asMatch[2]}` : part;
+        });
+      return `const ${defIdent} = ${modExpr}.default; const { ${bindings.join(', ')} } = ${modExpr};`;
+    }
+
+    // Form 4: `import defName from '...'`
+    if (/^[A-Za-z_$][\w$]*$/.test(trimmedClause)) {
+      return `const ${trimmedClause} = ${modExpr}.default ?? ${modExpr};`;
+    }
+
+    return fullMatch;
+  });
+}
+
+let _catalogPromise = null;
+export async function loadGenesisAppCatalog() {
+  if (_catalogPromise) return _catalogPromise;
+  _catalogPromise = (async () => {
+    try {
+      const resp = await fetch('/app-bundles/manifest.json', { cache: 'no-cache' });
+      if (!resp.ok) return { apps: [] };
+      return await resp.json();
+    } catch (_) {
+      return { apps: [] };
+    }
+  })();
+  return _catalogPromise;
+}
+
+/**
+ * Resolves the latest metadata & `uiHash` for an app `slug` by merging:
+ *   1. Genesis catalog (`/app-bundles/manifest.json`)
+ *   2. Locally published / updated Studio apps (`localStorage`)
+ *   3. Live on-chain `AppStore` HFS (`getAppBySlug`) if deployed on Subnet 1!
+ */
+export async function resolveEffectiveAppMeta(slug, storeClient) {
+  const cleanSlug = String(slug || '').trim().toLowerCase();
+  const catalog = await loadGenesisAppCatalog();
+  const base = (catalog.apps || []).find((a) => a.slug === cleanSlug) || null;
+  const localOverrides = sdk
+    .loadLocalPublishedApps()
+    .find((a) => String(a.slug || '').toLowerCase() === cleanSlug);
+
+  let onChain = null;
+  if (storeClient) {
+    try {
+      onChain = await storeClient.fetchAppBySlug(cleanSlug);
+    } catch (_) {}
+  }
+
+  if (!base && !localOverrides && !onChain) {
+    return null;
+  }
+
+  // Prefer live on-chain `AppStore` release if present, then local Studio override, then genesis!
+  const merged = {
+    ...(base || {}),
+    ...(localOverrides || {}),
+    ...(onChain
+      ? {
+          appId: onChain.appId,
+          title: onChain.title || localOverrides?.title || base?.title,
+          summary: onChain.summary || localOverrides?.summary || base?.summary,
+          icon: onChain.icon || localOverrides?.icon || base?.icon,
+          version: onChain.version || localOverrides?.version || base?.version,
+          category: onChain.category || localOverrides?.category || base?.category,
+          execMode: base?.isSystemCore ? sdk.APP_EXEC_MODE.VERIFIED_HOST : onChain.execMode,
+          uiHash: onChain.uiHash,
+          wasmCodeHash:
+            onChain.wasmCodeHash !== sdk.ZERO_BYTES32
+              ? onChain.wasmCodeHash
+              : base?.wasmCodeHash || sdk.ZERO_BYTES32,
+          defaultHfsAddr:
+            onChain.defaultHfsAddr !== sdk.ZERO_ADDR
+              ? onChain.defaultHfsAddr
+              : base?.defaultHfsAddr || sdk.ZERO_ADDR,
+          publisher: onChain.publisher,
+          releaseCount: onChain.releaseCount,
+          updatedBlock: onChain.updatedBlock,
+          source: 'onchain',
+        }
+      : {}),
+  };
+
+  // Only keep static genesis `bundleUrl` fallback if `uiHash` still matches genesis `base.uiHash`
+  if (base && merged.uiHash && merged.uiHash.toLowerCase() !== base.uiHash.toLowerCase()) {
+    merged.bundleUrl = '';
+  }
+
+  return merged;
+}
+
+/**
+ * Mounts a `keccak256`-verified `VERIFIED_HOST` single-file HTML bundle directly into the current
+ * document so URL query/hash deep-links, `localStorage` wallet state, WebSocket JSON-RPC, and DOM
+ * styling run with 100% native fidelity, plus a compact non-intrusive Verified Bundle Inspector pill.
+ */
+export async function mountVerifiedHostAppBundle({ appMeta, verifiedBundle }) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(verifiedBundle.html, 'text/html');
+
+  if (doc.title) {
+    document.title = doc.title;
+  }
+
+  // Inject <style> blocks from the bundle into <head>
+  doc.head.querySelectorAll('style').forEach((styleEl) => {
+    const clone = document.createElement('style');
+    clone.setAttribute('data-slx-mounted-bundle', appMeta.slug || 'app');
+    clone.textContent = styleEl.textContent;
+    document.head.appendChild(clone);
+  });
+
+  // Extract <script> tags before injecting body markup
+  const scripts = [];
+  doc.body.querySelectorAll('script').forEach((scr) => {
+    scripts.push({
+      type: (scr.getAttribute('type') || '').toLowerCase(),
+      code: scr.textContent || '',
+    });
+    scr.remove();
+  });
+
+  // Reset inline stub styles on <body> so the app's own CSS rules govern <body> cleanly
+  document.body.removeAttribute('style');
+  if (doc.body.className) {
+    document.body.className = doc.body.className;
+  }
+  if (doc.body.getAttribute('style')) {
+    document.body.setAttribute('style', doc.body.getAttribute('style'));
+  }
+  document.body.innerHTML = doc.body.innerHTML;
+
+  // Mount site-wide legal consent footer & modal
+  try {
+    legalConsent.mountLegalConsent();
+  } catch (_) {}
+
+  // Append compact, collapsible Verified HFS Bundle Inspector Pill (bottom-left)
+  mountVerifiedBundleBadge({ appMeta, verifiedBundle });
+
+  // Execute extracted module / inline scripts via Blob ES module URLs
+  for (const s of scripts) {
+    if (!s.code.trim()) continue;
+    if (s.type === 'module') {
+      const rewritten = rewriteHostModuleImports(s.code);
+      const blob = new Blob([rewritten], { type: 'text/javascript' });
+      const blobUrl = URL.createObjectURL(blob);
+      try {
+        await import(/* @vite-ignore */ blobUrl);
+      } finally {
+        URL.revokeObjectURL(blobUrl);
+      }
+    } else {
+      const el = document.createElement('script');
+      el.textContent = s.code;
+      document.body.appendChild(el);
+    }
+  }
+}
+
+function mountVerifiedBundleBadge({ appMeta, verifiedBundle }) {
+  if (document.getElementById('slxBundleVerifiedPill')) return;
+  const gzKb = ((verifiedBundle.compressedLen || appMeta.compressedLen || 0) / 1024).toFixed(1);
+  const srcTag = verifiedBundle.cacheHit
+    ? 'IndexedDB CAS'
+    : verifiedBundle.loadedFrom === 'onchain-appstore'
+    ? '⛓️ On-Chain AppStore'
+    : 'Verified CAS';
+  const shortUi = sdk.shortHex(verifiedBundle.uiHash || appMeta.uiHash || '', 8, 6);
+
+  const wrap = document.createElement('div');
+  wrap.id = 'slxBundleVerifiedPill';
+  wrap.style.cssText =
+    'position:fixed;left:12px;bottom:12px;z-index:9940;display:inline-flex;align-items:center;gap:7px;' +
+    'padding:5px 10px;border-radius:999px;background:rgba(5,12,26,0.92);' +
+    'border:1px solid rgba(56,189,248,0.42);backdrop-filter:blur(8px);' +
+    'font-family:"JetBrains Mono",monospace;font-size:10.5px;color:#cbd5e1;box-shadow:0 8px 24px rgba(0,0,0,0.5);';
+  wrap.innerHTML =
+    `<span style="color:#6ee7b7;font-weight:800;" title="keccak256(gzipBundle) verified before DOM execution">🧩 UI ${shortUi}</span>` +
+    `<span style="color:#64748b;">•</span>` +
+    `<span style="color:#93c5fd;">${gzKb}KB gz (${srcTag})</span>` +
+    `<a href="/apps.html?edit=${encodeURIComponent(appMeta.slug || '')}" style="color:#fde68a;text-decoration:none;font-weight:700;margin-left:2px;" title="Inspect, fork, or hot-publish a new UI version in the HFS App Store without redeploying the web client">✏ Studio</a>` +
+    `<a href="/apps.html" style="color:#38bdf8;text-decoration:none;font-weight:700;" title="Open SuperLexicon HFS App Store">🏪 Store</a>`;
+  document.body.appendChild(wrap);
+}

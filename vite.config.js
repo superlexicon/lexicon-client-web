@@ -29,6 +29,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        apps: resolve(__dirname, 'apps.html'),
         explorer: resolve(__dirname, 'explorer.html'),
         battleship: resolve(__dirname, 'battleship.html'),
         social: resolve(__dirname, 'social.html'),

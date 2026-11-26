@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QUANTUM 4D JACKPOT — Validator-Quorum Threshold ECVRF Lottery (SuperLexicon Subnet 1)</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/lottery.css" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+</head>
+<body>
+  <div class="lot-shell">
+    <div id="slxUnifiedHeaderMount"></div>
+    <button id="btnFaucetTopup" data-uh-unhide="1" class="lot-btn lot-btn-emerald" style="display:none;" title="Claim 1,000 SGD-FIAT test funds from Institutional Faucet">💧 +1,000 SGD Test Funds</button>
+    <button id="btnCryptoSpec" data-uh-unhide="1" class="lot-btn" style="display:none;">🔬 Threshold VRF Math</button>
+
+    <main class="lot-main">
+      <!-- Left / Primary Column: Grand Jackpot Marquee + 4D Reel Ticket Builder + Current Round Slip Feed -->
+      <section class="lot-primary-col">
+        <div class="lot-hero-card">
+          <div class="lot-hero-top">
+            <div>
+              <div class="lot-eyebrow mono">
+                <span class="lot-pulse-dot"></span>
+                <span id="roundBadge">ROUND #— • CONNECTING…</span>
+              </div>
+              <h1 class="lot-jackpot-amount mono" id="jackpotAmount">— SGD</h1>
+              <p class="lot-jackpot-sub">
+                100% Rolling Grand Jackpot Pool (<strong id="reserveAmount" class="mono">— SGD</strong> Fixed-Odds Reserve) • Settled Directly in <code>SGD-FIAT</code>
+              </p>
+            </div>
+
+            <div class="lot-countdown-box">
+              <span class="lot-countdown-lbl mono" id="countdownLabel">DRAW WINDOW</span>
+              <strong class="lot-countdown-val mono" id="countdownValue">Awaiting 1st Ticket</strong>
+              <span class="lot-countdown-sub mono" id="countdownSub">12-block window (~48s)</span>
+              <button id="btnTriggerDraw" class="lot-btn lot-btn-amber" style="display:none;margin-top:8px;width:100%;">
+                ⚡ Close Sales &amp; Request Quorum VRF Draw
+              </button>
+            </div>
+          </div>
+
+          <div class="lot-tier-strip mono">
+            <div class="lot-tier-pill lot-tier-gold">
+              <span>🏆 EXACT 4D (1 in 10,000)</span>
+              <strong id="tier4dVal">100% Grand Jackpot</strong>
+            </div>
+            <div class="lot-tier-pill">
+              <span>🥈 LAST 3 DIGITS (3D)</span>
+              <strong>250 SGD</strong>
+            </div>
+            <div class="lot-tier-pill">
+              <span>🥉 LAST 2 DIGITS (2D)</span>
+              <strong>40 SGD</strong>
+            </div>
+            <div class="lot-tier-pill">
+              <span>✨ LAST 1 DIGIT (1D — 1 in 10!)</span>
+              <strong>15 SGD</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4-Digit Reel Picker & Slip Cart -->
+        <div class="lot-builder-grid">
+          <div class="lot-panel">
+            <div class="lot-panel-hdr">
+              <h3>🎰 Pick Your 4D Number (<code>0000–9999</code>)</h3>
+              <span class="mono lot-price-tag">10 SGD / Ticket</span>
+            </div>
+
+            <div class="lot-reels-wrap">
+              <div class="lot-reel-col">
+                <button type="button" class="lot-reel-step" data-digit="0" data-step="1">▲</button>
+                <input type="text" inputmode="numeric" maxlength="1" class="lot-reel-digit mono" id="digit0" value="7" />
+                <button type="button" class="lot-reel-step" data-digit="0" data-step="-1">▼</button>
+              </div>
+              <div class="lot-reel-col">
+                <button type="button" class="lot-reel-step" data-digit="1" data-step="1">▲</button>
+                <input type="text" inputmode="numeric" maxlength="1" class="lot-reel-digit mono" id="digit1" value="7" />
+                <button type="button" class="lot-reel-step" data-digit="1" data-step="-1">▼</button>
+              </div>
+              <div class="lot-reel-col">
+                <button type="button" class="lot-reel-step" data-digit="2" data-step="1">▲</button>
+                <input type="text" inputmode="numeric" maxlength="1" class="lot-reel-digit mono" id="digit2" value="7" />
+                <button type="button" class="lot-reel-step" data-digit="2" data-step="-1">▼</button>
+              </div>
+              <div class="lot-reel-col">
+                <button type="button" class="lot-reel-step" data-digit="3" data-step="1">▲</button>
+                <input type="text" inputmode="numeric" maxlength="1" class="lot-reel-digit mono" id="digit3" value="7" />
+                <button type="button" class="lot-reel-step" data-digit="3" data-step="-1">▼</button>
+              </div>
+            </div>
+
+            <div class="lot-picker-actions">
+              <button type="button" id="btnAddPick" class="lot-btn lot-btn-cyan">+ Add to Slip</button>
+              <button type="button" id="btnQuick1" class="lot-btn">🎲 Quick Pick ×1</button>
+              <button type="button" id="btnQuick5" class="lot-btn">🎲 Quick Pick ×5</button>
+              <button type="button" id="btnCover1D" class="lot-btn" title="Adds 10 tickets ending in 0..9 — mathematically guarantees at least a 1D (15 SGD) or higher win!">🎯 Wheel 0–9 (10×)</button>
+            </div>
+          </div>
+
+          <div class="lot-panel lot-slip-panel">
+            <div class="lot-panel-hdr">
+              <h3>🧾 Your Ticket Slip (<span id="slipCount">0</span>/10)</h3>
+              <button type="button" id="btnClearSlip" class="lot-link-btn mono">Clear</button>
+            </div>
+            <div id="slipList" class="lot-slip-list mono"></div>
+            <div class="lot-slip-footer">
+              <div class="lot-balance-row mono">
+                <span>Your Balance: <strong id="mySgdBalance">— SGD</strong></span>
+                <span>Total: <strong id="slipCost">0 SGD</strong></span>
+              </div>
+              <button type="button" id="btnBuyTickets" class="lot-btn lot-btn-primary" style="width:100%;">
+                🎟️ Buy Tickets on Subnet 1
+              </button>
+              <div id="txStatusMsg" class="lot-tx-status mono"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Current-Round Tickets & Rolling Commitment Root -->
+        <div class="lot-panel">
+          <div class="lot-panel-hdr">
+            <h3>📜 Current Round Sealed Tickets (<span id="curRoundTicketsCnt">0</span>)</h3>
+            <span class="mono lot-commit-pill" id="curCommitRoot" title="Rolling keccak256 commitment over all sold tickets — fed directly into VRF seed alpha!">commit: —</span>
+          </div>
+          <div id="curTicketsGrid" class="lot-tickets-grid mono"></div>
+        </div>
+      </section>
+
+      <!-- Right / Audit Column: Validator Quorum Status + Settled Draws + Live Client-Side Proof Verifier -->
+      <aside class="lot-audit-col">
+        <!-- Live Active Validator Quorum & DKG Epoch Card -->
+        <div class="lot-panel">
+          <div class="lot-panel-hdr">
+            <h3>🛡️ Wasmtime Validator-Quorum VRF Beacon</h3>
+            <span class="mono lot-quorum-pill" id="quorumBadge">— of — BFT</span>
+          </div>
+          <div class="lot-beacon-meta mono" id="beaconMetaSummary">
+            Reading <code>host_active_validators</code> &amp; DKG Epoch keys…
+          </div>
+          <div id="validatorNodesList" class="lot-validators-list mono"></div>
+        </div>
+
+        <!-- Player Lifetime Stats -->
+        <div class="lot-panel">
+          <div class="lot-panel-hdr">
+            <h3>🏅 Your Lifetime 4D Stats</h3>
+            <span class="mono lot-muted" id="myIdentityShort">Not connected</span>
+          </div>
+          <div class="lot-stats-row mono">
+            <div><span>Tickets</span><strong id="statBought">0</strong></div>
+            <div><span>Wagered</span><strong id="statSpent">0 SGD</strong></div>
+            <div><span>Won</span><strong id="statWon" style="color:#34d399;">0 SGD</strong></div>
+            <div><span>Winning Hits</span><strong id="statHits" style="color:#fbbf24;">0</strong></div>
+          </div>
+        </div>
+
+        <!-- Settled Draws History & 1-Click Browser Verifier -->
+        <div class="lot-panel">
+          <div class="lot-panel-hdr">
+            <h3>🏆 Provably-Fair Draw History</h3>
+            <span class="mono lot-muted" id="settledCountTag">0 Draws</span>
+          </div>
+          <div id="historyList" class="lot-history-list"></div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Client-Side Edwards25519 DLEQ + Lagrange Proof Verification Modal -->
+    <div id="proofModal" class="lot-modal-backdrop" style="display:none;">
+      <div class="lot-modal">
+        <div class="lot-modal-hdr">
+          <h3 id="proofModalTitle">🔬 Browser Cryptographic Audit — Round #—</h3>
+          <button type="button" id="btnCloseProof" class="lot-btn">✕</button>
+        </div>
+        <div id="proofModalBody" class="lot-modal-body mono"></div>
+      </div>
+    </div>
+
+    <!-- Architecture / Security Modal -->
+    <div id="specModal" class="lot-modal-backdrop" style="display:none;">
+      <div class="lot-modal">
+        <div class="lot-modal-hdr">
+          <h3>🔬 Why Validator-Quorum Threshold ECVRF Is Unbiasable &amp; Unpredictable</h3>
+          <button type="button" id="btnCloseSpec" class="lot-btn">✕</button>
+        </div>
+        <div class="lot-modal-body">
+          <p><strong>1. Dynamic Consensus Validator Set (<code>env::host_active_validators</code>):</strong> Wasmtime reads the live <code>Full</code> validator registry directly from consensus <code>GlobalAccountState</code> and enforces the BFT-safe threshold <code>t = N</code> (for <code>N &le; 4</code>) or <code>t = &lfloor;2N/3&rfloor; + 1</code> (for <code>N &ge; 5</code>, e.g. <code>4-of-5</code>, <code>11-of-15</code>, <code>15-of-21</code>) automatically as external validators join or leave.</p>
+          <p><strong>2. Non-Interactive Dealerless DKG + Objective DLEQ Fraud Proofs:</strong> Every validator contributes an independent degree-<code>(t&minus;1)</code> secret polynomial over the prime-order-<code>&ell;</code> subgroup of <code>Edwards25519</code> using its existing 32-byte consensus key. No single node ever knows the combined epoch secret <code>S</code>.</p>
+          <p><strong>3. Subset-Invariant Uniqueness (Zero Last-Revealer Grinding):</strong> When ticket sales freeze at <code>closeAndRequestDraw()</code>, the VRF input <code>&alpha;</code> commits to the frozen <code>tickets_commitment</code> root. Every validator&rsquo;s partial evaluation <code>&Gamma;<sub>i</sub> = s<sub>i</sub> &middot; H(&alpha;)</code> carries a 64-byte Chaum-Pedersen DLEQ proof against its public <code>SharePK<sub>i</sub></code>. By polynomial interpolation over <code>&#8484;<sub>&ell;</sub></code>, <em>every</em> valid <code>t</code>-of-<code>N</code> subset combines to the <strong>exact same curve point <code>&Gamma; = S &middot; H(&alpha;)</code></strong>—making selective withholding or proposer re-ordering mathematically powerless to alter the winning 4D number!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/lottery.js"></script>
+  <script type="module" src="/src/legal-consent.js"></script>
+</body>
+</html>

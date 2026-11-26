@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RF Mesh Pulse Poll</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; background: #050b16; color: #f8fafc; font-family: system-ui, sans-serif; }
+    .card { max-width: 720px; margin: 0 auto; background: #0a1428; border: 1px solid rgba(56,189,248,0.4); border-radius: 14px; padding: 20px; }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; background: rgba(16,185,129,0.2); border: 1px solid rgba(52,211,153,0.5); color: #6ee7b7; font-family: monospace; font-size: 11px; font-weight: 700; }
+    .opt { margin-top: 10px; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(71,85,105,0.75); background: #060d1b; display: flex; flex-direction: column; gap: 6px; }
+    .bar { height: 8px; border-radius: 999px; background: #1e293b; overflow: hidden; }
+    .fill { height: 100%; background: linear-gradient(90deg, #0ea5e9, #10b981); transition: width 0.25s; }
+    button { padding: 7px 13px; border-radius: 8px; border: 1px solid rgba(56,189,248,0.6); background: rgba(14,165,233,0.22); color: #e0f2fe; font-weight: 700; cursor: pointer; font-family: monospace; font-size: 12px; }
+    button:hover { background: rgba(14,165,233,0.38); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <span class="pill">🛡️ Sandboxed Iframe App • window.slx Bridge</span>
+      <span id="ctxInfo" style="font-family:monospace;font-size:12px;color:#94a3b8;">Connecting to Host…</span>
+    </div>
+    <h2 style="margin:12px 0 4px;">📊 Next Community HFS Subroutine Priority?</h2>
+    <p style="margin:0 0 14px;font-size:13px;color:#94a3b8;">Cast a signed vote via your Host Identity HFS — zero private keys exposed to this iframe.</p>
+    <div id="optionsList"></div>
+    <div id="logBox" style="margin-top:14px;font-family:monospace;font-size:12px;color:#7dd3fc;"></div>
+  </div>
+  <script>
+    const OPTIONS = [
+      { id: 'mesh-map', label: '🗺️ Live LoRa / LR2021 SNR Coverage Heatmap HFS' },
+      { id: 'dao-bounty', label: '⚡ Milestone Hardware Firmware Bounty Escrow HFS' },
+      { id: 'p2p-swap', label: '🔄 Atomic Over-the-Air Offline Voucher Swap HFS' },
+      { id: 'chess-zk', label: '♟️ Fog-of-War Zero-Knowledge Blitz Chess HFS' }
+    ];
+    let votes = { 'mesh-map': 14, 'dao-bounty': 11, 'p2p-swap': 9, 'chess-zk': 7 };
+    let userTag = 'Guest';
+
+    async function init() {
+      if (window.slx) {
+        const ctx = await window.slx.getContext();
+        userTag = ctx.user.nickname + ' · ' + ctx.user.tag4;
+        document.getElementById('ctxInfo').textContent = 'Connected as ' + userTag + ' (Blk #' + ctx.blockNumber + ')';
+        const saved = await window.slx.getAppStorage('votes_v1');
+        if (saved) votes = saved;
+      }
+      render();
+    }
+
+    function render() {
+      const total = Object.values(votes).reduce((a, b) => a + b, 0) || 1;
+      document.getElementById('optionsList').innerHTML = OPTIONS.map(o => {
+        const count = votes[o.id] || 0;
+        const pct = ((count / total) * 100).toFixed(1);
+        return '<div class="opt">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
+            '<strong style="font-size:13.5px;">' + o.label + '</strong>' +
+            '<button onclick="castVote(\'' + o.id + '\')">Vote (' + count + ' • ' + pct + '%)</button>' +
+          '</div>' +
+          '<div class="bar"><div class="fill" style="width:' + pct + '%"></div></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    window.castVote = async function(optId) {
+      const log = document.getElementById('logBox');
+      try {
+        log.textContent = '⏳ Requesting Host Wallet signature via window.slx.sendTransaction…';
+        const res = await window.slx.sendTransaction({
+          fnSig: 'vote(string)',
+          args: [['string', optId]],
+          summary: 'Cast community poll vote for "' + optId + '"'
+        });
+        votes[optId] = (votes[optId] || 0) + 1;
+        await window.slx.setAppStorage('votes_v1', votes);
+        log.textContent = '✓ Vote recorded by ' + userTag + ' • txHash: ' + String(res.txHash).slice(0, 18) + '…';
+        render();
+      } catch (err) {
+        log.textContent = '⚠ ' + err.message;
+      }
+    };
+
+    init();
+  </script>
+</body>
+</html>

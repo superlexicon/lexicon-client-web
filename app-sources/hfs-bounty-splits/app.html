@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HFS R&D Bounty Splits</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; background: #050a14; color: #f8fafc; font-family: system-ui, sans-serif; }
+    .card { max-width: 720px; margin: 0 auto; background: #0a1324; border: 1px solid rgba(251,191,36,0.42); border-radius: 14px; padding: 18px; }
+    input { padding: 7px 10px; border-radius: 8px; border: 1px solid #334155; background: #030712; color: #f8fafc; font-family: monospace; font-size: 12px; width: 100%; }
+    button { padding: 8px 13px; border-radius: 8px; border: 1px solid rgba(251,191,36,0.65); background: rgba(245,158,11,0.2); color: #fef3c7; font-family: monospace; font-weight: 700; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-family: monospace; font-size: 12.5px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #1e293b; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <strong style="color:#fde68a;font-family:monospace;font-size:12px;">🧮 ANTI-DATACENTER R&amp;D BOUNTY SPLITTER</strong>
+      <span id="hdrUser" style="font-family:monospace;font-size:12px;color:#94a3b8;">Sandboxed Guest</span>
+    </div>
+    <h2 style="margin:10px 0 4px;">Open-Source Subroutine Grant Pool: $25,000</h2>
+    <p style="margin:0 0 12px;font-size:13px;color:#94a3b8;">Add contributor splits and execute deterministic settlement via Host Wallet confirmation.</p>
+    <div style="display:grid;grid-template-columns:1.4fr 0.8fr auto;gap:8px;">
+      <input id="recIn" placeholder="Contributor handle or 0x… Identity" />
+      <input id="bpsIn" type="number" min="5" max="100" value="25" placeholder="Share %" />
+      <button onclick="addSplit()">+ Add Recipient</button>
+    </div>
+    <table>
+      <thead><tr><th>Contributor</th><th>Share %</th><th>Payout (USD)</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <span id="msg" style="font-family:monospace;font-size:12px;color:#6ee7b7;">Ready</span>
+      <button onclick="settlePool()">⚡ Sign &amp; Execute Split</button>
+    </div>
+  </div>
+  <script>
+    const POOL = 25000;
+    let splits = [
+      { who: 'RustWasmCore · 7a12', pct: 50 },
+      { who: 'RfSawFilterLab · 3e09', pct: 30 },
+      { who: 'ZkBulletproofs · 8b44', pct: 20 }
+    ];
+    async function init() {
+      if (window.slx) {
+        const ctx = await window.slx.getContext();
+        document.getElementById('hdrUser').textContent = ctx.user.nickname + ' · ' + ctx.user.tag4;
+        const s = await window.slx.getAppStorage('splits_v1');
+        if (Array.isArray(s) && s.length) splits = s;
+      }
+      render();
+    }
+    function render() {
+      document.getElementById('rows').innerHTML = splits.map(s =>
+        '<tr><td>' + s.who.replace(/</g, '&lt;') + '</td><td>' + s.pct + '%</td><td>$' + Math.round(POOL * s.pct / 100).toLocaleString() + '</td></tr>'
+      ).join('');
+    }
+    window.addSplit = async function() {
+      const who = document.getElementById('recIn').value.trim();
+      const pct = Math.max(1, Math.min(100, Number(document.getElementById('bpsIn').value || 10)));
+      if (!who) return;
+      splits.push({ who, pct });
+      if (window.slx) await window.slx.setAppStorage('splits_v1', splits);
+      document.getElementById('recIn').value = '';
+      render();
+    };
+    window.settlePool = async function() {
+      const msg = document.getElementById('msg');
+      try {
+        msg.textContent = '⏳ Awaiting Host Wallet approval…';
+        const res = await window.slx.sendTransaction({
+          fnSig: 'executeBountySplit(uint64)',
+          args: [['uint64', POOL]],
+          summary: 'Settle $25,000 R&D Bounty Split across ' + splits.length + ' contributors'
+        });
+        msg.textContent = '✓ Split executed (' + String(res.txHash).slice(0, 16) + '…)';
+      } catch (e) {
+        msg.textContent = '⚠ ' + e.message;
+      }
+    };
+    init();
+  </script>
+</body>
+</html>

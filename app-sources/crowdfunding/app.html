@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Board-Activated Pre-Order Crowdfunding &amp; IFRS Growth Budget HFS — SuperLexicon</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 15% 0%, #0d1f3a 0%, #050a14 55%, #03060d 100%);
+      color: #f8fafc;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+    }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .cf-wrap { max-width: 1360px; margin: 0 auto; padding: 18px 20px 64px; display: flex; flex-direction: column; gap: 16px; }
+
+    .cf-hero {
+      border-radius: 16px;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: linear-gradient(135deg, rgba(8, 25, 48, 0.94), rgba(6, 13, 26, 0.96));
+      padding: 18px 22px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .cf-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #7dd3fc;
+      font-size: 0.71rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Constitutional Graph Strip: Crowdfunding <-> AccountingLedger <-> CorporateCharter <-> Authorization */
+    .cf-chain-graph {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 1020px) {
+      .cf-chain-graph { grid-template-columns: repeat(2, 1fr); }
+    }
+    .cf-node-box {
+      border-radius: 12px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      background: rgba(5, 11, 22, 0.94);
+      padding: 11px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .cf-node-lbl { font-size: 0.66rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+    .cf-node-val { font-size: 0.8rem; font-weight: 800; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cf-node-sub { font-size: 0.67rem; color: #7dd3fc; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .cf-node-sub a { color: #38bdf8; text-decoration: none; font-weight: 700; }
+    .cf-node-sub a:hover { text-decoration: underline; }
+
+    /* 4-Stage Multi-Step Governance Pipeline */
+    .cf-stepper {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 980px) {
+      .cf-stepper { grid-template-columns: repeat(2, 1fr); }
+    }
+    .cf-step {
+      border-radius: 12px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: rgba(7, 13, 26, 0.9);
+      padding: 12px 14px;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .cf-step.current {
+      border-color: #38bdf8;
+      background: linear-gradient(135deg, rgba(12, 42, 74, 0.72), rgba(7, 15, 29, 0.95));
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35);
+    }
+    .cf-step.done {
+      border-color: rgba(52, 211, 153, 0.65);
+      background: linear-gradient(135deg, rgba(6, 42, 35, 0.65), rgba(7, 15, 29, 0.95));
+    }
+    .cf-step-num { font-size: 0.67rem; font-weight: 800; text-transform: uppercase; color: #7dd3fc; display: flex; justify-content: space-between; }
+    .cf-step.done .cf-step-num { color: #6ee7b7; }
+    .cf-step-title { font-size: 0.82rem; font-weight: 800; color: #f8fafc; margin-top: 4px; }
+    .cf-step-desc { font-size: 0.69rem; color: #94a3b8; margin-top: 3px; line-height: 1.4; }
+
+    .cf-mode-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 920px) {
+      .cf-mode-bar { grid-template-columns: 1fr; }
+    }
+    .cf-mode-tab {
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: rgba(7, 14, 28, 0.92);
+      color: #e2e8f0;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .cf-mode-tab:hover { border-color: rgba(56, 189, 248, 0.6); }
+    .cf-mode-tab.active {
+      border-color: #34d399;
+      background: linear-gradient(135deg, rgba(6, 38, 35, 0.82), rgba(7, 18, 34, 0.95));
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.35);
+    }
+    .cf-mode-title { font-size: 0.8rem; font-weight: 800; color: #f8fafc; margin-bottom: 3px; display: flex; justify-content: space-between; align-items: center; }
+    .cf-mode-desc { font-size: 0.71rem; color: #94a3b8; line-height: 1.42; }
+
+    .cf-stat-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 900px) {
+      .cf-stat-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+    .cf-kpi {
+      border-radius: 12px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: #060d1b;
+      padding: 12px 15px;
+      border-left: 4px solid #38bdf8;
+    }
+    .cf-kpi-lbl { font-size: 0.67rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
+    .cf-kpi-val { font-size: 1.2rem; font-weight: 800; color: #f8fafc; margin-top: 4px; }
+    .cf-kpi-sub { font-size: 0.67rem; color: #64748b; margin-top: 3px; }
+
+    .cf-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .cf-col-5 { grid-column: span 5; }
+    .cf-col-7 { grid-column: span 7; }
+    .cf-col-6 { grid-column: span 6; }
+    .cf-col-12 { grid-column: span 12; }
+    @media (max-width: 1040px) {
+      .cf-col-5, .cf-col-7, .cf-col-6 { grid-column: span 12; }
+    }
+
+    .cf-card {
+      border-radius: 14px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: rgba(6, 12, 24, 0.94);
+      padding: 17px 19px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .cf-card h2 {
+      margin: 0;
+      font-size: 0.92rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 9px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.95);
+    }
+
+    .cf-thermo-wrap { position: relative; padding: 12px 0 26px; }
+    .cf-thermo-track {
+      width: 100%;
+      height: 18px;
+      border-radius: 999px;
+      background: #0b1324;
+      border: 1px solid rgba(71, 85, 105, 0.85);
+      overflow: hidden;
+      position: relative;
+    }
+    .cf-thermo-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #0ea5e9 0%, #10b981 65%, #a855f7 100%);
+      transition: width 0.35s ease;
+    }
+    .cf-thermo-pins { position: relative; height: 28px; margin-top: 6px; }
+    .cf-pin {
+      position: absolute;
+      transform: translateX(-50%);
+      font-size: 0.65rem;
+      white-space: nowrap;
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .cf-pin.unlocked { color: #6ee7b7; font-weight: 800; }
+
+    label.cf-lbl { display: flex; flex-direction: column; gap: 4px; font-size: 0.71rem; font-weight: 700; color: #cbd5e1; }
+    input.cf-in, select.cf-in {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(71, 85, 105, 0.85);
+      background: #030813;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      outline: none;
+    }
+    .cf-btn {
+      padding: 8px 12px;
+      border-radius: 9px;
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      background: rgba(14, 165, 233, 0.18);
+      color: #e0f2fe;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.73rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .cf-btn:hover:not(:disabled) { background: rgba(14, 165, 233, 0.3); }
+    .cf-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .cf-btn-emerald { border-color: rgba(52, 211, 153, 0.65); background: rgba(16, 185, 129, 0.2); color: #d1fae5; }
+    .cf-btn-emerald:hover:not(:disabled) { background: rgba(16, 185, 129, 0.34); }
+    .cf-btn-amber { border-color: rgba(251, 191, 36, 0.65); background: rgba(245, 158, 11, 0.18); color: #fef3c7; }
+    .cf-btn-amber:hover:not(:disabled) { background: rgba(245, 158, 11, 0.32); }
+    .cf-btn-rose { border-color: rgba(244, 63, 94, 0.65); background: rgba(225, 29, 72, 0.18); color: #ffe4e6; }
+
+    .cf-table { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
+    .cf-table th {
+      text-align: left;
+      padding: 7px 9px;
+      color: #94a3b8;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.85);
+    }
+    .cf-table td {
+      padding: 8px 9px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.75);
+      vertical-align: middle;
+    }
+    .cf-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+    .cf-badge-ok { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(52, 211, 153, 0.5); }
+    .cf-badge-lock { background: rgba(71, 85, 105, 0.25); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.45); }
+    .cf-badge-hold { background: rgba(245, 158, 11, 0.2); color: #fde68a; border: 1px solid rgba(251, 191, 36, 0.45); }
+    .cf-badge-void { background: rgba(244, 63, 94, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.45); }
+    .cf-badge-sky { background: rgba(14, 165, 233, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.45); }
+
+    .cf-codebox {
+      border-radius: 9px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: #030711;
+      padding: 10px 12px;
+      font-size: 0.71rem;
+      color: #bae6fd;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+    .cf-scroll-box {
+      border-radius: 9px;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      background: #040915;
+      padding: 11px 13px;
+      font-size: 0.69rem;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      max-height: 195px;
+      overflow-y: auto;
+      line-height: 1.48;
+    }
+    .cf-dir-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .cf-dir-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      border: 1px solid rgba(71, 85, 105, 0.7);
+      background: #071022;
+      color: #cbd5e1;
+    }
+    .cf-dir-chip.signed {
+      border-color: rgba(52, 211, 153, 0.65);
+      background: rgba(6, 56, 44, 0.55);
+      color: #a7f3d0;
+    }
+    .cf-toast {
+      display: none;
+      padding: 10px 13px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: rgba(14, 165, 233, 0.15);
+      color: #e0f2fe;
+    }
+    .cf-policy-banner {
+      border-radius: 14px;
+      border: 1px solid rgba(251, 191, 36, 0.48);
+      background: linear-gradient(135deg, rgba(28, 22, 8, 0.92), rgba(7, 15, 29, 0.96));
+      padding: 15px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .cf-policy-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 1020px) {
+      .cf-policy-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .cf-policy-grid { grid-template-columns: 1fr; }
+    }
+    .cf-policy-item {
+      border-radius: 10px;
+      border: 1px solid rgba(71, 85, 105, 0.72);
+      background: rgba(4, 9, 19, 0.85);
+      padding: 10px 12px;
+      font-size: 0.71rem;
+      color: #cbd5e1;
+      line-height: 1.46;
+    }
+    .cf-policy-item strong { color: #f8fafc; display: block; margin-bottom: 3px; font-size: 0.74rem; }
+    .cf-inline-link {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #38bdf8;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .cf-inline-link:hover { color: #7dd3fc; }
+    textarea.cf-in {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(71, 85, 105, 0.85);
+      background: #030813;
+      color: #f8fafc;
+      font-family: Inter, system-ui, sans-serif;
+      font-size: 0.75rem;
+      outline: none;
+      resize: vertical;
+    }
+    .cf-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10080;
+      background: rgba(2, 6, 17, 0.84);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .cf-modal-backdrop.open { display: flex; }
+    .cf-modal-card {
+      width: 100%;
+      max-width: 780px;
+      max-height: 90vh;
+      border-radius: 16px;
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      background: #060d1c;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .cf-modal-head {
+      padding: 15px 19px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.95);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(8, 19, 38, 0.95);
+    }
+    .cf-modal-body {
+      padding: 16px 19px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 0.76rem;
+      color: #cbd5e1;
+      line-height: 1.54;
+    }
+    .cf-legal-scroll {
+      border-radius: 10px;
+      border: 1px solid rgba(71, 85, 105, 0.85);
+      background: #030711;
+      padding: 14px 16px;
+      max-height: 330px;
+      overflow-y: auto;
+      font-size: 0.73rem;
+      line-height: 1.58;
+      color: #e2e8f0;
+    }
+    .cf-legal-scroll h4 {
+      margin: 12px 0 4px;
+      color: #7dd3fc;
+      font-size: 0.77rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .cf-legal-scroll h4:first-child { margin-top: 0; }
+    .cf-legal-scroll p { margin: 0 0 8px; }
+    .cf-modal-foot {
+      padding: 13px 19px;
+      border-top: 1px solid rgba(30, 41, 59, 0.95);
+      background: rgba(5, 11, 22, 0.96);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="instHeaderMount"></div>
+
+  <main class="cf-wrap">
+    <!-- Hero -->
+    <section class="cf-hero">
+      <div style="max-width:860px;">
+        <div class="cf-pill mono">🏛️ Crowdfunding HFS (#26) ⟷ AccountingLedger ⟷ CorporateCharter (BOARD_RESOLUTION)</div>
+        <h1 style="margin:8px 0 6px;font-size:1.46rem;font-weight:900;letter-spacing:-0.02em;">
+          Board-Resolution-Activated Pre-Order Crowdfunding &amp; IFRS Growth Budget HFS
+        </h1>
+        <p style="margin:0;font-size:0.82rem;color:#cbd5e1;line-height:1.52;">
+          Bound directly to the company’s <code>AccountingLedger</code> and <code>CorporateCharter</code>: creating a campaign locks its SKU &amp; stretch-budget terms in <code>STATE_PENDING_BOARD_RESOLUTION</code> and triggers a <strong>Board of Directors Resolution</strong>. Only upon passing &amp; activating the resolution does the HFS enter <code>STATE_LIVE</code>—and settled proceeds sweep into <code>2300 Contract Liabilities (IFRS 15)</code>.
+        </p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <a id="lnkOpenCharter" href="/charter.html" class="cf-btn mono" style="text-decoration:none;">🏛️ CorporateCharter →</a>
+          <a id="lnkOpenAccounting" href="/accounting.html" class="cf-btn mono" style="text-decoration:none;">📒 AccountingLedger →</a>
+          <a href="/rewards.html" class="cf-btn mono" style="text-decoration:none;">🎁 90-Day SLXR Vouchers →</a>
+        </div>
+        <span id="cfStatePill" class="cf-badge cf-badge-sky mono">📝 STEP 1: DRAFT CAMPAIGN</span>
+      </div>
+    </section>
+
+    <div id="globalToast" class="cf-toast mono"></div>
+
+    <!-- Airwallex Credit Authorization, Cancellation & Post-Charge Refund Policy Banner -->
+    <section class="cf-policy-banner" aria-label="Pre-Order Credit Authorization &amp; Refund Policy">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="cf-badge cf-badge-hold mono">💳 AIRWALLEX CREDIT-AUTH PRE-ORDER POLICY</span>
+          <strong style="font-size:0.86rem;color:#fef3c7;">Superlexicon Pte. Ltd. — $0.00 Charged Upfront Until Minimum Target Is Reached</strong>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" id="btnOpenShipEstTop" class="cf-btn mono" style="padding:5px 10px;font-size:0.69rem;">
+            📦 Estimate Shipping &amp; Import Duties
+          </button>
+          <a href="#preorder-checkout" class="cf-btn cf-btn-emerald mono" style="padding:5px 10px;font-size:0.69rem;text-decoration:none;">
+            🛒 Go to Pre-Order Checkout ↓
+          </a>
+        </div>
+      </div>
+      <div class="cf-policy-grid">
+        <div class="cf-policy-item">
+          <strong>1. Credit Authorization Only ($0 Upfront)</strong>
+          Placing a pre-order initially requests <strong>ONLY a credit authorization</strong> for the full order amount via <strong>Airwallex</strong> (<code>auto_capture: false</code>). Zero funds are debited at checkout.
+        </div>
+        <div class="cf-policy-item">
+          <strong>2. Cards Charged ONLY at Minimum Target</strong>
+          Cards are actually charged <strong>only when the campaign reaches its minimum required target</strong>. If the minimum target is not reached, zero cards are charged.
+        </div>
+        <div class="cf-policy-item">
+          <strong>3. Cancel Anytime Before Charge — Not After</strong>
+          You may <strong>cancel anytime after credit authorization</strong> (<code>$0.00</code> charged) directly in the Pre-Order Register below, <strong>but NOT after your card has been charged</strong>.
+        </div>
+        <div class="cf-policy-item">
+          <strong>4. Post-Charge Refunds &amp; 12-Month Commitment</strong>
+          Once charged, funds are committed to EMSes; <strong>refunds after being charged are at the sole discretion of Superlexicon Pte. Ltd.</strong> We commit to delivering within at least <strong>12 months</strong> after campaign close. Prices exclude shipping &amp; taxes.
+        </div>
+      </div>
+    </section>
+
+    <!-- Live 4-Contract Constitutional & Accounting Linkage Strip -->
+    <section class="cf-chain-graph mono">
+      <div class="cf-node-box">
+        <div class="cf-node-lbl"><span>1. Company IFRS Ledger</span><span id="tagAccMode" class="cf-badge cf-badge-ok">LINKED</span></div>
+        <div id="lblCompanyName" class="cf-node-val">Loading Company…</div>
+        <div class="cf-node-sub">
+          <span id="lblAccAddr">0x…</span>
+          <a id="lnkAccInline" href="/accounting.html">Open GL →</a>
+        </div>
+      </div>
+      <div class="cf-node-box">
+        <div class="cf-node-lbl"><span>2. Connected CorporateCharter</span><span id="tagCharterState" class="cf-badge cf-badge-ok">ACTIVE</span></div>
+        <div id="lblCharterInfo" class="cf-node-val">Board of Directors</div>
+        <div class="cf-node-sub">
+          <span id="lblCharterAddr">0x…</span>
+          <a id="lnkCharterInline" href="/charter.html">Resolutions →</a>
+        </div>
+      </div>
+      <div class="cf-node-box">
+        <div class="cf-node-lbl"><span>3. Board Resolution Auth HFS</span><span id="tagBoardAuthState" class="cf-badge cf-badge-lock">NOT TRIGGERED</span></div>
+        <div id="lblBoardAuthQuorum" class="cf-node-val">POLICY_BOARD_RESOLUTION</div>
+        <div class="cf-node-sub">
+          <span id="lblBoardAuthAddr">Created at Step 1</span>
+          <span id="lblBoardAuthSub">One-time consume</span>
+        </div>
+      </div>
+      <div class="cf-node-box">
+        <div class="cf-node-lbl"><span>4. Crowdfunding HFS (#26)</span><span id="tagCfHfsState" class="cf-badge cf-badge-lock">UNDEPLOYED</span></div>
+        <div id="lblCfTitle" class="cf-node-val">SuperLexicon Wave 1 Hardware</div>
+        <div class="cf-node-sub">
+          <span id="lblCfAddr">Awaiting Step 1</span>
+          <span id="lblCfExecMode">Sandbox / Subnet 1</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4-Step Multi-Step Governance Pipeline (Analogous to Share Issuance) -->
+    <section class="cf-stepper mono">
+      <div id="stepCard1" class="cf-step current">
+        <div class="cf-step-num"><span>Step 1 • Proposal</span><span id="stepTag1">ACTIVE</span></div>
+        <div class="cf-step-title">Specify Campaign &amp; Trigger Board Resolution</div>
+        <div class="cf-step-desc">Link <code>AccountingLedger</code> → lock SKUs &amp; IFRS budget tiers in <code>PENDING_BOARD_RESOLUTION (1)</code> &amp; spawn <code>Authorization</code>.</div>
+      </div>
+      <div id="stepCard2" class="cf-step">
+        <div class="cf-step-num"><span>Step 2 • Board Vote</span><span id="stepTag2">LOCKED</span></div>
+        <div class="cf-step-title">Directors Deliberate &amp; Sign Quorum</div>
+        <div class="cf-step-desc">Board Directors sign <code>POLICY_BOARD_RESOLUTION</code> on <code>CorporateCharter</code>. Premature pre-orders revert (<code>-26</code>).</div>
+      </div>
+      <div id="stepCard3" class="cf-step">
+        <div class="cf-step-num"><span>Step 3 • Enact → LIVE</span><span id="stepTag3">LOCKED</span></div>
+        <div class="cf-step-title">Activate Resolution &amp; Open Pre-Orders</div>
+        <div class="cf-step-desc">Consume finalized Board <code>Authorization</code> → set <code>STATE_LIVE (2)</code>, start block deadline &amp; unlock stretch tiers!</div>
+      </div>
+      <div id="stepCard4" class="cf-step">
+        <div class="cf-step-num"><span>Step 4 • IFRS Settlement</span><span id="stepTag4">LOCKED</span></div>
+        <div class="cf-step-title">Sweep to <code>2300</code> OR 100% Refund</div>
+        <div class="cf-step-desc">Goal met → sweep cash to <code>AccountingLedger</code> (<code>2300 Contract Liabilities</code>) &amp; disburse unlocked budget; missed → <code>$0</code> charged!</div>
+      </div>
+    </section>
+
+    <!-- Step 1 & Step 2 Governance Workspace -->
+    <div class="cf-grid">
+      <!-- Left: Step 1 Campaign Specification & Proposal -->
+      <section class="cf-card cf-col-6">
+        <h2 class="mono">
+          <span style="color:#7dd3fc;">📜 Step 1: Campaign Details &amp; Board Resolution Trigger</span>
+          <button type="button" id="btnResetDraft" class="cf-btn">↺ New Campaign Draft</button>
+        </h2>
+
+        <div class="cf-mode-bar">
+          <button type="button" class="cf-mode-tab" data-mode="1">
+            <div class="cf-mode-title mono"><span>Mode 1 • Hard-Cap</span><span>CAP</span></div>
+            <div class="cf-mode-desc">Blocks pre-orders above target; if missed, <strong>no-one is charged</strong>.</div>
+          </button>
+          <button type="button" class="cf-mode-tab" data-mode="2">
+            <div class="cf-mode-title mono"><span>Mode 2 • All-or-Nothing</span><span>MIN</span></div>
+            <div class="cf-mode-desc">Minimum target (missed = <strong>no-one charged</strong>); uncapped above goal.</div>
+          </button>
+          <button type="button" class="cf-mode-tab active" data-mode="3">
+            <div class="cf-mode-title mono"><span>Mode 3 • Stretch Budget</span><span>TIERS</span></div>
+            <div class="cf-mode-desc">Crossing stretch targets unlocks codified IFRS growth budget lines!</div>
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:9px;">
+          <label class="cf-lbl mono">
+            <span>Campaign Title (32B)</span>
+            <input id="inCampTitle" value="SuperLexicon Wave 1 Hardware" maxlength="32" class="cf-in" />
+          </label>
+          <label class="cf-lbl mono">
+            <span>Base Target (SGD/USD)</span>
+            <input id="inBaseTarget" type="number" value="150000" min="1000" class="cf-in" />
+          </label>
+          <label class="cf-lbl mono">
+            <span>Window (Blocks post-Board)</span>
+            <input id="inDurationBlocks" type="number" value="600" min="20" class="cf-in" />
+          </label>
+        </div>
+
+        <!-- Custom Stretch Tier Adder -->
+        <details style="border-top:1px solid rgba(30,41,59,0.9);padding-top:9px;">
+          <summary class="mono" style="cursor:pointer;font-size:0.73rem;font-weight:700;color:#93c5fd;">
+            ➕ Customize Stretch-Goal IFRS Growth Budget Line Items (Before Board Vote)
+          </summary>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:9px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <label class="cf-lbl mono">
+                <span>Stretch Target (SGD/USD)</span>
+                <input id="inNewTierTarget" type="number" value="1500000" class="cf-in" />
+              </label>
+              <label class="cf-lbl mono">
+                <span>Unlocked Budget (SGD/USD)</span>
+                <input id="inNewTierAlloc" type="number" value="300000" class="cf-in" />
+              </label>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:8px;">
+              <label class="cf-lbl mono">
+                <span>Codified IFRS Account</span>
+                <select id="selNewTierCat" class="cf-in">
+                  <option value="2">6400-RND • R&amp;D Engineering (IAS 38)</option>
+                  <option value="3">1500-CAPEX • Automated SMT Machinery (IAS 16)</option>
+                  <option value="4">6400-CERT • Global RF Certifications (IAS 1)</option>
+                  <option value="5">6400-GROWTH • Repeater Seed Growth (IAS 1)</option>
+                </select>
+              </label>
+              <label class="cf-lbl mono">
+                <span>Budget Line-Item Title</span>
+                <input id="inNewTierTitle" value="Custom LR2021 Dual-Band Daughterboard" class="cf-in" />
+              </label>
+            </div>
+            <button type="button" id="btnAddStretchTier" class="cf-btn">➕ Append Stretch-Goal Budget Line Item</button>
+          </div>
+        </details>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;">
+          <button type="button" id="btnProposeOnChain" class="cf-btn cf-btn-emerald" style="flex:1.3;">
+            ⛓️ Step 1: Deploy On-Chain &amp; Trigger Board Resolution
+          </button>
+          <button type="button" id="btnProposeSandbox" class="cf-btn" style="flex:1;">
+            🧪 Step 1: Trigger Board Resolution (Guided Sandbox)
+          </button>
+        </div>
+      </section>
+
+      <!-- Right: Step 2 & Step 3 Board Resolution Vote & Activation -->
+      <section class="cf-card cf-col-6">
+        <h2 class="mono">
+          <span style="color:#fde68a;">⚖️ Step 2 &amp; 3: Board Resolution Quorum &amp; Live Activation</span>
+          <span id="boardQuorumBadge" class="cf-badge cf-badge-lock">Awaiting Step 1</span>
+        </h2>
+
+        <div class="mono" style="font-size:0.71rem;color:#94a3b8;">
+          Active Board of Directors on <code id="lblBoardCharterShort">CorporateCharter</code> (<code>POLICY_BOARD_RESOLUTION</code>):
+        </div>
+        <div id="directorsRosterBox" class="cf-dir-list mono"></div>
+
+        <div id="formalResolutionBox" class="cf-scroll-box mono"></div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" id="btnSignBoardRes" class="cf-btn cf-btn-amber" disabled>
+            ✍️ Step 2: Sign Board Resolution (Director)
+          </button>
+          <button type="button" id="btnActivateLive" class="cf-btn cf-btn-emerald" disabled>
+            ⚡ Step 3: Enact Passed Resolution → Set Campaign LIVE
+          </button>
+          <button type="button" id="btnTestPreLiveGuard" class="cf-btn cf-btn-rose" disabled>
+            🛡️ Test Pre-Activation Guard (-26)
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Live KPI Strip -->
+    <div class="cf-stat-strip mono">
+      <div class="cf-kpi">
+        <div class="cf-kpi-lbl">Total Committed Pre-Orders</div>
+        <div id="kpiCommitted" class="cf-kpi-val">$0</div>
+        <div id="kpiCommittedSub" class="cf-kpi-sub">Base Target: $150,000 (0.0%)</div>
+      </div>
+      <div class="cf-kpi" style="border-left-color:#f59e0b;">
+        <div class="cf-kpi-lbl">Realized Escrow vs. Uncharged Card Holds</div>
+        <div id="kpiRailSplit" class="cf-kpi-val">$0 / $0</div>
+        <div id="kpiRailSub" class="cf-kpi-sub">Card holds charged $0 until target met</div>
+      </div>
+      <div class="cf-kpi" style="border-left-color:#10b981;">
+        <div class="cf-kpi-lbl">Unlocked IFRS Growth Budget</div>
+        <div id="kpiBudgetUnlocked" class="cf-kpi-val">$0</div>
+        <div id="kpiBudgetSub" class="cf-kpi-sub">0 / 4 budget tiers unlocked</div>
+      </div>
+      <div class="cf-kpi" style="border-left-color:#a855f7;">
+        <div class="cf-kpi-lbl">Post-Activation Block Window</div>
+        <div id="kpiDeadline" class="cf-kpi-val">Starts on Board Enactment</div>
+        <div id="kpiBackersSub" class="cf-kpi-sub">0 pre-order pledges recorded</div>
+      </div>
+    </div>
+
+    <!-- Milestone Progress Thermometer -->
+    <section class="cf-card">
+      <h2 class="mono">
+        <span style="color:#7dd3fc;">📊 Step 3 &amp; 4: Live Pre-Order &amp; Stretch-Goal IFRS Budget Thermometer</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" id="btnSimWave" class="cf-btn" disabled>⚡ Simulate Backer Wave (+$124.7k)</button>
+          <button type="button" id="btnFinalizeSuccess" class="cf-btn cf-btn-emerald" disabled>🏁 Step 4A: Finalize &amp; Sweep to IFRS 2300</button>
+          <button type="button" id="btnSimMissedDeadline" class="cf-btn cf-btn-rose" disabled>⏱️ Step 4B: Test Missed Deadline ($0 Charged)</button>
+        </div>
+      </h2>
+      <div class="cf-thermo-wrap">
+        <div class="cf-thermo-track">
+          <div id="thermoFill" class="cf-thermo-fill" style="width:0%;"></div>
+        </div>
+        <div id="thermoPins" class="cf-thermo-pins mono"></div>
+      </div>
+    </section>
+
+    <div class="cf-grid">
+      <!-- Left: Hardware Pre-Order Checkout -->
+      <div id="preorder-checkout" class="cf-card cf-col-5">
+        <h2 class="mono">
+          <span style="color:#6ee7b7;">🛒 Hardware Pre-Order Checkout (Airwallex Auth)</span>
+          <span id="checkoutGateTag" class="cf-badge cf-badge-lock">LOCKED UNTIL STEP 3 LIVE</span>
+        </h2>
+
+        <div id="quickEnableBanner" style="display:none;padding:8px 10px;border-radius:9px;border:1px solid rgba(56,189,248,0.45);background:rgba(14,165,233,0.12);font-size:0.7rem;color:#bae6fd;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+          <span>Arrived via Hardware Pre-Order? Enact Step 1→3 above or open Guided Live Checkout in 1 click:</span>
+          <button type="button" id="btnQuickEnableLive" class="cf-btn cf-btn-emerald mono" style="padding:4px 9px;font-size:0.66rem;">⚡ Enable Demo Live Window</button>
+        </div>
+
+        <label class="cf-lbl mono">
+          <span>Select Hardware Device SKU (Excl. Shipping &amp; Import Taxes)</span>
+          <select id="selRewardSku" class="cf-in"></select>
+        </label>
+
+        <div style="display:grid;grid-template-columns:0.8fr 1.4fr;gap:10px;">
+          <label class="cf-lbl mono">
+            <span>Quantity (Units)</span>
+            <input id="inQty" type="number" min="1" max="2000" value="1" class="cf-in" />
+          </label>
+          <label class="cf-lbl mono">
+            <span>Payment Authorization Rail</span>
+            <select id="selPaymentRail" class="cf-in">
+              <option value="oracle_card_hold">💳 Airwallex Credit Authorization ($0 Charged Until Min Target)</option>
+              <option value="ocbc_paynow">🏦 OCBC PayNow Corporate / MEPS+ Pre-Auth Hold</option>
+              <option value="onchain_escrow">⛓️ Subnet 1 On-Chain Escrowed Cash</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Attached Identity HFS Customer Name & Billing/Shipping Addresses (Editable Anytime) -->
+        <div style="border-radius:10px;border:1px solid rgba(56,189,248,0.38);background:#040a17;padding:11px 12px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+            <span class="mono" style="font-size:0.72rem;font-weight:800;color:#7dd3fc;">🪪 Attached Identity HFS Profile &amp; Addresses</span>
+            <span id="buyerIdBadge" class="cf-badge cf-badge-lock mono">Not Deployed Yet</span>
+          </div>
+          <div style="font-size:0.67rem;color:#94a3b8;line-height:1.4;">
+            Required for every pre-order and sealed to your <code>Identity</code> HFS (<code>enc1</code> encrypted). You may update your nickname, full name, or addresses at any time.
+          </div>
+          <div style="display:grid;grid-template-columns:0.9fr 1.3fr;gap:8px;">
+            <label class="cf-lbl mono">
+              <span>Nickname (1–24 chars) *</span>
+              <input id="inBuyerNickname" maxlength="24" placeholder="Public nickname" class="cf-in" />
+            </label>
+            <label class="cf-lbl mono">
+              <span>Full Name (as per Credit Card) *</span>
+              <input id="inBuyerFullName" maxlength="160" placeholder="Exact cardholder full legal name" class="cf-in" />
+            </label>
+          </div>
+          <label class="cf-lbl mono">
+            <span>Billing Address (as per Credit Card Account) *</span>
+            <textarea id="inBuyerBillingAddr" rows="2" maxlength="480" placeholder="Street address, unit/apt, city, state, postal code, country" class="cf-in"></textarea>
+          </label>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.69rem;color:#cbd5e1;cursor:pointer;">
+              <input id="chkSameShipping" type="checkbox" checked />
+              <span>Shipping address is the same as Billing Address</span>
+            </label>
+            <button type="button" id="btnSaveBuyerIdentity" class="cf-btn mono" style="padding:4px 9px;font-size:0.66rem;">
+              💾 Save / Update Identity HFS
+            </button>
+          </div>
+          <div id="buyerShippingWrap" style="display:none;">
+            <label class="cf-lbl mono">
+              <span>Shipping Address (Physical Delivery Destination) *</span>
+              <textarea id="inBuyerShippingAddr" rows="2" maxlength="480" placeholder="Recipient street, unit/apt, city, postal code, country" class="cf-in"></textarea>
+            </label>
+          </div>
+        </div>
+
+        <div id="orderCalcBox" class="cf-codebox mono"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:0.69rem;color:#94a3b8;">
+          <span>Prices exclude shipping &amp; import duties (invoiced when ready to ship; 48h dispatch SLA).</span>
+          <button type="button" id="btnOpenShipEstCheckout" class="cf-inline-link mono">📦 Today's Shipping &amp; Duty Estimates →</button>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" id="btnSubmitPledge" class="cf-btn cf-btn-emerald" style="flex:1;" disabled>
+            📜 Review Agreement &amp; Authorize Pre-Order
+          </button>
+          <button type="button" id="btnDownloadVoucher" class="cf-btn" title="Download Blinded SLXR Secret Key">💾 SLXR Key</button>
+        </div>
+
+        <!-- Live Airwallex Banking-Oracle Endpoint & $1.00 Integration Test -->
+        <details style="border-top:1px solid rgba(30,41,59,0.9);padding-top:9px;">
+          <summary class="mono" style="cursor:pointer;font-size:0.7rem;font-weight:700;color:#fcd34d;">
+            🧪 Airwallex Banking-Oracle Live Endpoint &amp; $1.00 AccountingLedger Test
+          </summary>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            <label class="cf-lbl mono">
+              <span>Banking-Oracle API Base URL (leave blank for offline/sandbox simulation)</span>
+              <input id="inOracleApiUrl" placeholder="http://127.0.0.1:9088 or https://oracle.superlexicon.org" class="cf-in" />
+            </label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <button type="button" id="btnRunDollarTest" class="cf-btn cf-btn-amber" style="flex:1;">
+                💳 Run $1.00 Live Airwallex → Oracle → AccountingLedger Test
+              </button>
+            </div>
+            <div id="dollarTestResultBox" class="cf-codebox mono" style="display:none;font-size:0.67rem;"></div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Right: Corporate Growth Budget Table & Governed Disbursement -->
+      <div class="cf-card cf-col-7">
+        <h2 class="mono">
+          <span style="color:#fde68a;">📒 Company IFRS Growth Budget Ledger (Auto-Unlocked by Stretch Tiers)</span>
+          <span id="ifrsSweepBadge" class="cf-badge cf-badge-lock">2300 Contract Liabilities: $0</span>
+        </h2>
+
+        <div style="overflow-x:auto;">
+          <table class="cf-table mono">
+            <thead>
+              <tr>
+                <th>Tier &amp; Target</th>
+                <th>Corporate Budget Line Item</th>
+                <th>IFRS Account</th>
+                <th>Allocation</th>
+                <th>Disbursed</th>
+                <th>State</th>
+              </tr>
+            </thead>
+            <tbody id="budgetTiersTbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Governed Disbursement -->
+        <div style="border-top:1px solid rgba(30,41,59,0.95);padding-top:11px;display:flex;flex-direction:column;gap:8px;">
+          <div class="mono" style="font-size:0.76rem;font-weight:800;color:#e2e8f0;">
+            🏛️ Governed IFRS Growth Budget Disbursement (<code>disburseUnlockedBudgetLine</code>)
+          </div>
+          <div style="display:grid;grid-template-columns:1.4fr 0.9fr 1.1fr;gap:8px;">
+            <label class="cf-lbl mono">
+              <span>Unlocked Budget Line Item</span>
+              <select id="selDisburseTier" class="cf-in"></select>
+            </label>
+            <label class="cf-lbl mono">
+              <span>Amount (SGD/USD)</span>
+              <input id="inDisburseUsd" type="number" value="45000" class="cf-in" />
+            </label>
+            <label class="cf-lbl mono">
+              <span>Vendor Identity (0x…)</span>
+              <input id="inVendorAddr" value="0x8800000000000000000000000000000000000088" class="cf-in" />
+            </label>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button type="button" id="btnDisburseBudget" class="cf-btn cf-btn-amber" disabled>
+              💸 Execute Governed IFRS Disbursement
+            </button>
+            <span style="font-size:0.69rem;color:#94a3b8;">Unreached tiers revert (<code>ERR_BUDGET_TIER_LOCKED -40</code>); overspends revert (<code>ERR_BUDGET_LINE_EXCEEDED -41</code>).</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom: Pledge Ledger & Deterministic Calldata / Sync -->
+      <div class="cf-card cf-col-7">
+        <h2 class="mono">
+          <span style="color:#c084fc;">🧾 Pre-Order Escrow &amp; Card-Hold Register</span>
+          <span id="pledgeSummaryTag" style="font-size:0.68rem;color:#94a3b8;">0 Pledges</span>
+        </h2>
+        <div style="overflow-x:auto;max-height:260px;">
+          <table class="cf-table mono">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>SKU &amp; Qty</th>
+                <th>Amount</th>
+                <th>Rail</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="pledgesTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="cf-card cf-col-5">
+        <h2 class="mono">
+          <span style="color:#38bdf8;">⛓️ Live HFS Sync &amp; Calldata Inspector</span>
+          <span style="font-size:0.68rem;color:#94a3b8;">crowdfunding.wasm (40 KB)</span>
+        </h2>
+        <label class="cf-lbl mono">
+          <span>Attach / Query Deployed Crowdfunding HFS Address on Subnet 1</span>
+          <div style="display:flex;gap:6px;">
+            <input id="inCrowdfundAddr" placeholder="0x… (auto-filled on Step 1 deploy)" class="cf-in" />
+            <button type="button" id="btnSyncLiveRpc" class="cf-btn">📡 Sync</button>
+          </div>
+        </label>
+        <div id="lastCalldataBox" class="cf-codebox mono" style="max-height:200px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Mandatory Pre-Order Agreement & Binding Arbitration Modal (Displayed BEFORE Calling Airwallex API) -->
+  <div id="preorderAgreementModal" class="cf-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="preorderAgreementTitle">
+    <div class="cf-modal-card" onclick="event.stopPropagation()">
+      <div class="cf-modal-head">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <strong id="preorderAgreementTitle" style="font-size:0.98rem;color:#f8fafc;">📜 Superlexicon Pte. Ltd. — Hardware Pre-Order Agreement</strong>
+            <span class="cf-badge cf-badge-hold mono">REVIEW BEFORE AIRWALLEX API CALL</span>
+          </div>
+          <div style="font-size:0.71rem;color:#94a3b8;margin-top:3px;">
+            Please review your Identity HFS order summary and the binding Pre-Order Terms &amp; Arbitration Agreement below before we transmit any credit authorization request to Airwallex.
+          </div>
+        </div>
+        <button type="button" id="btnClosePreorderAgreement" class="cf-btn mono" style="padding:4px 9px;">✕</button>
+      </div>
+
+      <div class="cf-modal-body">
+        <div id="preorderSummaryBox" class="cf-codebox mono" style="font-size:0.7rem;"></div>
+
+        <div class="cf-legal-scroll" id="preorderLegalScrollBox">
+          <h4>1. Pre-Order Reservation Nature &amp; Best-Efforts Delivery Indications</h4>
+          <p>
+            This Agreement governs your hardware pre-order reservation placed with <strong>Superlexicon Pte. Ltd.</strong> (Singapore) (&ldquo;Superlexicon&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;). You acknowledge and agree that <strong>this transaction is a pre-order</strong> for newly engineered multi-radio hardware and is not an immediate purchase of in-stock inventory. Any target production or delivery timelines displayed on our website or checkout (including indicative windows such as <code>T+6m</code>, <code>T+9m</code>, or <code>T+12m</code>) are <strong>good-faith estimations and indications provided on a best-efforts basis only</strong>, and are subject to change due to forces beyond our reasonable control, including without limitation semiconductor and RF chip manufacturers, silicon wafer/packaging lead times, Electronics Manufacturing Services (&ldquo;EMS&rdquo;) factory capacity, component allocations, regulatory testing laboratories, global freight logistics, customs clearance, and force majeure events.
+          </p>
+
+          <h4>2. Airwallex Credit Authorization Only ($0 Upfront), Card Charge at Minimum Target, Cancellation &amp; 12-Month Delivery Commitment</h4>
+          <p>
+            <strong>(a) Initial Credit Authorization Hold Only:</strong> When you submit your pre-order, we initially request <strong>only a credit authorization hold</strong> for the full device order amount via <strong>Airwallex</strong> (<code>auto_capture: false</code>; <code>$0.00</code> charged at submission). We will <strong>actually charge all authorized cards only when the campaign reaches its minimum required funding target</strong>. If the campaign closes without reaching its minimum required target, zero cards are charged and all holds are released.
+          </p>
+          <p>
+            <strong>(b) Cancellation Before vs. After Card Charge:</strong> You are entitled to <strong>cancel your pre-order at any time after credit authorization prior to your card being charged</strong> (resulting in <code>$0.00</code> charged). <strong>You may NOT cancel your order once your card has been charged.</strong> Because captured pre-order proceeds are immediately committed to EMS partners, tooling, and long-lead silicon procurement upon reaching the minimum target, <strong>we are unable to provide refunds as of right after cards are charged</strong>. Following card capture, <strong>any refund request shall be considered strictly on a case-by-case basis at the sole and absolute discretion of Superlexicon Pte. Ltd.</strong>
+          </p>
+          <p>
+            <strong>(c) Minimum Delivery Commitment:</strong> Notwithstanding supply-chain variability, once cards are charged, Superlexicon Pte. Ltd. is <strong>committed at the very least to delivering the final hardware product within twelve (12) months after the end of the pre-order campaign</strong>.
+          </p>
+
+          <h4>3. Reference Industrial Design vs. Final Product Form</h4>
+          <p>
+            All product renders, 3D CAD models, enclosure illustrations, dimensions, weights, finishes, and visual styling presented on our slides and pre-order pages are <strong>reference designs only</strong>. You acknowledge that the physical look, enclosure geometry, antenna housing, or external form of the final production device <strong>may differ from the reference designs shown today, provided that its core functional specifications perform as specified</strong>.
+          </p>
+
+          <h4>4. Prices Exclusive of Shipping &amp; Taxes — 48-Hour Dispatch Upon Final Fee Settlement</h4>
+          <p>
+            All listed pre-order device prices (<code>$198</code> / <code>$888</code> / <code>$1,288</code> USD) are <strong>strictly exclusive of international or domestic shipping, lithium-battery freight surcharges, insurance, local GST/VAT, customs tariffs, brokerage fees, and import duties</strong>. You may review indicative rates at any time here:
+            <button type="button" id="btnOpenShipEstFromLegal" class="cf-inline-link">📦 Click to View Today&rsquo;s Shipping &amp; Import Duty Estimates</button>.
+            Once your hardware unit completes factory QA and is ready to ship to the Shipping Address attached to your <code>Identity</code> HFS, we will notify and invoice you for the exact applicable shipping fees and taxes. <strong>Superlexicon Pte. Ltd. will ship your order within 48 hours of confirmed payment of those shipping and tax fees.</strong>
+          </p>
+
+          <h4>5. Radio Broadcast Transceiver Notice &amp; Buyer Regulatory Compliance Responsibility</h4>
+          <p>
+            Lexicon hardware devices contain active multi-band radio-frequency (&ldquo;RF&rdquo;) broadcast transceivers operating across Sub-GHz, 2.4 GHz, and/or Wi-Fi HaLow spectrum. While we have taken every care in hardware and firmware engineering to ensure our devices operate within typical regional ISM power (EIRP), duty-cycle, and frequency limits, <strong>spectrum laws vary by jurisdiction and you (the Buyer)—and NOT Superlexicon Pte. Ltd.—are solely responsible for checking your local telecommunications, radio-licensing, and import regulations and operating the device in full compliance with them</strong>.
+          </p>
+
+          <h4>6. Reservation Priority, No Title Transfer &amp; Non-Interest-Bearing Holding (Industry-Standard Pre-Order Terms)</h4>
+          <p>
+            This Agreement secures your production queue priority attached to your on-chain <code>Identity</code> HFS and does not constitute a completed contract of sale or transfer of title until your unit is manufactured, final shipping/tax charges are settled, and the carrier takes custody. Except where prohibited by mandatory law, captured pre-order payments are not held in a separate trust or escrow account, do not accrue interest, and may be deployed directly toward manufacturing, component procurement, and R&amp;D commitments.
+          </p>
+
+          <h4>7. Non-Transferability, Anti-Scalping &amp; Unilateral Cancellation Right</h4>
+          <p>
+            Your pre-order reservation and associated <code>Identity</code> HFS delivery slot are personal to you and may not be assigned, resold, or transferred without Superlexicon&rsquo;s prior written consent. Modeled on standard hardware reservation frameworks, Superlexicon reserves the right to unilaterally cancel any pre-order if we reasonably suspect commercial scalping/resale, payment fraud, inaccurate cardholder/address records, or regulatory/export non-compliance (in which case we will release your uncaptured authorization hold or refund the actual pre-order sum paid, as your sole and exclusive remedy).
+          </p>
+
+          <h4>8. Export Control &amp; Sanctions Compliance</h4>
+          <p>
+            You represent and warrant that neither you nor any end-user at your Shipping Address is located in an embargoed/sanctioned territory or listed on any restricted-party list maintained by Singapore (Strategic Goods Control), the United States (OFAC / BIS Entity List), the European Union, the United Kingdom, or the United Nations, and you will not re-export the hardware in violation of applicable cryptographic or RF export laws.
+          </p>
+
+          <h4>9. Limitation of Liability &amp; Exclusion of Indirect Damages</h4>
+          <p>
+            TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL SUPERLEXICON PTE. LTD., ITS DIRECTORS, OFFICERS, SUPPLIERS, OR AFFILIATES BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES (INCLUDING LOSS OF PROFITS, DATA, VALIDATOR REWARDS, OR RF AIRTIME) ARISING OUT OF OR RELATING TO THIS PRE-ORDER AGREEMENT OR ANY DELIVERY DELAY. <strong>SUPERLEXICON&rsquo;S TOTAL CUMULATIVE LIABILITY FOR ALL CLAIMS RELATING TO YOUR PRE-ORDER SHALL NOT EXCEED THE ACTUAL PRE-ORDER AMOUNT PAID BY YOU TO SUPERLEXICON FOR THE AFFECTED ORDER.</strong>
+          </p>
+
+          <h4>10. Mandatory Individual Binding Arbitration, Waiver of Court/Jury Trial &amp; Class-Action Waiver</h4>
+          <p>
+            <strong>PLEASE READ THIS SECTION CAREFULLY — IT REQUIRES INDIVIDUAL ARBITRATION OVER COURT LITIGATION AND WAIVES CLASS ACTIONS:</strong>
+          </p>
+          <p>
+            <strong>(a) Governing Law &amp; 60-Day Informal Resolution Notice:</strong> This Agreement is governed by the laws of the Republic of Singapore, without regard to conflict-of-laws rules. If any concern or dispute arises, you and Superlexicon agree to first send a written Notice of Dispute (including your Full Name, <code>Identity</code> HFS address, and order reference) to <code>legal@superlexicon.org</code> and allow sixty (60) days to resolve it informally before initiating arbitration.
+          </p>
+          <p>
+            <strong>(b) Binding Individual Arbitration (SIAC):</strong> If not resolved within 60 days, <strong>any dispute, claim, or controversy arising out of or relating to this Pre-Order Agreement, your payment authorization/charge, or the hardware (including the validity, scope, or enforceability of this clause) shall be resolved exclusively by final and binding individual arbitration</strong> administered by the <strong>Singapore International Arbitration Centre (&ldquo;SIAC&rdquo;)</strong> in accordance with the SIAC Expedited Procedure Rules in force, before a single arbitrator in English, with Singapore as the legal seat (remote video/written hearings available for consumer claims). Judgment on the award may be entered in any court having jurisdiction. Either party may alternatively bring an eligible individual claim in a statutory small-claims tribunal of competent jurisdiction, and Superlexicon may seek injunctive relief in court solely to prevent intellectual-property infringement or unauthorized firmware tampering.
+          </p>
+          <p>
+            <strong>(c) Court, Jury &amp; Class-Action Waiver:</strong> <strong>YOU AND SUPERLEXICON IRREVOCABLY WAIVE ANY RIGHT TO SUE IN COURT OR HAVE A TRIAL BY JURY. FURTHERMORE, ALL ARBITRATIONS AND PROCEEDINGS MUST BE CONDUCTED STRICTLY ON AN INDIVIDUAL BASIS — NEITHER YOU NOR SUPERLEXICON MAY BRING OR PARTICIPATE IN ANY CLASS, COLLECTIVE, CONSOLIDATED, PRIVATE ATTORNEY GENERAL, OR REPRESENTATIVE ACTION.</strong>
+          </p>
+          <p>
+            <strong>(d) 30-Day Right to Opt Out of Arbitration:</strong> You may opt out of this arbitration provision within thirty (30) days after accepting this Pre-Order Agreement by sending a signed written opt-out notice stating your Full Legal Name, Billing Address, <code>Identity</code> HFS address, and clear intent to opt out of arbitration to <code>legal@superlexicon.org</code>. Opting out will not affect any other term of this Pre-Order Agreement.
+          </p>
+        </div>
+
+        <label style="display:flex;align-items:flex-start;gap:9px;padding:10px 12px;border-radius:10px;border:1px solid rgba(52,211,153,0.45);background:rgba(16,185,129,0.1);cursor:pointer;font-size:0.73rem;color:#e2e8f0;">
+          <input id="chkAcceptPreorderAgreement" type="checkbox" style="margin-top:3px;transform:scale(1.15);" />
+          <span>
+            I confirm that my <strong>Full Legal Name, Billing Address, and Shipping Address</strong> match my credit card account and <code>Identity</code> HFS, and I have read and agree to the <strong>Superlexicon Pte. Ltd. Hardware Pre-Order Agreement</strong>—including credit-authorization-only checkout, non-refundability after card capture (at company discretion, with a 12-month post-campaign delivery commitment), exclusion of shipping &amp; taxes, buyer RF regulatory responsibility, and <strong>Mandatory Individual Binding Arbitration &amp; Class-Action Waiver</strong>.
+          </span>
+        </label>
+      </div>
+
+      <div class="cf-modal-foot">
+        <button type="button" id="btnCancelPreorderAgreement" class="cf-btn mono">← Back to Checkout</button>
+        <button type="button" id="btnConfirmPreorderAgreement" class="cf-btn cf-btn-emerald mono" disabled>
+          💳 Agree &amp; Submit Airwallex Credit Authorization →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Shipping & Import Duty Estimator Modal -->
+  <div id="shippingTaxEstimateModal" class="cf-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="shipEstTitle" style="z-index:10095;">
+    <div class="cf-modal-card" style="max-width:640px;" onclick="event.stopPropagation()">
+      <div class="cf-modal-head">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <strong id="shipEstTitle" style="font-size:0.95rem;color:#f8fafc;">📦 Today&rsquo;s Estimated Shipping &amp; Import Duties</strong>
+            <span class="cf-badge cf-badge-sky mono">INDICATIVE ONLY • 48H DISPATCH SLA</span>
+          </div>
+          <div style="font-size:0.71rem;color:#94a3b8;margin-top:3px;">
+            Non-binding estimates based on today&rsquo;s tracked DHL/FedEx Lithium-Battery Express rates from Singapore/Shenzhen and WTO ITA (<code>HS 8517.62</code>) customs schedules.
+          </div>
+        </div>
+        <button type="button" id="btnCloseShipEst" class="cf-btn mono" style="padding:4px 9px;">✕</button>
+      </div>
+      <div class="cf-modal-body">
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 0.7fr;gap:9px;">
+          <label class="cf-lbl mono">
+            <span>Destination Region / Country</span>
+            <select id="selShipEstRegion" class="cf-in">
+              <option value="SG">🇸🇬 Singapore (Domestic Courier • 9% GST)</option>
+              <option value="US">🇺🇸 United States (0% ITA Duty • State Use/Import Est.)</option>
+              <option value="EU">🇪🇺🇬🇧 European Union / UK (0% ITA Duty • ~20% VAT)</option>
+              <option value="EA">🇯🇵🇰🇷🇹🇼 Japan / S. Korea / Taiwan (0% ITA Duty • ~10% VAT)</option>
+              <option value="AU">🇦🇺🇳🇿 Australia / New Zealand (0% ITA Duty • 10–15% GST)</option>
+              <option value="ASEAN">🌏 ASEAN / Middle East (0–5% Duty • 7–12% VAT/GST)</option>
+              <option value="ROW">🌐 Rest of World (Tracked Air Express + Local Customs)</option>
+            </select>
+          </label>
+          <label class="cf-lbl mono">
+            <span>Hardware Device</span>
+            <select id="selShipEstSku" class="cf-in"></select>
+          </label>
+          <label class="cf-lbl mono">
+            <span>Units</span>
+            <input id="inShipEstQty" type="number" min="1" max="500" value="1" class="cf-in" />
+          </label>
+        </div>
+
+        <div id="shipEstBreakdownBox" class="cf-codebox mono" style="font-size:0.73rem;"></div>
+
+        <div style="font-size:0.7rem;color:#94a3b8;line-height:1.48;">
+          <strong>How Final Shipping &amp; Taxes Work:</strong> Nothing is charged for shipping or taxes during pre-order. When your unit passes factory QA and is ready to ship, Superlexicon Pte. Ltd. will advise your exact carrier shipping fee and applicable import taxes/duties—and <strong>will dispatch your parcel within 48 hours of payment of those fees</strong>.
+        </div>
+      </div>
+      <div class="cf-modal-foot" style="justify-content:flex-end;">
+        <button type="button" id="btnDoneShipEst" class="cf-btn cf-btn-emerald mono">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/crowdfunding.js"></script>
+</body>
+</html>

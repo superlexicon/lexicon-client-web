@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mesh Repeater Beacon Wall</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; background: #040914; color: #f8fafc; font-family: system-ui, sans-serif; }
+    .wrap { max-width: 740px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .box { background: #091326; border: 1px solid rgba(52,211,153,0.4); border-radius: 14px; padding: 16px; }
+    input, select { padding: 8px 10px; border-radius: 8px; border: 1px solid #334155; background: #030712; color: #f8fafc; font-family: monospace; font-size: 12.5px; }
+    button { padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(52,211,153,0.65); background: rgba(16,185,129,0.22); color: #d1fae5; font-family: monospace; font-weight: 700; cursor: pointer; }
+    .beacon { padding: 10px 12px; border-radius: 10px; background: #050b18; border: 1px solid rgba(56,189,248,0.28); margin-top: 8px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <strong style="color:#6ee7b7;font-family:monospace;font-size:12px;">📻 LR2021 REPEATER BEACON LOG (SANDBOXED APP)</strong>
+        <span id="who" style="font-family:monospace;font-size:12px;color:#94a3b8;">Loading…</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 130px auto;gap:8px;margin-top:12px;">
+        <input id="msgIn" placeholder="e.g. Clear 917.2 MHz LOS across Marina Bay (+11.4 dB SNR)" />
+        <select id="bandIn">
+          <option>915 MHz FLRC</option>
+          <option>868 MHz SAW</option>
+          <option>2.4 GHz LoRa</option>
+        </select>
+        <button onclick="postBeacon()">📡 Broadcast</button>
+      </div>
+      <div id="statusLine" style="margin-top:8px;font-family:monospace;font-size:11.5px;color:#7dd3fc;"></div>
+    </div>
+    <div class="box">
+      <strong style="font-size:13px;color:#bae6fd;">Recent Verified Field Beacons</strong>
+      <div id="feed"></div>
+    </div>
+  </div>
+  <script>
+    let beacons = [
+      { author: 'NodeOp_SG · 9f2a', band: '915 MHz FLRC', text: 'Dual-Wio Dongle locked onto Subnet 1 State Carousel @ 142 TPS.', ts: 'Genesis' },
+      { author: 'AlpineRelay · 4c18', band: '868 MHz SAW', text: 'SF2485E +33 dBm SAW filter holding -41 dBm cross-band floor.', ts: 'Genesis' }
+    ];
+    let me = 'Operator';
+    async function boot() {
+      if (window.slx) {
+        const ctx = await window.slx.getContext();
+        me = ctx.user.nickname + ' · ' + ctx.user.tag4;
+        document.getElementById('who').textContent = me;
+        const saved = await window.slx.getAppStorage('beacons_v1');
+        if (Array.isArray(saved) && saved.length) beacons = saved;
+      }
+      render();
+    }
+    function render() {
+      document.getElementById('feed').innerHTML = beacons.map(b =>
+        '<div class="beacon">' +
+          '<div style="display:flex;justify-content:space-between;font-family:monospace;font-size:11.5px;color:#6ee7b7;">' +
+            '<span>' + b.author + ' • [' + b.band + ']</span><span>' + b.ts + '</span>' +
+          '</div>' +
+          '<div style="margin-top:4px;color:#e2e8f0;">' + b.text.replace(/</g, '&lt;') + '</div>' +
+        '</div>'
+      ).join('');
+    }
+    window.postBeacon = async function() {
+      const inp = document.getElementById('msgIn');
+      const band = document.getElementById('bandIn').value;
+      const text = inp.value.trim();
+      if (!text) return;
+      const st = document.getElementById('statusLine');
+      try {
+        st.textContent = '⏳ Signing beacon via Host Identity HFS…';
+        const res = await window.slx.sendTransaction({
+          fnSig: 'postBeacon(string,string)',
+          args: [['string', band], ['string', text]],
+          summary: 'Broadcast RF repeater status (' + band + ')'
+        });
+        beacons.unshift({ author: me, band, text, ts: new Date().toLocaleTimeString() });
+        await window.slx.setAppStorage('beacons_v1', beacons.slice(0, 25));
+        inp.value = '';
+        st.textContent = '✓ Broadcast confirmed (' + String(res.txHash).slice(0, 16) + '…)';
+        render();
+      } catch (e) {
+        st.textContent = '⚠ ' + e.message;
+      }
+    };
+    boot();
+  </script>
+</body>
+</html>

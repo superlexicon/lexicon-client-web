@@ -1,0 +1,23 @@
+{
+  "artifact": "dist/app_store.wasm",
+  "code_hash": "0x9ed33ecadd23d9f35c7f77d0cead887fb40fa3a6fc31eff26783151dd496b948",
+  "exports": [
+    "memory",
+    "main"
+  ],
+  "hps": "app-store",
+  "imports": [
+    "env::host_state_set",
+    "env::get_calldata",
+    "env::host_call_contract",
+    "env::host_get_code_hash",
+    "env::host_emit_event",
+    "env::get_msg_sender",
+    "env::get_block_number",
+    "env::host_state_get"
+  ],
+  "initial_memory_pages": 32,
+  "max_memory_pages": 64,
+  "optimized_wasm_bytes": 23751,
+  "raw_wasm_bytes": 23754
+}
