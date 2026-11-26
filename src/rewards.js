@@ -53,7 +53,7 @@ function refreshEntitlementPreview() {
   const tier = Number(selTier?.value || 2000);
   const slxr = computeExpectedSlxrEntitlement(sku, tier);
   const pct = (tier / 100).toFixed(0);
-  const price = sku === 1 ? '$178' : sku === 2 ? '$688' : '$1,198';
+  const price = sku === 1 ? '$198' : sku === 2 ? '$888' : '$1,288';
   if (entitlementPreview) {
     entitlementPreview.innerHTML = `Expected Entitlement: <strong style="color:#6ee7b7;">${fmtNum(slxr)} SLXR</strong> (${pct}% × ${price} × 1,000,000 — Unlocks after <strong>90 Active Validator Days</strong>)`;
   }
