@@ -1194,7 +1194,7 @@ export class SlxInstSession {
         if (activePage === 'dex') return 'DEX';
         if (activePage === 'charter') return 'Charter';
         if (activePage === 'commerce') return 'Storefront';
-        if (activePage === 'accounting') return 'IFRS Ledger';
+        if (activePage === 'accounting' || activePage === 'crowdfunding') return 'IFRS Ledger';
         return 'HFS';
       },
       getContractAddr: () => {
@@ -1202,7 +1202,7 @@ export class SlxInstSession {
         if (activePage === 'dex') return this.inst.dexClob || '';
         if (activePage === 'charter') return this.inst.corporateCharter || '';
         if (activePage === 'commerce') return this.inst.productLedger || '';
-        if (activePage === 'accounting') return this.inst.accountingLedger || '';
+        if (activePage === 'accounting' || activePage === 'crowdfunding') return this.inst.accountingLedger || '';
         return '';
       },
       onWalletSwitch: async () => {
@@ -1232,6 +1232,7 @@ export class SlxInstSession {
       charter: 'CORPORATE_CHARTER',
       commerce: 'PRODUCT_LEDGER',
       accounting: 'IFRS_LEDGER',
+      crowdfunding: 'IFRS_LEDGER',
     };
     const hfsType = pageTypeMap[activePage];
     if (hfsType && this.unifiedHeader?.contextSlot) {
@@ -1245,7 +1246,7 @@ export class SlxInstSession {
           if (activePage === 'dex') return this.inst.dexClob || '';
           if (activePage === 'charter') return this.inst.corporateCharter || '';
           if (activePage === 'commerce') return this.inst.productLedger || '';
-          if (activePage === 'accounting') return this.inst.accountingLedger || '';
+          if (activePage === 'accounting' || activePage === 'crowdfunding') return this.inst.accountingLedger || '';
           return '';
         },
         onSelectInstance: async (entry) => {
@@ -1330,7 +1331,7 @@ export class SlxInstSession {
       if (m.fiatLedger || m.bk) next.fiatLedger = m.fiatLedger || m.bk;
       if (m.treasuryIdentity || m.tr) next.treasuryIdentity = m.treasuryIdentity || m.tr;
       if (m.merchantRevenueIdentity) next.merchantRevenueIdentity = m.merchantRevenueIdentity;
-    } else if (this.activePage === 'accounting') {
+    } else if (this.activePage === 'accounting' || this.activePage === 'crowdfunding') {
       const isBase =
         entry.primaryAddr.toLowerCase() === (this.baseInst.accountingLedger || '').toLowerCase();
       next.accountingLedger = entry.primaryAddr;

@@ -3479,21 +3479,35 @@ function renderConsole(force = false) {
       </div>
     `;
   } else if (state.consoleTab === 'sub') {
+    const cfHref = `/crowdfunding.html${
+      session.inst?.accountingLedger ? `?hfs=${encodeURIComponent(session.inst.accountingLedger)}` : ''
+    }`;
     el.consolePane.innerHTML = `
-      <div class="ifrs-form-grid">
-        <div class="ifrs-field">
-          <label>Plan Code</label>
-          <input class="inst-input" id="inSubPlan" value="SLX-MESH-ENT" maxlength="8" />
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px;border-radius:8px;background:rgba(6,78,59,0.34);border:1px solid rgba(52,211,153,0.38);font-size:11.5px;color:#cbd5e1;">
+          <div>
+            <strong style="color:#6ee7b7;">Board-Activated Pre-Order Crowdfunding &amp; Stretch-Goal Growth Budget (IFRS 15):</strong>
+            <span style="margin-left:6px;">① Draft Campaign → Triggers <code>BOARD_RESOLUTION</code> on Charter</span>
+            <span style="margin-left:8px;">② Enact → Sets <code>Crowdfunding = LIVE</code></span>
+            <span style="margin-left:8px;">③ Settle → Sweeps into <code>2300 Contract Liabilities</code> &amp; unlocks IFRS Growth Budget</span>
+          </div>
+          <a class="inst-btn sm emerald" href="${cfHref}">🚀 Launch / Manage Pre-Order Crowdfunding →</a>
         </div>
-        <div class="ifrs-field">
-          <label>Duration (Blocks, ≥ 20)</label>
-          <input class="inst-input" type="number" id="inSubBlks" value="120" min="20" />
+        <div class="ifrs-form-grid">
+          <div class="ifrs-field">
+            <label>Plan Code</label>
+            <input class="inst-input" id="inSubPlan" value="SLX-MESH-ENT" maxlength="8" />
+          </div>
+          <div class="ifrs-field">
+            <label>Duration (Blocks, ≥ 20)</label>
+            <input class="inst-input" type="number" id="inSubBlks" value="120" min="20" />
+          </div>
+          <div class="ifrs-field">
+            <label>Upfront Subscription (SGD)</label>
+            <input class="inst-input" type="number" id="inSubAmt" value="6000" min="100" />
+          </div>
+          <button class="inst-btn emerald" id="btnExecSub">⚡ Pay &amp; Book IFRS 15 Deferred Subscription</button>
         </div>
-        <div class="ifrs-field">
-          <label>Upfront Subscription (SGD)</label>
-          <input class="inst-input" type="number" id="inSubAmt" value="6000" min="100" />
-        </div>
-        <button class="inst-btn emerald" id="btnExecSub">⚡ Pay &amp; Book IFRS 15 Deferred Subscription</button>
       </div>
     `;
   } else if (state.consoleTab === 'ops') {

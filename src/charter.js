@@ -1174,6 +1174,37 @@ function buildResolutionTemplate(spec, mode = 'hydrated') {
     ].join('\n');
   }
 
+  if (spec.execKind === 'crowdfundingCampaign') {
+    const cfAddr = shortAddr(spec.crowdfundingHps || spec.targetHps);
+    const accAddr = shortAddr(spec.accountingLedger);
+    const cfMode =
+      spec.campaignMode === 1
+        ? 'MODE 1 — Single Hard-Cap All-or-Nothing'
+        : spec.campaignMode === 2
+        ? 'MODE 2 — Single Target Flexible All-or-Nothing'
+        : 'MODE 3 — Multi-Tier Stretch-Goal IFRS Growth Budget';
+    const baseTgt = fmtNum(spec.baseTarget || 150000);
+    const durBlks = fmtNum(spec.durationBlocks || 400);
+    return [
+      `========================================================================`,
+      `BOARD OF DIRECTORS RESOLUTION — PRE-ORDER CROWDFUNDING & GROWTH BUDGET`,
+      `Company: ${tok('COMPANY_NAME', comp)}  |  Governance Policy: POLICY_BOARD_RESOLUTION`,
+      `Active Board Signatories: ${tok('DIRECTOR_ROSTER', dirRoster)}`,
+      `========================================================================`,
+      ``,
+      `1. LINKED IFRS ACCOUNTING LEDGER & CROWDFUNDING HFS:`,
+      `   • AccountingLedger HFS: ${tok('ACCOUNTING_LEDGER', accAddr)}`,
+      `   • Crowdfunding HFS:     ${tok('CROWDFUNDING_HFS', cfAddr)} (State: PENDING_BOARD_RESOLUTION)`,
+      `   • Campaign Mode:        ${tok('CAMPAIGN_MODE', cfMode)}`,
+      `   • Base Target & Window: ${tok('BASE_TARGET', baseTgt)} SGD/USD over ${tok('DURATION_BLOCKS', durBlks)} blocks from enactment`,
+      ``,
+      `IT IS HEREBY RESOLVED BY THE BOARD OF DIRECTORS THAT:`,
+      `  (a) Crowdfunding.activateCampaign(${tok('AUTH_HFS_ADDR', authTag)}) be enacted to transition ${tok('CROWDFUNDING_HFS', cfAddr)} into STATE_LIVE (2);`,
+      `  (b) If the base target (${tok('BASE_TARGET', baseTgt)}) is not met by the deadline block, no customer card holds shall be captured and 100% of escrowed pre-orders shall be refundable;`,
+      `  (c) Upon reaching target, settled pre-order proceeds shall sweep into Account 2300 (Contract Liabilities — IFRS 15) on AccountingLedger ${tok('ACCOUNTING_LEDGER', accAddr)} and unlock the codified Stretch-Goal Growth Budget tiers.`,
+    ].join('\n');
+  }
+
   if (spec.execKind === 'serviceContract') {
     const scCode = String(spec.svcCode || 'DEF-MOD-FLRC-C2').trim().slice(0, 24);
     const scMo = Number(spec.svcMonthly || 180000);
@@ -5781,6 +5812,23 @@ function buildResolutionExecCalldata(r) {
       ['address', r.futuresLedger],
       ['uint64', r.futuresPct],
       ['address', r.authAddr],
+    ]);
+  }
+  if (r.execKind === 'crowdfundingCampaign') {
+    if (r.viaAccountingActivate && r.accountingLedger) {
+      const inner = encodeAbi('activateCrowdfundingCampaign(address,address)', [
+        ['address', r.crowdfundingHps || r.targetHps],
+        ['address', r.authAddr],
+      ]);
+      return encodeAbi('execute(address,bytes)', [
+        ['address', r.accountingLedger],
+        ['bytes', hexToBytes(inner)],
+      ]);
+    }
+    const inner = encodeAbi('activateCampaign(address)', [['address', r.authAddr]]);
+    return encodeAbi('execute(address,bytes)', [
+      ['address', r.crowdfundingHps || r.targetHps],
+      ['bytes', hexToBytes(inner)],
     ]);
   }
   if (r.execKind === 'serviceContract') {
