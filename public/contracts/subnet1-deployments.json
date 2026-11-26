@@ -13,18 +13,19 @@
     "social_events": "0x0ec1707ec40e134459ad196f213827bfb1ec329c08bc57c3a9f659ac80c3083f",
     "asset_ledger": "0xd49fe9103190ffd83fa8b9db7addd160f7e87fade1301e52b77613220f2bfa0c",
     "dex_clob": "0x0225c10b0447dc9ef3e7bee6c8878bbf43bc0ec4d529a6fccca48027572f9818",
-    "corporate_charter": "0xbca7d543e5aa1439b743eb3e14ef6dda47c516f77886185e9952852ab56d42f8",
+    "corporate_charter": "0x033c48f881aa37b01c496b9f6b0e1ded3cb9b65989796acb33bbe5c6d8d4ec2b",
     "authorization": "0xc7ae3320a544d65a02c727455af6fb53a3b4277612003fd30165c687004105c1",
     "accounting_ledger": "0x059131d44d88e520cea3f223acd5b219ab014c6f94d6e5046fa1bc61ea92907b",
     "confidential_ledger": "0x76006dbc173b4d91f40a6393be2d417e03ee0944fbea4f3339a5e82b283122f9",
     "share_capital": "0xa3b95da0441d75f2c5117ed0bc014e0b33a0aaf70fa882e7a4ef23ee04b8187b",
-    "hfs_registry": "0x2ec51fe027c2cf006ce58658068b6bfb06deb4ec8a923872893d3651cba4b18d",
+    "hfs_registry": "0xa11eab4570f59f44bc7ac1983afafe606cb47aa82b4a0f50e12a3f663344deb5",
     "hegemony": "0x6ec4d45aac397c97f2a9e98daa18831ca9fcee2f8a839a082d16ad2d46aee66e",
     "cipher_noir": "0x09dc9c499c3a1e6ed78562e0c26a44bb3b5ce7a259a946796e32142bf57e0826",
     "vrf_beacon": "0xbe906042cf5412ca0ddd9c6a861f1f8cd1e024c3edac5bcb42f1809fdb558a79",
     "lottery": "0x47ad30cec9bea929e83508ac042394ce0bce98caa120afe871bd79e3850bd354",
     "secret_ballot": "0x1817db8449f5166890989a1c56c5552fd21a9af39dfa4c963073a7dfc85adf8f",
-    "subnet_registry": "0x5365ed423586cdd689b264c188f9230b2ba4e1562d8d1a76f802e04ff6547e0f"
+    "subnet_registry": "0x5365ed423586cdd689b264c188f9230b2ba4e1562d8d1a76f802e04ff6547e0f",
+    "app_store": "0xee9d0de546e867f3a564e67cca86ea8988b965246b240eb93c9c2fc83ee90646"
   },
   "battleship": {
     "contractAddr": "0xabb7f6c0ea97ed6f946a51b5d0a944f98226cab1",
@@ -237,22 +238,22 @@
         "unitCost": 95,
         "isCashProcure": true,
         "defaultOrderQty": 1,
-        "category": "B2C Retail • Edge AI RF Pod",
-        "specs": "2× Semtech LR2021 (Sub-GHz + 2.4 GHz FLRC) + Edge Tensor Module • Offline radio mesh signing pod",
+        "category": "B2C Retail \u2022 Edge AI RF Pod",
+        "specs": "2\u00d7 Semtech LR2021 (Sub-GHz + 2.4 GHz FLRC) + Edge Tensor Module \u2022 Offline radio mesh signing pod",
         "skuId": "0xd4325ca8bbee0b6635c61d1ad04a45cf99ed65fe88ebc6dc3a4885d447039860"
       },
       {
         "code": "APEL-VIZ-PRO",
         "name": "Apel Vizion Pro Mesh [SIM-BOT]",
-        "fullName": "Apel Vizion Pro — Titanium Spatial Mesh Headset [SIM-BOT]",
+        "fullName": "Apel Vizion Pro \u2014 Titanium Spatial Mesh Headset [SIM-BOT]",
         "tier": "b2c",
         "units": 120,
         "price": 920,
         "unitCost": 390,
         "isCashProcure": true,
         "defaultOrderQty": 1,
-        "category": "B2C Retail • Wearable Mesh Node",
-        "specs": "Grade-5 Titanium • Dual Micro-OLED • 2× LR2021 Dual-Band RF • u-blox GNSS • Secure Enclave",
+        "category": "B2C Retail \u2022 Wearable Mesh Node",
+        "specs": "Grade-5 Titanium \u2022 Dual Micro-OLED \u2022 2\u00d7 LR2021 Dual-Band RF \u2022 u-blox GNSS \u2022 Secure Enclave",
         "skuId": "0x36021700c04a386869f065a5069816ee906b735b373086406de6703bec8b1fd3"
       },
       {
@@ -265,8 +266,8 @@
         "unitCost": 680,
         "isCashProcure": true,
         "defaultOrderQty": 1,
-        "category": "B2C Retail • Satellite + RF Terminal",
-        "specs": "Dual-Core 64-bit RISC-V • Phased-Array LEO + 2× LR2021 Sub-GHz/2.4GHz • Hardware Signing Vault",
+        "category": "B2C Retail \u2022 Satellite + RF Terminal",
+        "specs": "Dual-Core 64-bit RISC-V \u2022 Phased-Array LEO + 2\u00d7 LR2021 Sub-GHz/2.4GHz \u2022 Hardware Signing Vault",
         "skuId": "0x3de6ea08cfa9dd9614d8b002be585922ebd0f8a1194699a8ee99809cc81e6c61"
       },
       {
@@ -279,50 +280,50 @@
         "unitCost": 270,
         "isCashProcure": true,
         "defaultOrderQty": 1,
-        "category": "B2C Retail • RISC-V RF DevKit",
+        "category": "B2C Retail \u2022 RISC-V RF DevKit",
         "specs": "Dual 64-bit RISC-V + Dual-LR2021 Hat + Wasmtime HFS SDK & Sub-GHz/2.4GHz SMA Antennas",
         "skuId": "0x225e352f361eab1a8951cda5631ccdf34e6d0068a84d4b19b352712ba9167cd5"
       },
       {
         "code": "B2B-DGX-100",
         "name": "B2B 100x H200 Pods [SIM-BOT]",
-        "fullName": "B2B Fleet Crate — 100× Nvidya H200 Mini-Pods (19% Bulk Discount) [SIM-BOT]",
+        "fullName": "B2B Fleet Crate \u2014 100\u00d7 Nvidya H200 Mini-Pods (19% Bulk Discount) [SIM-BOT]",
         "tier": "b2b",
         "units": 45,
         "price": 19500,
         "unitCost": 8800,
         "isCashProcure": true,
         "defaultOrderQty": 3,
-        "category": "B2B Bulk Deal • 100-Unit Crate",
-        "specs": "100× serialized Nvidya H200 Mini-Pods in Pelican fleet case + bulk IdentityRegistry onboarding manifest",
+        "category": "B2B Bulk Deal \u2022 100-Unit Crate",
+        "specs": "100\u00d7 serialized Nvidya H200 Mini-Pods in Pelican fleet case + bulk IdentityRegistry onboarding manifest",
         "skuId": "0x991a271a41ca03befc33feba482499f7a93f471579af34ba951a06f7ed020453"
       },
       {
         "code": "B2B-VIZ-50",
         "name": "B2B 50x Apel Vizion [SIM-BOT]",
-        "fullName": "B2B Field Crew Pack — 50× Apel Vizion Pro Mesh Nodes (17% Bulk Discount) [SIM-BOT]",
+        "fullName": "B2B Field Crew Pack \u2014 50\u00d7 Apel Vizion Pro Mesh Nodes (17% Bulk Discount) [SIM-BOT]",
         "tier": "b2b",
         "units": 35,
         "price": 38000,
         "unitCost": 17500,
         "isCashProcure": true,
         "defaultOrderQty": 2,
-        "category": "B2B Bulk Deal • 50-Unit Crew Pack",
-        "specs": "50× Grade-5 Titanium Apel Vizion nodes pre-keyed for maritime, aerospace & industrial field crews",
+        "category": "B2B Bulk Deal \u2022 50-Unit Crew Pack",
+        "specs": "50\u00d7 Grade-5 Titanium Apel Vizion nodes pre-keyed for maritime, aerospace & industrial field crews",
         "skuId": "0x5b8843b1ecda5d82ea90c0abf100dad7ee0baf2eaf30e82cecf21d7d6883c932"
       },
       {
         "code": "B2B-DISH-25",
         "name": "B2B 25x Starlynx Kit [SIM-BOT]",
-        "fullName": "B2B Command Lot — 25× Starlynx Mini Field Terminals (16% Bulk Discount) [SIM-BOT]",
+        "fullName": "B2B Command Lot \u2014 25\u00d7 Starlynx Mini Field Terminals (16% Bulk Discount) [SIM-BOT]",
         "tier": "b2b",
         "units": 35,
         "price": 33500,
         "unitCost": 15500,
         "isCashProcure": true,
         "defaultOrderQty": 3,
-        "category": "B2B Bulk Deal • 25-Unit Lot",
-        "specs": "25× Starlynx Mini field terminals with Satellite NTN + Dual-LR2021 + 8-bay rugged rack charger",
+        "category": "B2B Bulk Deal \u2022 25-Unit Lot",
+        "specs": "25\u00d7 Starlynx Mini field terminals with Satellite NTN + Dual-LR2021 + 8-bay rugged rack charger",
         "skuId": "0x807d6957aba1b2124d8df17676bd7e19a35fd90a3585ac33d55273ebff47a0d1"
       },
       {
@@ -335,8 +336,8 @@
         "unitCost": 11800,
         "isCashProcure": false,
         "defaultOrderQty": 3,
-        "category": "B2B Infrastructure • RF Mast Relay",
-        "specs": "MIL-STD-810H tower/mast relay • 8× parallel LR2021 diversity channels • PoE++ / Solar • Embedded BFT Validator",
+        "category": "B2B Infrastructure \u2022 RF Mast Relay",
+        "specs": "MIL-STD-810H tower/mast relay \u2022 8\u00d7 parallel LR2021 diversity channels \u2022 PoE++ / Solar \u2022 Embedded BFT Validator",
         "skuId": "0x64270a26ccabf499d86dcfa2b1a8ddd77e3c62a54ce0cd87041ea2aa17234ea7"
       },
       {
@@ -349,7 +350,7 @@
         "unitCost": 14000,
         "isCashProcure": true,
         "defaultOrderQty": 2,
-        "category": "B2B Enterprise • BFT Node Rack",
+        "category": "B2B Enterprise \u2022 BFT Node Rack",
         "specs": "Dual-PSU 1U Validator Server pre-loaded with Wasmtime HFS Suite (Charter, IFRS, DEX, Custody Vault)",
         "skuId": "0x0434c12c6afc2712ccb61725d587d6c878c55c7cf2a7139ffff305378d8b555e"
       }
@@ -361,7 +362,7 @@
         "title": "Resolution #2026-01: Appoint Independent Director [SIM-BOT]",
         "summary": "Appoint Satyaa Nadella [SIM-BOT] to the Board of Directors of Nvidya Systems Pte. Ltd. [SIM-BOT].",
         "category": "Board Expansion",
-        "policyLabel": "Shareholder Super-Majority (≥75%)",
+        "policyLabel": "Shareholder Super-Majority (\u226575%)",
         "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
         "targetHps": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
         "actionHash": "0xf098aac6988986504ca0df5c07197d50e405d6b6599b8caa3f4af9109775acd6",
@@ -375,7 +376,7 @@
         "title": "Resolution #2026-02: Appoint Chief Financial Officer [SIM-BOT]",
         "summary": "Grant ROLE_TREASURY_MANAGER to Ruth Poratt [SIM-BOT] under Nvidya Systems Pte. Ltd. [SIM-BOT].",
         "category": "Executive Role Grant",
-        "policyLabel": "Shareholder Super-Majority (≥75%)",
+        "policyLabel": "Shareholder Super-Majority (\u226575%)",
         "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
         "targetHps": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
         "actionHash": "0x08dfbdc2a459e9f6e40731bc020c5eaddc6dd13e7bfa96017e436816663c2d58",
@@ -391,7 +392,7 @@
         "title": "Resolution #2026-03: Authorize R&D Treasury Share Issuance [SIM-BOT]",
         "summary": "Issue +20,000 new NVDAX-EQ Common Shares into Nvidya Corporate Reserve [SIM-BOT].",
         "category": "Share Capital Issuance",
-        "policyLabel": "Shareholder Super-Majority (≥75%)",
+        "policyLabel": "Shareholder Super-Majority (\u226575%)",
         "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
         "targetHps": "0xdf8d218d822632b4b3025e899117120c2456cb9f",
         "actionHash": "0xf6c0893fed98b058891fcb4b8c3f833aac3bfaa787446974e6a71366be9acf07",
@@ -406,7 +407,7 @@
         "title": "Resolution #2026-04: Authorize Catalog Product Manager [SIM-BOT]",
         "summary": "Grant ROLE_PRODUCT_MANAGER to Timm Cookk [SIM-BOT] to govern ProductLedger pricing & restocks.",
         "category": "Commerce Governance",
-        "policyLabel": "Shareholder Super-Majority (≥75%)",
+        "policyLabel": "Shareholder Super-Majority (\u226575%)",
         "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
         "targetHps": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
         "actionHash": "0xd7358ebe7d174e6ee6dd0fa50340fe46d1d278a777c4fd68076936900941f5e4",
@@ -629,5 +630,87 @@
         "edPub32Hex": "0xa533db5608a3641a32b6d7c35a2466f54e4dbf342980679590cbd0cd86d74618"
       }
     ]
+  },
+  "sovereignSuperlexiconSpec": {
+    "schemaVersion": 1,
+    "castInStone": true,
+    "entity": {
+      "legalName": "Superlexicon Pte. Ltd.",
+      "jurisdiction": "Singapore",
+      "countryCode": "SG",
+      "acraUen": "",
+      "reservedNamespaceProtected": true,
+      "shareClass": {
+        "symbol": "SLX-ORD",
+        "label": "Superlexicon Ordinary Shares",
+        "authorizedAndIssuedShares": 100000,
+        "votesPerShare": 1,
+        "decimals": 0
+      }
+    },
+    "founders": [
+      {
+        "key": "manogaran_thanabalan",
+        "fullName": "Manogaran Thanabalan",
+        "nickname": "Manogaran",
+        "handle": "@manogaran",
+        "isDirector": true,
+        "isSoleShareholder": true,
+        "ordinaryShares": 100000,
+        "votingPowerPct": 100,
+        "productionOwnerEoa": null,
+        "productionIdentityHfs": null,
+        "envEoaVar": "SLX_MANOGARAN_EOA",
+        "envIdentityVar": "SLX_MANOGARAN_IDENTITY",
+        "devnetSeedLabel": "slx-founder-manogaran-thanabalan-v1"
+      },
+      {
+        "key": "sarah_jean_rodrigues",
+        "fullName": "Sarah Jean Rodrigues",
+        "nickname": "Sarah",
+        "handle": "@sarah",
+        "isDirector": true,
+        "isSoleShareholder": false,
+        "ordinaryShares": 0,
+        "votingPowerPct": 0,
+        "productionOwnerEoa": null,
+        "productionIdentityHfs": null,
+        "envEoaVar": "SLX_SARAH_EOA",
+        "envIdentityVar": "SLX_SARAH_IDENTITY",
+        "devnetSeedLabel": "slx-founder-sarah-jean-rodrigues-v1"
+      }
+    ],
+    "socialGroups": {
+      "autoCompanyGroup": {
+        "slugName": "ALL_MEMBERS",
+        "label": "Superlexicon Pte. Ltd. - All Members",
+        "autoEnrollAllDirectorsOfficersAndShareholders": true
+      },
+      "defaultSubgroups": [
+        {
+          "slugName": "developers",
+          "slugKeccak256": "0x7425dff72041e497b9005317e8d584a8e5ec49bffe00da3b355471b70c8799a4",
+          "label": "Superlexicon \u00b7 Developers",
+          "directorManaged": true,
+          "initialMembers": [
+            "manogaran_thanabalan",
+            "sarah_jean_rodrigues"
+          ],
+          "grantsPermissions": [
+            "APP_STORE_PUBLISH_APP",
+            "APP_STORE_UPLOAD_UI_BUNDLE",
+            "WEB_RPC_UPLOAD_WASM_BYTECODE",
+            "WEB_RPC_DEPLOY_NON_IDENTITY_HFS"
+          ]
+        }
+      ]
+    },
+    "webRpcPolicy": {
+      "allowPublicPersonalIdentityDeploy": true,
+      "restrictNonIdentityHfsDeployToDevelopersSubgroup": true,
+      "restrictBytecodeStoreToDevelopersSubgroup": true,
+      "restrictAppStorePublishToDevelopersSubgroup": true,
+      "directRfSubnetIngressUnrestricted": true
+    }
   }
 }

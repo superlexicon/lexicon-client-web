@@ -38,6 +38,15 @@ import {
   wrapSecretForRecipientSecp,
   unwrapSecretWithPrivKey,
   decodeAuditorGrantsSliceHex,
+  SlxSocialAbi,
+  decodeSocialMessagesHex,
+  SUBGROUP_ALL_MEMBERS_SLUG,
+  SUBGROUP_DEVELOPERS_SLUG,
+  SOVEREIGN_SUPERLEXICON_CHARTER_SPEC,
+  isConfusableSuperlexiconName,
+  companyGroupChannelHash,
+  CharterSocialAbi,
+  decodeCompanySocialOverviewHex,
 } from '@superlexicon/sdk';
 import {
   SlxInstSession,
@@ -2129,6 +2138,7 @@ async function _runRefreshCharterWorldInner(meta = null) {
       refreshFuturesAndDexState(),
       refreshAuctionArenaState(),
       refreshAuditGovState(),
+      refreshCompanySocialState(),
     ]);
 
     state.firstRes = firstResObj;
@@ -2890,6 +2900,8 @@ function renderEverything() {
   renderAuctionArena();
   renderFuturesAndDex();
   renderRelatedMatters();
+  renderSovereignEntityBanner();
+  renderCompanySocialSection();
   renderEventFeeds();
 }
 
@@ -7321,6 +7333,21 @@ el.btnCloseIncorp?.addEventListener('click', closeIncorpModal);
 el.btnCancelIncorp?.addEventListener('click', closeIncorpModal);
 el.incorpModal?.addEventListener('click', closeIncorpModal);
 el.inpIncMyShares?.addEventListener('input', renderIncorpModalState);
+el.inpIncName?.addEventListener('input', () => {
+  const raw = (el.inpIncName?.value || '').trim();
+  const guardBox = $('incorpNameGuardNotice');
+  const blocked = isConfusableSuperlexiconName(raw);
+  if (guardBox) {
+    if (blocked) {
+      guardBox.style.display = 'block';
+      guardBox.innerHTML =
+        '🚫 <strong>Protocol-Reserved Entity Name (-110 / -25):</strong> <code>Superlexicon Pte. Ltd.</code> (Singapore) and all confusable/homoglyph variants are cast in stone at the protocol level and cannot be incorporated by third parties.';
+    } else {
+      guardBox.style.display = 'none';
+    }
+  }
+  if (el.btnSubmitIncorp) el.btnSubmitIncorp.disabled = blocked || state.busy;
+});
 
 el.btnAddExtParticipant?.addEventListener('click', () => {
   const addr = (el.inpExtIdentityAddr?.value || '').trim().toLowerCase();
@@ -9455,6 +9482,552 @@ document.getElementById('chrAuditMount')?.addEventListener('click', async (ev) =
     showBanner(`🚫 ${escapeHtml(err.message)}`, 'err');
   } finally {
     state.busy = false;
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Cast-in-Stone `Superlexicon Pte. Ltd.` Banner + Automatic Company Social &
+// Director-Managed Social Sub-Groups (`Superlexicon · Developers`)
+// ---------------------------------------------------------------------------
+
+state.corpSocial = {
+  overview: null,
+  activeSlug: SUBGROUP_ALL_MEMBERS_SLUG,
+  messages: [],
+};
+
+function resolveCharterMessagingAddr() {
+  const fromOv = state.corpSocial?.overview?.messagingHps;
+  if (fromOv && fromOv !== ZERO_ADDR) return fromOv;
+  return (
+    session.manifest?.fleetSocial?.messaging ||
+    session.manifest?.commonsRf?.messaging ||
+    ''
+  ).toLowerCase();
+}
+
+async function refreshCompanySocialState() {
+  const chr = session.inst?.corporateCharter?.toLowerCase();
+  if (!chr) return;
+  const myId = activeVerifiedIdentityLow() || ZERO_ADDR;
+  let overview = null;
+  try {
+    const rawHex = await session.ethCall(chr, CharterSocialAbi.getCompanySocialOverview(myId));
+    overview = decodeCompanySocialOverviewHex(rawHex);
+  } catch (_) {
+    overview = null;
+  }
+
+  if (!overview) {
+    const fallbackMembers = Array.from(
+      new Set([
+        ...(state.directors || []).map((d) => (typeof d === 'string' ? d : d.addr || '')).filter(Boolean),
+        ...(state.capRows || []).map((r) => r.addr).filter(Boolean),
+      ])
+    ).map((a) => a.toLowerCase());
+    overview = {
+      isSovereign: false,
+      viewerInAllMembers: Boolean(myId !== ZERO_ADDR && fallbackMembers.includes(myId)),
+      viewerIsActiveDirector: Boolean(state.myIsDirector && !state.myNeedsDirectorConsent),
+      charterState: state.charterState || 0,
+      legalName: companyNameStr(),
+      jurisdiction: 'Singapore',
+      registrationId: '',
+      messagingHps: resolveCharterMessagingAddr(),
+      allMembersChannelHash: companyGroupChannelHash(chr, SUBGROUP_ALL_MEMBERS_SLUG),
+      allMembers: fallbackMembers,
+      subgroups: [],
+    };
+  }
+
+  state.corpSocial.overview = overview;
+  const validSlugs = new Set([
+    SUBGROUP_ALL_MEMBERS_SLUG,
+    ...(overview.subgroups || []).map((g) => g.slug),
+  ]);
+  if (!validSlugs.has(state.corpSocial.activeSlug)) {
+    state.corpSocial.activeSlug = SUBGROUP_ALL_MEMBERS_SLUG;
+  }
+
+  const activeChan =
+    state.corpSocial.activeSlug === SUBGROUP_ALL_MEMBERS_SLUG
+      ? overview.allMembersChannelHash
+      : overview.subgroups.find((g) => g.slug === state.corpSocial.activeSlug)?.channelHash ||
+        companyGroupChannelHash(chr, state.corpSocial.activeSlug);
+
+  const msgAddr =
+    overview.messagingHps && overview.messagingHps !== ZERO_ADDR
+      ? overview.messagingHps
+      : resolveCharterMessagingAddr();
+
+  if (msgAddr && activeChan) {
+    try {
+      const mHex = await session.ethCall(msgAddr, SlxSocialAbi.getRecentMessages(activeChan, 28));
+      state.corpSocial.messages = decodeSocialMessagesHex(mHex);
+    } catch (_) {
+      state.corpSocial.messages = [];
+    }
+  } else {
+    state.corpSocial.messages = [];
+  }
+}
+
+function renderSovereignEntityBanner() {
+  const box = $('sovereignEntityBanner');
+  if (!box) return;
+  const ov = state.corpSocial?.overview;
+  const chr = session.inst?.corporateCharter || '';
+  const spec = SOVEREIGN_SUPERLEXICON_CHARTER_SPEC;
+
+  if (ov?.isSovereign) {
+    box.style.borderColor = 'rgba(52,211,153,0.6)';
+    box.style.background = 'linear-gradient(135deg,rgba(6,78,59,0.52),rgba(15,23,42,0.94))';
+    box.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="inst-badge green">🏛️ CAST-IN-STONE PROTOCOL ROOT</span>
+          <strong style="color:#ecfdf5;font-size:13px;">${escapeHtml(spec.legalName)} (${escapeHtml(ov.jurisdiction || 'Singapore')}${ov.registrationId ? ` • UEN ${escapeHtml(ov.registrationId)}` : ''})</strong>
+        </div>
+        <div style="color:#cbd5e1;font-size:11.5px;">
+          Directors: <strong>Manogaran Thanabalan</strong> &amp; <strong>Sarah Jean Rodrigues</strong> &bull; Sole Shareholder: <strong>Manogaran Thanabalan</strong> (<code>100,000 SLX-ORD</code> &bull; <code>100%</code>) &bull; Protected against lookalike/homoglyph imposters across all HFS &amp; RPC layers.
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        ${
+          ov.viewerIsActiveDirector && !ov.registrationId
+            ? `<button type="button" class="inst-btn sm emerald" id="btnStampAcraUen">🇸🇬 Stamp Singapore ACRA UEN</button>`
+            : ''
+        }
+        <a href="#sec-company-social" class="inst-btn sm primary" style="text-decoration:none;">💬 Developers &amp; Company Groups →</a>
+      </div>
+    `;
+    $('btnStampAcraUen')?.addEventListener('click', async () => {
+      const uen = window.prompt('Enter official Singapore ACRA UEN for Superlexicon Pte. Ltd.:', '');
+      if (!uen || !uen.trim()) return;
+      try {
+        state.busy = true;
+        startInflightAnim(`Stamping Singapore ACRA UEN (${uen.trim()}) on sovereign Charter…`);
+        await session.sendAsMyIdentity(
+          encodeAbi('execute(address,bytes)', [
+            ['address', chr],
+            ['bytes', hexToBytes(CharterSocialAbi.setRegistrationId(uen.trim()))],
+          ]),
+          'setRegistrationId(string)',
+          'CorporateCharter',
+          [chr]
+        );
+        finishInflightAnim('✓ Singapore ACRA UEN stamped in stone!');
+        await refreshCharterWorld();
+      } catch (err) {
+        finishInflightAnim('⚠ Could not stamp UEN');
+        showBanner(`🚫 ${escapeHtml(err.message)}`, 'err');
+      } finally {
+        state.busy = false;
+      }
+    });
+  } else {
+    box.style.borderColor = 'rgba(251,191,36,0.38)';
+    box.style.background = 'linear-gradient(135deg,rgba(30,41,59,0.88),rgba(15,23,42,0.94))';
+    box.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="inst-badge amber">⚠ SELF-ASSERTED ENTITY CHARTER</span>
+          <span style="font-family:var(--mono);font-size:11px;color:#93c5fd;">Verify Charter Address: <code>${escapeHtml(shortAddr(chr))}</code></span>
+        </div>
+        <div style="color:#cbd5e1;font-size:11.5px;">
+          User-created charters are self-asserted unless bank/registry attested. Protocol root <strong>Superlexicon Pte. Ltd.</strong> (Singapore; Directors: <strong>Manogaran Thanabalan</strong> &amp; <strong>Sarah Jean Rodrigues</strong>; <code>100,000</code> shares) is cast in stone and all confusable names are blocked at protocol level.
+        </div>
+      </div>
+      <a href="#sec-company-social" class="inst-btn sm" style="text-decoration:none;">💬 Company Social Group →</a>
+    `;
+  }
+}
+
+function renderCompanySocialSection() {
+  const listEl = $('corpSocialGroupsList');
+  const memBox = $('corpSubgroupMembersBox');
+  const dirBox = $('corpDirectorSubgroupAdmin');
+  const feedEl = $('corpSocialMessagesFeed');
+  const badgeEl = $('corpSocialCountBadge');
+  const titleEl = $('corpActiveChatTitle');
+  const metaEl = $('corpActiveChatMeta');
+  if (!listEl || !memBox || !feedEl) return;
+
+  const ov = state.corpSocial?.overview;
+  if (!ov) return;
+
+  const isDir = Boolean(ov.viewerIsActiveDirector || (state.myIsDirector && !state.myNeedsDirectorConsent));
+  if (dirBox) dirBox.style.display = isDir ? 'flex' : 'none';
+
+  const compLabel = ov.legalName || companyNameStr();
+  const groups = [
+    {
+      slug: SUBGROUP_ALL_MEMBERS_SLUG,
+      label: `${compLabel} · All Members`,
+      isAuto: true,
+      isDevGate: false,
+      memberCount: ov.allMembers.length,
+      members: ov.allMembers,
+      viewerIsMember: ov.viewerInAllMembers || state.myIsDirector || state.myIsShareholder,
+      channelHash: ov.allMembersChannelHash,
+    },
+    ...(ov.subgroups || []).map((g) => ({
+      ...g,
+      isAuto: false,
+      isDevGate: g.slug === SUBGROUP_DEVELOPERS_SLUG,
+      memberCount: g.members.length,
+    })),
+  ];
+
+  if (badgeEl) badgeEl.textContent = `${groups.length} ${groups.length === 1 ? 'Group' : 'Groups'}`;
+
+  listEl.innerHTML = groups
+    .map((g) => {
+      const sel = g.slug === state.corpSocial.activeSlug;
+      return `
+        <button type="button" data-select-sgrp="${g.slug}" style="text-align:left;padding:9px 11px;border-radius:10px;border:1px solid ${
+          sel ? 'rgba(56,189,248,0.7)' : 'rgba(51,65,85,0.7)'
+        };background:${sel ? 'rgba(14,116,144,0.24)' : 'rgba(15,23,42,0.75)'};color:#f8fafc;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <strong style="font-size:12.5px;">${g.isAuto ? '🏛️ ' : g.isDevGate ? '🧩 ' : '👥 '}${escapeHtml(g.label)}</strong>
+            <span style="font-size:10.5px;font-family:var(--mono);color:#94a3b8;">
+              ${g.isAuto ? 'Auto-enrolled on Charter creation' : g.isDevGate ? 'App Store & Web RPC Publisher Gate' : 'Director-managed sub-group'}
+            </span>
+          </div>
+          <span class="inst-badge ${g.viewerIsMember ? 'green' : 'cyan'}">${g.memberCount} mbrs</span>
+        </button>
+      `;
+    })
+    .join('');
+
+  const activeGroup = groups.find((g) => g.slug === state.corpSocial.activeSlug) || groups[0];
+  if (titleEl) titleEl.textContent = activeGroup.label;
+  if (metaEl) {
+    metaEl.innerHTML = `Channel <code>${escapeHtml(shortAddr(activeGroup.channelHash))}</code> &bull; ${
+      activeGroup.viewerIsMember
+        ? '<span style="color:#6ee7b7;">✓ You are a member (instant chat active)</span>'
+        : '<span style="color:#fcd34d;">🔒 Membership required to post</span>'
+    }`;
+  }
+
+  const memberPills = (activeGroup.members || [])
+    .map((addr) => {
+      const label = session.identityLabel ? session.identityLabel(addr) : shortAddr(addr);
+      const rmBtn =
+        !activeGroup.isAuto && isDir
+          ? `<button type="button" data-rm-sgrp-mem="${addr}" title="Remove from sub-group" style="margin-left:5px;background:none;border:none;color:#fca5a5;cursor:pointer;font-weight:800;">✕</button>`
+          : '';
+      return `<span style="display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;background:rgba(30,41,59,0.9);border:1px solid rgba(71,85,105,0.65);font-size:11px;font-family:var(--mono);color:#e2e8f0;">${escapeHtml(label)}${rmBtn}</span>`;
+    })
+    .join(' ');
+
+  memBox.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;">
+      <strong style="color:#cbd5e1;">Members (${activeGroup.members.length})</strong>
+      <span style="font-family:var(--mono);font-size:10.5px;color:#94a3b8;">${
+        activeGroup.isAuto ? 'Synced from Board, Roles & Cap Table' : 'Managed by Company Directors'
+      }</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;">${memberPills || '<span style="font-size:11px;color:#94a3b8;">No members yet</span>'}</div>
+    ${
+      !activeGroup.isAuto && isDir
+        ? `
+      <div style="display:flex;gap:6px;margin-top:4px;">
+        <input class="inst-input" id="inpAddSubgroupMemberAddr" type="text" placeholder="Add member Identity HFS (0x…)" style="flex:1;padding:6px 9px;font-size:11.5px;" />
+        <button type="button" class="inst-btn sm emerald" id="btnAddSubgroupMember">+ Add</button>
+      </div>
+    `
+        : ''
+    }
+  `;
+
+  const msgs = state.corpSocial.messages || [];
+  if (!msgs.length) {
+    feedEl.innerHTML = `
+      <div style="padding:24px 14px;text-align:center;color:#94a3b8;font-size:12px;border:1px dashed rgba(71,85,105,0.55);border-radius:10px;">
+        💬 <strong>${escapeHtml(activeGroup.label)}</strong> is live on-chain! All enrolled company members can message each other here and in CommonsRF Social immediately without manual RF handshakes.
+      </div>
+    `;
+  } else {
+    feedEl.innerHTML = msgs
+      .map((m) => {
+        const who = session.identityLabel ? session.identityLabel(m.authorAddr) : shortAddr(m.authorAddr);
+        return `
+          <div style="padding:8px 11px;border-radius:10px;background:rgba(15,23,42,0.82);border:1px solid rgba(51,65,85,0.68);">
+            <div style="display:flex;justify-content:space-between;font-size:10.5px;font-family:var(--mono);color:#7dd3fc;margin-bottom:3px;">
+              <strong>${escapeHtml(who)}</strong>
+              <span style="color:#64748b;">Blk #${fmtNum(m.block)}</span>
+            </div>
+            <div style="font-size:12.5px;color:#f1f5f9;line-height:1.45;">${escapeHtml(m.text)}</div>
+          </div>
+        `;
+      })
+      .join('');
+    feedEl.scrollTop = feedEl.scrollHeight;
+  }
+}
+
+$('corpSocialGroupsList')?.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('[data-select-sgrp]');
+  if (!btn) return;
+  state.corpSocial.activeSlug = btn.getAttribute('data-select-sgrp');
+  await refreshCompanySocialState();
+  renderCompanySocialSection();
+});
+
+$('btnPresetDevSubgroup')?.addEventListener('click', () => {
+  const slugIn = $('inpNewSubgroupSlug');
+  const lblIn = $('inpNewSubgroupLabel');
+  if (slugIn) slugIn.value = 'developers';
+  if (lblIn) {
+    lblIn.value = state.corpSocial?.overview?.isSovereign
+      ? 'Superlexicon · Developers'
+      : `${companyNameStr().slice(0, 36)} · Developers`;
+  }
+});
+
+$('btnSyncCorpSocial')?.addEventListener('click', async () => {
+  if (state.busy || !session.inst?.corporateCharter) return;
+  const chr = session.inst.corporateCharter;
+  const msgAddr = resolveCharterMessagingAddr();
+  state.busy = true;
+  try {
+    await session.ensureMyIdentity((m) => startInflightAnim(m));
+    startInflightAnim('Syncing Company Social Group & Messaging controller…');
+    const ov = state.corpSocial?.overview;
+    const inner =
+      !ov?.legalName && msgAddr
+        ? CharterSocialAbi.configureEntityAndSocial({
+            legalName: companyNameStr(),
+            jurisdiction: 'Singapore',
+            registrationId: '',
+            hfsRegistry: session.manifest?.hfsRegistry || ZERO_ADDR,
+            messagingHps: msgAddr,
+          })
+        : CharterSocialAbi.syncCompanySocialGroup();
+    await session.sendAsMyIdentity(
+      encodeAbi('execute(address,bytes)', [
+        ['address', chr],
+        ['bytes', hexToBytes(inner)],
+      ]),
+      'syncCompanySocialGroup()',
+      'CorporateCharter',
+      [chr, ...(msgAddr ? [msgAddr] : []), ...(state.capRows || []).map((r) => r.addr)]
+    );
+    finishInflightAnim('✓ Company Social Group synced!');
+    await refreshCharterWorld();
+  } catch (err) {
+    finishInflightAnim('⚠ Sync note');
+    showBanner(`🚫 ${escapeHtml(err.message)}`, 'err');
+  } finally {
+    state.busy = false;
+  }
+});
+
+$('btnCreateSubgroup')?.addEventListener('click', async () => {
+  if (state.busy || !session.inst?.corporateCharter) return;
+  const slugStr = ($('inpNewSubgroupSlug')?.value || '').trim();
+  const labelStr = ($('inpNewSubgroupLabel')?.value || '').trim();
+  if (!slugStr || !labelStr) {
+    showBanner('🚫 Enter both a sub-group slug (e.g. developers) and a label.', 'err');
+    return;
+  }
+  if (!state.corpSocial?.overview?.isSovereign && isConfusableSuperlexiconName(labelStr)) {
+    showBanner(
+      '🚫 Only the cast-in-stone Superlexicon Pte. Ltd. charter can create a subgroup named Superlexicon.',
+      'err'
+    );
+    return;
+  }
+  const chr = session.inst.corporateCharter;
+  const msgAddr = resolveCharterMessagingAddr();
+  state.busy = true;
+  try {
+    await session.ensureMyIdentity((m) => startInflightAnim(m));
+    if (!state.corpSocial?.overview?.messagingHps || state.corpSocial.overview.messagingHps === ZERO_ADDR) {
+      if (msgAddr) {
+        startInflightAnim('Step 1/2: Linking Messaging HFS to CorporateCharter…');
+        await session.sendAsMyIdentity(
+          encodeAbi('execute(address,bytes)', [
+            ['address', chr],
+            [
+              'bytes',
+              hexToBytes(
+                CharterSocialAbi.configureEntityAndSocial({
+                  legalName: state.corpSocial?.overview?.legalName || companyNameStr(),
+                  jurisdiction: state.corpSocial?.overview?.jurisdiction || 'Singapore',
+                  registrationId: state.corpSocial?.overview?.registrationId || '',
+                  hfsRegistry: session.manifest?.hfsRegistry || ZERO_ADDR,
+                  messagingHps: msgAddr,
+                })
+              ),
+            ],
+          ]),
+          'configureEntityAndSocial',
+          'CorporateCharter',
+          [chr, msgAddr]
+        );
+      }
+    }
+    startInflightAnim(`Creating company sub-group "${labelStr}" on-chain…`);
+    const initialDirectors = (state.directors || [])
+      .map((d) => (typeof d === 'string' ? d : d.addr || ''))
+      .filter(Boolean);
+    const cd = CharterSocialAbi.createCompanySubgroup({
+      subgroupSlug: slugStr,
+      label: labelStr,
+      initialMembers: initialDirectors,
+    });
+    await session.sendAsMyIdentity(
+      encodeAbi('execute(address,bytes)', [
+        ['address', chr],
+        ['bytes', hexToBytes(cd)],
+      ]),
+      `createCompanySubgroup(${slugStr})`,
+      'CorporateCharter',
+      [chr, ...(msgAddr ? [msgAddr] : []), ...initialDirectors]
+    );
+    finishInflightAnim(`✓ Sub-group "${labelStr}" created!`);
+    if ($('inpNewSubgroupSlug')) $('inpNewSubgroupSlug').value = '';
+    if ($('inpNewSubgroupLabel')) $('inpNewSubgroupLabel').value = '';
+    await refreshCharterWorld();
+  } catch (err) {
+    finishInflightAnim('⚠ Sub-group creation failed');
+    showBanner(`🚫 ${escapeHtml(err.message)}`, 'err');
+  } finally {
+    state.busy = false;
+  }
+});
+
+$('corpSubgroupMembersBox')?.addEventListener('click', async (ev) => {
+  if (state.busy || !session.inst?.corporateCharter) return;
+  const chr = session.inst.corporateCharter;
+  const slug = state.corpSocial.activeSlug;
+
+  const addBtn = ev.target.closest('#btnAddSubgroupMember');
+  if (addBtn) {
+    const memberAddr = ($('inpAddSubgroupMemberAddr')?.value || '').trim().toLowerCase();
+    if (!/^0x[0-9a-f]{40}$/.test(memberAddr)) {
+      showBanner('🚫 Enter a valid 20-byte Identity HFS address (0x…).', 'err');
+      return;
+    }
+    state.busy = true;
+    try {
+      await session.ensureMyIdentity((m) => startInflightAnim(m));
+      startInflightAnim(`Adding ${shortAddr(memberAddr)} to sub-group…`);
+      await session.sendAsMyIdentity(
+        encodeAbi('execute(address,bytes)', [
+          ['address', chr],
+          ['bytes', hexToBytes(CharterSocialAbi.addSubgroupMember(slug, memberAddr))],
+        ]),
+        'addSubgroupMember',
+        'CorporateCharter',
+        [chr, memberAddr]
+      );
+      finishInflightAnim('✓ Member added to company sub-group!');
+      await refreshCharterWorld();
+    } catch (err) {
+      finishInflightAnim('⚠ Add member failed');
+      showBanner(`🚫 ${escapeHtml(err.message)}`, 'err');
+    } finally {
+      state.busy = false;
+    }
+    return;
+  }
+
+  const rmBtn = ev.target.closest('[data-rm-sgrp-mem]');
+  if (rmBtn) {
+    const memberAddr = rmBtn.getAttribute('data-rm-sgrp-mem');
+    state.busy = true;
+    try {
+      await session.ensureMyIdentity((m) => startInflightAnim(m));
+      startInflightAnim(`Removing ${shortAddr(memberAddr)} from sub-group…`);
+      await session.sendAsMyIdentity(
+        encodeAbi('execute(address,bytes)', [
+          ['address', chr],
+          ['bytes', hexToBytes(CharterSocialAbi.removeSubgroupMember(slug, memberAddr))],
+        ]),
+        'removeSubgroupMember',
+        'CorporateCharter',
+        [chr, memberAddr]
+      );
+      finishInflightAnim('✓ Member removed from sub-group');
+      await refreshCharterWorld();
+    } catch (err) {
+      finishInflightAnim('⚠ Remove member failed');
+      showBanner(`🚫 ${escapeHtml(err.message)}`, 'err');
+    } finally {
+      state.busy = false;
+    }
+  }
+});
+
+async function sendCompanyGroupChatMessage() {
+  if (state.busy || !session.inst?.corporateCharter) return;
+  const input = $('inpCorpSocialMsg');
+  const text = (input?.value || '').trim();
+  if (!text) return;
+  const chr = session.inst.corporateCharter;
+  const msgAddr = resolveCharterMessagingAddr();
+  const slug =
+    state.corpSocial.activeSlug === SUBGROUP_ALL_MEMBERS_SLUG
+      ? '0x' + '00'.repeat(32)
+      : state.corpSocial.activeSlug;
+
+  state.busy = true;
+  try {
+    await session.ensureMyIdentity((m) => startInflightAnim(m));
+    if (!state.corpSocial?.overview?.messagingHps || state.corpSocial.overview.messagingHps === ZERO_ADDR) {
+      if (msgAddr) {
+        await session.sendAsMyIdentity(
+          encodeAbi('execute(address,bytes)', [
+            ['address', chr],
+            [
+              'bytes',
+              hexToBytes(
+                CharterSocialAbi.configureEntityAndSocial({
+                  legalName: state.corpSocial?.overview?.legalName || companyNameStr(),
+                  jurisdiction: state.corpSocial?.overview?.jurisdiction || 'Singapore',
+                  registrationId: state.corpSocial?.overview?.registrationId || '',
+                  hfsRegistry: session.manifest?.hfsRegistry || ZERO_ADDR,
+                  messagingHps: msgAddr,
+                })
+              ),
+            ],
+          ]),
+          'configureEntityAndSocial',
+          'CorporateCharter',
+          [chr, msgAddr]
+        );
+      }
+    }
+    startInflightAnim('Posting message to Corporate Social Group…');
+    await session.sendAsMyIdentity(
+      encodeAbi('execute(address,bytes)', [
+        ['address', chr],
+        ['bytes', hexToBytes(CharterSocialAbi.postCompanyGroupMessage(slug, text))],
+      ]),
+      'postCompanyGroupMessage',
+      'CorporateCharter',
+      [chr, ...(msgAddr ? [msgAddr] : [])]
+    );
+    if (input) input.value = '';
+    finishInflightAnim('✓ Message delivered to company group!');
+    await refreshCompanySocialState();
+    renderCompanySocialSection();
+  } catch (err) {
+    finishInflightAnim('⚠ Message rejected');
+    showBanner(`🚫 ${escapeHtml(err.message)}`, 'err');
+  } finally {
+    state.busy = false;
+  }
+}
+
+$('btnSendCorpSocialMsg')?.addEventListener('click', sendCompanyGroupChatMessage);
+$('inpCorpSocialMsg')?.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter') {
+    ev.preventDefault();
+    sendCompanyGroupChatMessage();
   }
 });
 

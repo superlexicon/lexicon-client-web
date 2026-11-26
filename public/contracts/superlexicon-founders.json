@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "castInStone": true,
+  "entity": {
+    "legalName": "Superlexicon Pte. Ltd.",
+    "jurisdiction": "Singapore",
+    "countryCode": "SG",
+    "acraUen": "",
+    "reservedNamespaceProtected": true,
+    "shareClass": {
+      "symbol": "SLX-ORD",
+      "label": "Superlexicon Ordinary Shares",
+      "authorizedAndIssuedShares": 100000,
+      "votesPerShare": 1,
+      "decimals": 0
+    }
+  },
+  "founders": [
+    {
+      "key": "manogaran_thanabalan",
+      "fullName": "Manogaran Thanabalan",
+      "nickname": "Manogaran",
+      "handle": "@manogaran",
+      "isDirector": true,
+      "isSoleShareholder": true,
+      "ordinaryShares": 100000,
+      "votingPowerPct": 100,
+      "productionOwnerEoa": null,
+      "productionIdentityHfs": null,
+      "envEoaVar": "SLX_MANOGARAN_EOA",
+      "envIdentityVar": "SLX_MANOGARAN_IDENTITY",
+      "devnetSeedLabel": "slx-founder-manogaran-thanabalan-v1"
+    },
+    {
+      "key": "sarah_jean_rodrigues",
+      "fullName": "Sarah Jean Rodrigues",
+      "nickname": "Sarah",
+      "handle": "@sarah",
+      "isDirector": true,
+      "isSoleShareholder": false,
+      "ordinaryShares": 0,
+      "votingPowerPct": 0,
+      "productionOwnerEoa": null,
+      "productionIdentityHfs": null,
+      "envEoaVar": "SLX_SARAH_EOA",
+      "envIdentityVar": "SLX_SARAH_IDENTITY",
+      "devnetSeedLabel": "slx-founder-sarah-jean-rodrigues-v1"
+    }
+  ],
+  "socialGroups": {
+    "autoCompanyGroup": {
+      "slugName": "ALL_MEMBERS",
+      "label": "Superlexicon Pte. Ltd. - All Members",
+      "autoEnrollAllDirectorsOfficersAndShareholders": true
+    },
+    "defaultSubgroups": [
+      {
+        "slugName": "developers",
+        "slugKeccak256": "0x7425dff72041e497b9005317e8d584a8e5ec49bffe00da3b355471b70c8799a4",
+        "label": "Superlexicon · Developers",
+        "directorManaged": true,
+        "initialMembers": ["manogaran_thanabalan", "sarah_jean_rodrigues"],
+        "grantsPermissions": [
+          "APP_STORE_PUBLISH_APP",
+          "APP_STORE_UPLOAD_UI_BUNDLE",
+          "WEB_RPC_UPLOAD_WASM_BYTECODE",
+          "WEB_RPC_DEPLOY_NON_IDENTITY_HFS"
+        ]
+      }
+    ]
+  },
+  "webRpcPolicy": {
+    "allowPublicPersonalIdentityDeploy": true,
+    "restrictNonIdentityHfsDeployToDevelopersSubgroup": true,
+    "restrictBytecodeStoreToDevelopersSubgroup": true,
+    "restrictAppStorePublishToDevelopersSubgroup": true,
+    "directRfSubnetIngressUnrestricted": true
+  }
+}

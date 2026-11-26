@@ -33,6 +33,16 @@ import {
   deriveIdentityEncryptionKeys,
   deriveCompanyAuditKeypair,
   wrapSecretForRecipientSecp,
+  SUBGROUP_ALL_MEMBERS_SLUG,
+  SUBGROUP_DEVELOPERS_SLUG,
+  SOVEREIGN_SUPERLEXICON_CHARTER_SPEC,
+  isConfusableSuperlexiconName,
+  companyGroupChannelHash,
+  CharterSocialAbi,
+  decodeEntityProfileHex,
+  decodeCompanySocialOverviewHex,
+  resolveSovereignSuperlexiconCharter,
+  checkSuperlexiconDeveloperStanding,
 } from "@superlexicon/sdk";
 import {
   mountHfsRegistryDropdown,
@@ -51,10 +61,44 @@ export {
   setUrlHfsParam,
   clearUrlHfsParam,
   mountHfsRegistryDropdown,
+  SUBGROUP_ALL_MEMBERS_SLUG,
+  SUBGROUP_DEVELOPERS_SLUG,
+  SOVEREIGN_SUPERLEXICON_CHARTER_SPEC,
+  isConfusableSuperlexiconName,
+  companyGroupChannelHash,
+  CharterSocialAbi,
+  decodeEntityProfileHex,
+  decodeCompanySocialOverviewHex,
+  resolveSovereignSuperlexiconCharter,
+  checkSuperlexiconDeveloperStanding,
 };
 
 const encodeSimpleAbi = encodeAbi;
 const signOrderedTx = signOrderedLexiconTx;
+
+export function assertNotConfusableSuperlexiconName(candidateName) {
+  if (isConfusableSuperlexiconName(candidateName)) {
+    throw new Error(
+      `Entity / HFS name "${candidateName}" is reserved at the protocol level (-110 / -25): "Superlexicon Pte. Ltd." and all confusable or lookalike entity names are cast in stone and cannot be created by third parties.`
+    );
+  }
+}
+
+export async function assertWebRpcHfsDeployAllowed({ wallet, rpcUrl = getDefaultNodeWsUrl() }) {
+  const idRec = wallet?.getIdentityRecord?.() || null;
+  const standing = await checkSuperlexiconDeveloperStanding({
+    rpcUrl,
+    identityAddr: idRec?.identityAddr || '',
+    eoaAddr: wallet?.keypair?.address || '',
+  });
+  if (!standing.authorized) {
+    throw new Error(
+      standing.reason ||
+        'Deploying new HFS subroutines over the public website RPC requires membership in the Superlexicon · Developers social group (governed by Superlexicon Pte. Ltd. CorporateCharter) — or connect directly via local LR2021 RF hardware.'
+    );
+  }
+  return standing;
+}
 
 async function waitReceipts(rpcUrl, hashes) {
   const out = [];
@@ -449,6 +493,13 @@ export async function deployNewCorporateCharterHfs({
   }
 
   const compName = String(companyName || label || 'Aegis Naval Robotics Pte. Ltd.').trim().slice(0, 60);
+  assertNotConfusableSuperlexiconName(compName);
+  await assertWebRpcHfsDeployAllowed({ wallet, rpcUrl });
+  const messagingAddr = (
+    manifest?.fleetSocial?.messaging ||
+    manifest?.commonsRf?.messaging ||
+    ''
+  ).toLowerCase();
   const sym =
     String(
       ticker ||
@@ -789,6 +840,7 @@ export async function deployNewCorporateCharterHfs({
       newBankLedger,
       newShareCapital,
       firstResAuth,
+      ...(messagingAddr ? [messagingAddr] : []),
       ...(hasIfrsAuto ? [newTreasuryIdentity, newAccountingLedger, treasRegAuth, inst.keeperIdentity.toLowerCase()] : []),
       ...(hasConfAuto ? [newConfLedger] : []),
       reg.toLowerCase(),
@@ -805,16 +857,24 @@ export async function deployNewCorporateCharterHfs({
     to: myId,
     data: execWrap(
       newCharter,
-      encodeSimpleAbi('initializeWithGovernance(address,bytes,bytes,bytes,bytes,bytes)', [
-        ['address', inst.registry],
-        ['bytes', rolesBlob],
-        ['bytes', policiesBlob],
-        ['bytes', new Uint8Array(0)],
-        ['bytes', shareClassesBlob],
-        ['bytes', modulesBlob],
-      ])
+      encodeSimpleAbi(
+        'initializeEntityWithGovernance(address,string,string,string,address,address,bytes,bytes,bytes,bytes,bytes)',
+        [
+          ['address', inst.registry],
+          ['string', compName],
+          ['string', 'Singapore'],
+          ['string', ''],
+          ['address', reg],
+          ['address', messagingAddr || ZERO],
+          ['bytes', rolesBlob],
+          ['bytes', policiesBlob],
+          ['bytes', new Uint8Array(0)],
+          ['bytes', shareClassesBlob],
+          ['bytes', modulesBlob],
+        ]
+      )
     ),
-    gasLimit: 9_200_000n,
+    gasLimit: 9_600_000n,
     extraTargets: targets,
   });
   const b2Sh = signOrderedTx({
@@ -1811,11 +1871,23 @@ export async function deployNewIfrsLedgerHfs({
   };
 }
 
-registerHfsTypeDeployer("PHANTOM_FLEET", deployNewPhantomFleetHfs);
-registerHfsTypeDeployer("DEX_CLOB", deployNewDexMarketHfs);
+function wrapWebGatedDeployer(fn) {
+  return async (opts = {}) => {
+    const candidateLabel = opts.companyName || opts.label || '';
+    if (candidateLabel) assertNotConfusableSuperlexiconName(candidateLabel);
+    await assertWebRpcHfsDeployAllowed({
+      wallet: opts.wallet,
+      rpcUrl: opts.rpcUrl || getDefaultNodeWsUrl(),
+    });
+    return fn(opts);
+  };
+}
+
+registerHfsTypeDeployer("PHANTOM_FLEET", wrapWebGatedDeployer(deployNewPhantomFleetHfs));
+registerHfsTypeDeployer("DEX_CLOB", wrapWebGatedDeployer(deployNewDexMarketHfs));
 registerHfsTypeDeployer("CORPORATE_CHARTER", deployNewCorporateCharterHfs);
-registerHfsTypeDeployer("FRACTURED_HEGEMONY", deployNewFracturedHegemonyHfs);
-registerHfsTypeDeployer("CIPHER_NOIR", deployNewCipherNoirHfs);
-registerHfsTypeDeployer("QUANTUM_LOTTERY", deployNewQuantumLotteryHfs);
-registerHfsTypeDeployer("SECRET_BALLOT", deployNewSecretBallotHfs);
-registerHfsTypeDeployer("IFRS_LEDGER", deployNewIfrsLedgerHfs);
+registerHfsTypeDeployer("FRACTURED_HEGEMONY", wrapWebGatedDeployer(deployNewFracturedHegemonyHfs));
+registerHfsTypeDeployer("CIPHER_NOIR", wrapWebGatedDeployer(deployNewCipherNoirHfs));
+registerHfsTypeDeployer("QUANTUM_LOTTERY", wrapWebGatedDeployer(deployNewQuantumLotteryHfs));
+registerHfsTypeDeployer("SECRET_BALLOT", wrapWebGatedDeployer(deployNewSecretBallotHfs));
+registerHfsTypeDeployer("IFRS_LEDGER", wrapWebGatedDeployer(deployNewIfrsLedgerHfs));

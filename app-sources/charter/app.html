@@ -55,6 +55,9 @@
       </div>
     </section>
 
+    <!-- Cast-in-Stone Sovereign Superlexicon Root vs Self-Asserted Entity Verification Strip -->
+    <section id="sovereignEntityBanner" style="padding:11px 16px;border-radius:14px;border:1px solid rgba(56,189,248,0.34);background:linear-gradient(135deg,rgba(6,78,59,0.28),rgba(15,23,42,0.92));display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;line-height:1.48;"></section>
+
     <!-- Initial On-Chain Data Hydration Indicator (Visible from 0ms until Subnet 1 Charter state renders) -->
     <section id="chrBootLoader" class="chr-boot-loader" aria-live="polite">
       <div class="chr-boot-top">
@@ -183,6 +186,9 @@
       </a>
       <a class="chr-jump-btn" href="#sec-related-matters" data-jump-sec="sec-related-matters">
         4. 🔗 Related Ledgers &amp; Apps
+      </a>
+      <a class="chr-jump-btn" href="#sec-company-social" data-jump-sec="sec-company-social">
+        5. 💬 Company Social &amp; Sub-Groups
       </a>
     </nav>
 
@@ -1492,6 +1498,73 @@
       </div>
     </section>
 
+    <!-- =====================================================================
+         SECTION 5: AUTOMATIC COMPANY SOCIAL GROUP & DIRECTOR SUB-GROUPS
+         ===================================================================== -->
+    <section id="sec-company-social" class="chr-section-wrap">
+      <div class="chr-section-heading">
+        <div>
+          <div class="chr-sec-eyebrow">Section 5 • Charter-Linked Corporate Comms &amp; Access Control</div>
+          <h2 class="chr-sec-title">💬 Company Social Group &amp; Director Sub-Groups</h2>
+          <div class="chr-sec-desc">
+            Every <code>CorporateCharter</code> automatically creates an <strong>All Members</strong> group for its Directors, Officers &amp; Shareholders (no <code>&le;150m</code> RF encounter required). Active Directors can also create company sub-groups—such as <strong><code>Superlexicon &middot; Developers</code></strong>, which gates App Store publishing and Web RPC HFS deployments.
+          </div>
+        </div>
+        <button type="button" class="inst-btn sm" id="btnSyncCorpSocial">
+          🔄 Sync Company Roster
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(290px,0.95fr) minmax(320px,1.45fr);gap:14px;align-items:start;">
+        <!-- Left: Channels, Sub-Groups & Director Management -->
+        <div class="inst-card" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <strong style="font-size:13.5px;color:#7dd3fc;">📡 Charter Channels &amp; Sub-Groups</strong>
+            <span class="inst-badge green" id="corpSocialCountBadge">1 Group</span>
+          </div>
+          <div id="corpSocialGroupsList" style="display:flex;flex-direction:column;gap:7px;"></div>
+
+          <!-- Active Sub-Group Roster & Director Add/Remove Controls -->
+          <div id="corpSubgroupMembersBox" style="padding:10px 12px;border-radius:11px;background:rgba(7,13,26,0.68);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px;"></div>
+
+          <!-- Director-Only Create Sub-Group Box -->
+          <div id="corpDirectorSubgroupAdmin" style="display:none;padding:11px 12px;border-radius:11px;background:rgba(6,78,59,0.22);border:1px solid rgba(52,211,153,0.38);flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+              <strong style="font-size:12px;color:#6ee7b7;">👔 Director: Create Company Sub-Group</strong>
+              <button type="button" class="inst-btn sm" id="btnPresetDevSubgroup" style="padding:3px 8px;font-size:10.5px;">
+                ⚡ Preset: Developers
+              </button>
+            </div>
+            <input class="inst-input" id="inpNewSubgroupSlug" type="text" maxlength="32" placeholder="Sub-group slug (e.g. developers, hardware-rd)" />
+            <input class="inst-input" id="inpNewSubgroupLabel" type="text" maxlength="60" placeholder="Display label (e.g. Engineering & Developers)" />
+            <button type="button" class="inst-btn sm emerald" id="btnCreateSubgroup">
+              ➕ Create Sub-Group On-Chain
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Live Attributed Group Chat -->
+        <div class="inst-card" style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid var(--line);">
+            <div>
+              <strong id="corpActiveChatTitle" style="font-size:14px;color:#f8fafc;">🏛️ All Company Members</strong>
+              <div id="corpActiveChatMeta" style="font-size:11px;font-family:var(--mono);color:var(--txt-2);margin-top:2px;">
+                Protected by <code>CorporateCharter.postCompanyGroupMessage</code> &rarr; <code>Messaging</code>
+              </div>
+            </div>
+            <a href="/social.html" class="inst-btn sm" style="text-decoration:none;">🌐 Open in CommonsRF Social →</a>
+          </div>
+
+          <div id="corpSocialMessagesFeed" style="min-height:210px;max-height:310px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:6px 2px;"></div>
+
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="inst-input" id="inpCorpSocialMsg" type="text" maxlength="500" placeholder="Message your fellow Directors, Officers &amp; Shareholders…" style="flex:1;" />
+            <button type="button" class="inst-btn primary" id="btnSendCorpSocialMsg">Send ↵</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Collapsible Live Blockchain Audit Stream -->
     <details class="chr-inspector-drawer">
       <summary>
@@ -1547,6 +1620,7 @@
             <input class="inst-input" id="inpIncWinBlocks" type="number" min="3" max="20" value="6" required />
           </div>
         </div>
+        <div id="incorpNameGuardNotice" style="display:none;padding:9px 12px;border-radius:10px;background:rgba(127,29,29,0.36);border:1px solid rgba(248,113,113,0.55);font-size:11.5px;color:#fecaca;line-height:1.45;"></div>
 
         <div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">

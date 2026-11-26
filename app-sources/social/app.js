@@ -31,6 +31,15 @@ import {
   deterministicEncounterNonce,
   SUBNET1_FLEET_SOCIAL_DEFAULT,
   getUrlHfsParam,
+  SlxSocialAbi,
+  decodeSocialMessagesHex,
+  SUBGROUP_ALL_MEMBERS_SLUG,
+  SUBGROUP_DEVELOPERS_SLUG,
+  SOVEREIGN_SUPERLEXICON_CHARTER_SPEC,
+  companyGroupChannelHash,
+  CharterSocialAbi,
+  decodeCompanySocialOverviewHex,
+  fetchRegisteredHfsByType,
 } from '@superlexicon/sdk';
 import { mountSlxUnifiedHeader } from '@superlexicon/sdk/ui';
 import { mountHfsRegistryDropdown } from './slx-hfs-registry.js';
@@ -2919,6 +2928,12 @@ function renderCenterTab(view, me, curPersona) {
     return;
   }
 
+  // TAB 6: CORPORATE CHARTER SOCIAL GROUPS & DEVELOPER SUB-GROUPS
+  if (app.mainTab === 'company_groups') {
+    renderCompanyGroupsSocialTab();
+    return;
+  }
+
   // TAB 5: HANDSHAKES
   const hnds = rel.handshakes;
   el.centerModuleView.innerHTML =
@@ -3509,5 +3524,218 @@ socialWatcher = slxWatchChainApp({
     if (app.suiteAddrs.charter && !app.rpcBusy) {
       await refreshRpcSuite();
     }
+    if (app.mainTab === 'company_groups') {
+      await refreshSocialCompanyGroups();
+      renderAll();
+    }
   },
 });
+
+// ---------------------------------------------------------------------------
+// CorporateCharter Company Social Groups & `Superlexicon · Developers` Tab
+// ---------------------------------------------------------------------------
+
+app.corpGroupsState = {
+  loaded: false,
+  charters: [],
+  activeKey: '',
+  messages: [],
+};
+
+async function refreshSocialCompanyGroups() {
+  try {
+    const { manifest } = await SlxHfsCache.hydrateWithManifest();
+    const myId = (slxWallet.getIdentityRecord()?.identityAddr || '').toLowerCase();
+    const candidateMap = new Map();
+
+    const sovAddr =
+      manifest?.sovereignSuperlexicon?.corporateCharter ||
+      manifest?.superlexiconCharter?.corporateCharter ||
+      '';
+    if (sovAddr && /^0x[0-9a-f]{40}$/i.test(sovAddr)) {
+      candidateMap.set(sovAddr.toLowerCase(), {
+        charterAddr: sovAddr.toLowerCase(),
+        fallbackLabel: SOVEREIGN_SUPERLEXICON_CHARTER_SPEC.legalName,
+        isSovereignHint: true,
+      });
+    }
+    if (manifest?.institutional?.corporateCharter) {
+      const c = manifest.institutional.corporateCharter.toLowerCase();
+      if (!candidateMap.has(c)) {
+        candidateMap.set(c, {
+          charterAddr: c,
+          fallbackLabel: manifest.institutional.companyName || 'Corporate Charter',
+          isSovereignHint: false,
+        });
+      }
+    }
+    if (manifest?.hfsRegistry) {
+      const regItems = await fetchRegisteredHfsByType({
+        rpcUrl: app.rpcUrl,
+        registryAddr: manifest.hfsRegistry,
+        typeName: 'CORPORATE_CHARTER',
+        limit: 12,
+      }).catch(() => []);
+      for (const item of regItems) {
+        if (item?.primaryAddr && !candidateMap.has(item.primaryAddr.toLowerCase())) {
+          candidateMap.set(item.primaryAddr.toLowerCase(), {
+            charterAddr: item.primaryAddr.toLowerCase(),
+            fallbackLabel: item.label || 'Corporate Charter',
+            isSovereignHint: false,
+          });
+        }
+      }
+    }
+
+    const msgFallback = (
+      app.suiteAddrs.messaging ||
+      manifest?.fleetSocial?.messaging ||
+      manifest?.commonsRf?.messaging ||
+      ''
+    ).toLowerCase();
+
+    const entries = [];
+    for (const cand of candidateMap.values()) {
+      let ov = null;
+      try {
+        const hex = await slxNodeRpc(app.rpcUrl, 'eth_call', [
+          {
+            to: cand.charterAddr,
+            data: CharterSocialAbi.getCompanySocialOverview(myId || ZERO_ADDR),
+          },
+          'latest',
+        ]);
+        ov = decodeCompanySocialOverviewHex(hex);
+      } catch (_) {}
+
+      const compName = ov?.legalName || cand.fallbackLabel;
+      const isSov = Boolean(ov?.isSovereign || cand.isSovereignHint);
+      const msgAddr = ov?.messagingHps && ov.messagingHps !== ZERO_ADDR ? ov.messagingHps : msgFallback;
+      entries.push({
+        key: `${cand.charterAddr}:all`,
+        charterAddr: cand.charterAddr,
+        subgroupSlug: SUBGROUP_ALL_MEMBERS_SLUG,
+        label: `${compName} · All Members`,
+        isAuto: true,
+        isSov,
+        isDevGate: false,
+        memberCount: ov?.allMembers?.length || 0,
+        viewerIsMember: Boolean(ov?.viewerInAllMembers),
+        channelHash: ov?.allMembersChannelHash || companyGroupChannelHash(cand.charterAddr, SUBGROUP_ALL_MEMBERS_SLUG),
+        messagingHps: msgAddr,
+      });
+      for (const sg of ov?.subgroups || []) {
+        entries.push({
+          key: `${cand.charterAddr}:${sg.slug}`,
+          charterAddr: cand.charterAddr,
+          subgroupSlug: sg.slug,
+          label: sg.label,
+          isAuto: false,
+          isSov,
+          isDevGate: sg.slug === SUBGROUP_DEVELOPERS_SLUG,
+          memberCount: sg.members.length,
+          viewerIsMember: Boolean(sg.viewerIsMember),
+          channelHash: sg.channelHash,
+          messagingHps: msgAddr,
+        });
+      }
+    }
+
+    app.corpGroupsState.charters = entries;
+    app.corpGroupsState.loaded = true;
+    if (!entries.some((e) => e.key === app.corpGroupsState.activeKey) && entries.length > 0) {
+      app.corpGroupsState.activeKey = entries[0].key;
+    }
+
+    const active = entries.find((e) => e.key === app.corpGroupsState.activeKey);
+    if (active && active.messagingHps) {
+      const mHex = await slxNodeRpc(app.rpcUrl, 'eth_call', [
+        { to: active.messagingHps, data: SlxSocialAbi.getRecentMessages(active.channelHash, 24) },
+        'latest',
+      ]).catch(() => '0x');
+      app.corpGroupsState.messages = decodeSocialMessagesHex(mHex);
+    } else {
+      app.corpGroupsState.messages = [];
+    }
+  } catch (_) {}
+}
+
+function renderCompanyGroupsSocialTab() {
+  if (!app.corpGroupsState.loaded) {
+    refreshSocialCompanyGroups().then(() => renderAll());
+  }
+  const spec = SOVEREIGN_SUPERLEXICON_CHARTER_SPEC;
+  const groups = app.corpGroupsState.charters || [];
+  const active = groups.find((g) => g.key === app.corpGroupsState.activeKey) || groups[0] || null;
+
+  el.centerModuleView.innerHTML = `
+    <div class="sc-card" style="border-color:rgba(52,211,153,0.48);background:linear-gradient(135deg,rgba(6,78,59,0.34),rgba(9,19,38,0.95));">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.6rem;flex-wrap:wrap;">
+        <div>
+          <span class="sc-badge sc-badge-emerald mono">🏛️ CAST-IN-STONE CORPORATE &amp; DEVELOPER SOCIAL GROUPS</span>
+          <h3 style="margin:6px 0 4px;font-size:0.95rem;color:#f8fafc;">Zero-Handshake Company Channels &amp; <code>Superlexicon &middot; Developers</code></h3>
+          <p style="margin:0;font-size:0.75rem;color:#cbd5e1;line-height:1.48;">
+            Creating any <code>CorporateCharter</code> automatically enrolls all Directors, Officers &amp; Shareholders into an <strong>All Members</strong> group so distributed teams chat without physical <code>&le;150m</code> RF encounters. Sovereign root <strong>${escapeHtml(spec.legalName)}</strong> (Singapore &bull; Directors: <strong>Manogaran Thanabalan</strong> &amp; <strong>Sarah Jean Rodrigues</strong> &bull; <code>100,000 SLX-ORD</code> shares) governs the <strong><code>Superlexicon &middot; Developers</code></strong> subgroup required to publish apps or deploy HFS over Web RPC.
+          </p>
+        </div>
+        <a href="/charter.html#sec-company-social" class="sc-btn sc-btn-emerald" style="text-decoration:none;white-space:nowrap;">🏛️ Manage in Charter →</a>
+      </div>
+    </div>
+
+    <div class="sc-card">
+      <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.75rem;">
+        ${
+          groups.length
+            ? groups
+                .map(
+                  (g) => `
+                <button type="button" class="sc-btn ${g.key === active?.key ? 'sc-btn-primary' : ''}" data-sel-corp-grp="${escapeHtml(g.key)}">
+                  ${g.isDevGate ? '🧩' : '🏛️'} ${escapeHtml(g.label)} (${g.memberCount})
+                </button>`
+                )
+                .join('')
+            : '<span style="font-size:0.75rem;color:#94a3b8;">Syncing CorporateCharter groups from Subnet 1…</span>'
+        }
+      </div>
+
+      ${
+        active
+          ? `
+        <div style="padding:0.6rem 0.75rem;border-radius:0.65rem;background:#071022;border:1px solid #1e355d;margin-bottom:0.65rem;font-size:0.73rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem;">
+          <div>
+            <strong>${escapeHtml(active.label)}</strong>
+            <span class="mono" style="color:#7dd3fc;margin-left:6px;">Charter ${escapeHtml(active.charterAddr.slice(0, 10))}…</span>
+          </div>
+          <a href="/charter.html?hfs=${encodeURIComponent(active.charterAddr)}#sec-company-social" class="sc-btn" style="text-decoration:none;font-size:0.68rem;padding:0.22rem 0.5rem;">Open Charter Chat &amp; Roster →</a>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.45rem;max-height:260px;overflow-y:auto;">
+          ${
+            app.corpGroupsState.messages.length
+              ? app.corpGroupsState.messages
+                  .map(
+                    (m) => `
+                  <div style="padding:0.5rem 0.65rem;border-radius:0.55rem;background:#0b1730;border:1px solid #1e355d;">
+                    <div class="mono" style="display:flex;justify-content:space-between;font-size:0.66rem;color:#7dd3fc;margin-bottom:2px;">
+                      <span>${escapeHtml(m.authorAddr.slice(0, 12))}…</span>
+                      <span>Blk #${m.block}</span>
+                    </div>
+                    <div style="font-size:0.78rem;color:#f1f5f9;">${escapeHtml(m.text)}</div>
+                  </div>`
+                  )
+                  .join('')
+              : `<div style="padding:1.1rem;text-align:center;font-size:0.75rem;color:#94a3b8;border:1px dashed #1e355d;border-radius:0.6rem;">No messages yet in <strong>${escapeHtml(active.label)}</strong>. Company members &amp; Directors can post directly from Corporate Charter!</div>`
+          }
+        </div>`
+          : ''
+      }
+    </div>
+  `;
+
+  el.centerModuleView.querySelectorAll('[data-sel-corp-grp]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      app.corpGroupsState.activeKey = btn.getAttribute('data-sel-corp-grp');
+      await refreshSocialCompanyGroups();
+      renderAll();
+    });
+  });
+}

@@ -22,6 +22,7 @@ import {
   loadLocalPublishedApps,
   buildSandboxedIframeSrcdoc,
   attachSandboxedAppBridge,
+  isConfusableSuperlexiconName,
 } from '@superlexicon/sdk';
 import {
   mountSlxUnifiedHeader,
@@ -225,6 +226,11 @@ async function refreshMergedCatalog() {
   }
 
   state.apps = Array.from(bySlug.values());
+  state.devStanding = await storeClient.checkPublisherStanding(wallet).catch(() => ({
+    authorized: false,
+    inDevelopersGroup: false,
+    isDirectRf: false,
+  }));
   renderHeaderStatus();
   renderCategories();
   renderAppsGrid();
@@ -235,7 +241,41 @@ function renderHeaderStatus() {
   const lbl = document.getElementById('lblStoreAddr');
   const btnDep = document.getElementById('btnDeployStoreHfs');
   const btnSync = document.getElementById('btnSyncAllCatalogOnChain');
+  const heroBadge = document.getElementById('heroDevGateBadge');
+  const studioBanner = document.getElementById('studioDevGateBanner');
+  const btnPub = document.getElementById('btnStudioPublish');
   document.getElementById('lblAppCount').textContent = String(state.apps.length);
+
+  const st = state.devStanding;
+  if (st?.authorized) {
+    if (heroBadge) {
+      heroBadge.style.borderColor = 'rgba(52,211,153,0.55)';
+      heroBadge.innerHTML =
+        '✅ <strong>Authorized Developer:</strong> Active in <code>Superlexicon · Developers</code> — Web RPC HFS deploy &amp; App Store publishing unlocked.';
+    }
+    if (studioBanner) {
+      studioBanner.style.borderColor = 'rgba(52,211,153,0.55)';
+      studioBanner.style.background =
+        'linear-gradient(135deg,rgba(6,78,59,0.42),rgba(15,23,42,0.92))';
+      studioBanner.firstElementChild.innerHTML =
+        '<span class="mono" style="font-weight:800;color:#6ee7b7;">✅ AUTHORIZED SUPERLEXICON DEVELOPER:</span> Your <code>Identity</code> HFS is verified in the <strong><code>Superlexicon · Developers</code></strong> social subgroup under <strong>Superlexicon Pte. Ltd.</strong> (Singapore). Full on-chain UI bundle upload, HFS deployment &amp; App Store publishing are unlocked!';
+    }
+    if (btnPub) {
+      btnPub.disabled = state.busy;
+      btnPub.title = 'Publish verified UI bundle & HFS listing to Subnet 1 AppStore';
+    }
+  } else {
+    if (heroBadge) {
+      heroBadge.style.borderColor = 'rgba(251,191,36,0.45)';
+      heroBadge.innerHTML =
+        '🔒 <strong>Web RPC Publish Gate:</strong> Publishing requires <code>Superlexicon · Developers</code> membership (or direct <code>LR2021</code> RF hardware). Running apps &amp; Sandbox Preview are open to all.';
+    }
+    if (btnPub) {
+      btnPub.disabled = false;
+      btnPub.title =
+        'Requires membership in Superlexicon · Developers social subgroup (click to check live standing)';
+    }
+  }
 
   if (state.storeAddr) {
     lbl.textContent = `${shortHex(state.storeAddr, 8, 6)} • Live Subnet 1`;
