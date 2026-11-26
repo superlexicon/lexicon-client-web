@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🧩 HFS App Store &amp; Zero-Redeploy Publisher Studio — SuperLexicon</title>
+  <title>🧩 SuperLexicon App Store &amp; Directory — Zero Backend, Zero Database, Zero EC2</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/src/slx-wallet.css" />
   <style>
     :root { color-scheme: dark; }
@@ -15,43 +15,110 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at 20% 0%, #0d1f3c 0%, #050a14 60%, #03060c 100%);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(16, 185, 129, 0.13) 0%, transparent 42%),
+        radial-gradient(circle at 88% 4%, rgba(14, 165, 233, 0.16) 0%, transparent 45%),
+        #040812;
       color: #f8fafc;
       font-family: Inter, system-ui, -apple-system, sans-serif;
     }
     .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .as-wrap { max-width: 1400px; margin: 0 auto; padding: 18px 20px 64px; display: flex; flex-direction: column; gap: 16px; }
-
-    .as-hero {
-      border-radius: 16px;
-      border: 1px solid rgba(56, 189, 248, 0.45);
-      background: linear-gradient(135deg, rgba(8, 24, 48, 0.95), rgba(6, 12, 24, 0.96));
-      padding: 18px 22px;
+    .as-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px 20px 68px;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
+      flex-direction: column;
+      gap: 18px;
     }
-    .as-pill {
+
+    /* Hero Banner */
+    .as-hero {
+      border-radius: 20px;
+      border: 1px solid rgba(52, 211, 153, 0.42);
+      background: linear-gradient(135deg, rgba(7, 25, 38, 0.96) 0%, rgba(7, 15, 30, 0.97) 58%, rgba(14, 22, 45, 0.96) 100%);
+      padding: 24px 28px;
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 22px;
+      align-items: center;
+      box-shadow: 0 20px 52px rgba(0, 0, 0, 0.48);
+    }
+    @media (max-width: 1024px) {
+      .as-hero { grid-template-columns: 1fr; padding: 20px; }
+    }
+    .as-eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
+      gap: 8px;
+      padding: 4px 12px;
       border-radius: 999px;
       font-size: 0.69rem;
       font-weight: 800;
-      background: rgba(14, 165, 233, 0.16);
-      border: 1px solid rgba(56, 189, 248, 0.45);
-      color: #7dd3fc;
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(52, 211, 153, 0.48);
+      color: #6ee7b7;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
     }
+    .as-hero h1 {
+      margin: 10px 0 8px;
+      font-size: clamp(1.55rem, 2.6vw, 2.15rem);
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      color: #f8fafc;
+    }
+    .as-hero-grad {
+      background: linear-gradient(90deg, #6ee7b7 0%, #38bdf8 55%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .as-hero p {
+      margin: 0;
+      font-size: 0.87rem;
+      color: #cbd5e1;
+      line-height: 1.58;
+      max-width: 720px;
+    }
+    .as-cta-primary {
+      padding: 13px 22px;
+      border-radius: 12px;
+      border: 1px solid rgba(110, 231, 183, 0.85);
+      background: linear-gradient(135deg, #10b981 0%, #059669 55%, #0284c7 100%);
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      box-shadow: 0 10px 28px rgba(16, 185, 129, 0.34);
+      transition: transform 0.15s ease, filter 0.15s ease;
+      text-decoration: none;
+    }
+    .as-cta-primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+    .as-hero-cta-box {
+      border-radius: 15px;
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      background: rgba(3, 8, 18, 0.72);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    /* Buttons */
     .as-btn {
       padding: 8px 13px;
       border-radius: 9px;
-      border: 1px solid rgba(56, 189, 248, 0.55);
-      background: rgba(14, 165, 233, 0.18);
+      border: 1px solid rgba(56, 189, 248, 0.52);
+      background: rgba(14, 165, 233, 0.16);
       color: #e0f2fe;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.73rem;
@@ -63,20 +130,113 @@
       gap: 6px;
       transition: all 0.15s ease;
     }
-    .as-btn:hover:not(:disabled) { background: rgba(14, 165, 233, 0.32); }
+    .as-btn:hover:not(:disabled) { background: rgba(14, 165, 233, 0.3); }
     .as-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    .as-btn-emerald { border-color: rgba(52, 211, 153, 0.65); background: rgba(16, 185, 129, 0.22); color: #d1fae5; }
+    .as-btn-emerald { border-color: rgba(52, 211, 153, 0.68); background: rgba(16, 185, 129, 0.22); color: #d1fae5; }
     .as-btn-emerald:hover:not(:disabled) { background: rgba(16, 185, 129, 0.36); }
-    .as-btn-amber { border-color: rgba(251, 191, 36, 0.65); background: rgba(245, 158, 11, 0.2); color: #fef3c7; }
+    .as-btn-amber { border-color: rgba(251, 191, 36, 0.62); background: rgba(245, 158, 11, 0.18); color: #fef3c7; }
+    .as-btn-violet { border-color: rgba(167, 139, 250, 0.6); background: rgba(139, 92, 246, 0.18); color: #ede9fe; }
     .as-btn-rose { border-color: rgba(244, 63, 94, 0.65); background: rgba(225, 29, 72, 0.2); color: #ffe4e6; }
 
+    /* Zero-Infra 4-Pillar Architecture Strip */
+    .as-zero-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 1080px) {
+      .as-zero-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 620px) {
+      .as-zero-strip { grid-template-columns: 1fr; }
+    }
+    .as-zero-card {
+      border-radius: 14px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: rgba(7, 14, 28, 0.92);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .as-zero-strike {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.67rem;
+      color: #fda4af;
+      text-decoration: line-through;
+      opacity: 0.88;
+    }
+    .as-zero-title {
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .as-zero-replace {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.69rem;
+      font-weight: 700;
+      color: #6ee7b7;
+    }
+    .as-zero-desc {
+      font-size: 0.73rem;
+      color: #94a3b8;
+      line-height: 1.46;
+    }
+
+    /* Interactive How-It-Works / Instructions Drawer */
+    .as-guide-box {
+      border-radius: 16px;
+      border: 1px solid rgba(56, 189, 248, 0.42);
+      background: rgba(6, 14, 29, 0.95);
+      padding: 18px 20px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .as-guide-box.open { display: flex; }
+    .as-guide-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 960px) {
+      .as-guide-grid { grid-template-columns: 1fr; }
+    }
+    .as-step-card {
+      border-radius: 12px;
+      border: 1px solid rgba(71, 85, 105, 0.72);
+      background: #040915;
+      padding: 13px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .as-code-snippet {
+      margin: 4px 0 0;
+      padding: 9px 11px;
+      border-radius: 8px;
+      background: #02050d;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      color: #bae6fd;
+      font-size: 0.68rem;
+      line-height: 1.45;
+      overflow-x: auto;
+    }
+
+    /* Mode Switcher Bar */
     .as-tabs {
       display: flex;
-      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
       flex-wrap: wrap;
       border-bottom: 1px solid rgba(51, 65, 85, 0.85);
-      padding-bottom: 10px;
+      padding-bottom: 11px;
     }
+    .as-tab-group { display: flex; gap: 8px; flex-wrap: wrap; }
     .as-tab {
       padding: 9px 16px;
       border-radius: 10px;
@@ -95,6 +255,7 @@
       box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3);
     }
 
+    /* Directory Toolbar & Cards */
     .as-toolbar {
       display: flex;
       justify-content: space-between;
@@ -104,17 +265,19 @@
     }
     .as-cat-bar { display: flex; gap: 6px; flex-wrap: wrap; }
     .as-cat-pill {
-      padding: 6px 11px;
+      padding: 6px 12px;
       border-radius: 999px;
       border: 1px solid rgba(71, 85, 105, 0.75);
       background: #071020;
       color: #94a3b8;
-      font-size: 0.71rem;
+      font-size: 0.72rem;
       font-weight: 700;
       cursor: pointer;
+      transition: all 0.14s ease;
     }
+    .as-cat-pill:hover { color: #e2e8f0; border-color: rgba(56, 189, 248, 0.5); }
     .as-cat-pill.active {
-      border-color: rgba(52, 211, 153, 0.7);
+      border-color: rgba(52, 211, 153, 0.75);
       background: rgba(16, 185, 129, 0.2);
       color: #d1fae5;
     }
@@ -129,26 +292,45 @@
       font-size: 0.75rem;
       outline: none;
     }
+    .as-in:focus { border-color: #38bdf8; }
 
     .as-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
       gap: 14px;
     }
     .as-card {
-      border-radius: 14px;
+      border-radius: 15px;
       border: 1px solid rgba(51, 65, 85, 0.88);
-      background: rgba(6, 13, 26, 0.94);
-      padding: 16px 18px;
+      background: linear-gradient(180deg, rgba(9, 17, 34, 0.95) 0%, rgba(5, 11, 22, 0.96) 100%);
+      padding: 17px 18px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 12px;
-      transition: border-color 0.16s ease, transform 0.14s ease;
+      gap: 13px;
+      transition: border-color 0.16s ease, transform 0.14s ease, box-shadow 0.16s ease;
     }
     .as-card:hover {
-      border-color: rgba(56, 189, 248, 0.65);
+      border-color: rgba(56, 189, 248, 0.68);
       transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.42);
+    }
+    .as-card-create {
+      border: 1px dashed rgba(52, 211, 153, 0.6);
+      background: linear-gradient(135deg, rgba(6, 36, 30, 0.55), rgba(7, 15, 29, 0.92));
+      align-items: flex-start;
+    }
+    .as-app-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(14, 165, 233, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      flex-shrink: 0;
     }
     .as-badge {
       display: inline-block;
@@ -157,10 +339,23 @@
       font-size: 0.63rem;
       font-weight: 800;
     }
-    .as-badge-emerald { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(52, 211, 153, 0.5); }
-    .as-badge-sky { background: rgba(14, 165, 233, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.5); }
-    .as-badge-amber { background: rgba(245, 158, 11, 0.2); color: #fde68a; border: 1px solid rgba(251, 191, 36, 0.5); }
+    .as-badge-emerald { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; border: 1px solid rgba(52, 211, 153, 0.48); }
+    .as-badge-sky { background: rgba(14, 165, 233, 0.18); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.48); }
+    .as-badge-amber { background: rgba(245, 158, 11, 0.18); color: #fde68a; border: 1px solid rgba(251, 191, 36, 0.48); }
 
+    .as-stack-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      background: #030711;
+      border: 1px solid rgba(51, 65, 85, 0.68);
+      font-size: 0.65rem;
+      color: #94a3b8;
+    }
+
+    /* Sandboxed Runner */
     .as-runner-shell {
       border-radius: 16px;
       border: 1px solid rgba(56, 189, 248, 0.5);
@@ -188,9 +383,23 @@
       background: #050a14;
     }
 
+    /* Studio / Publisher */
+    .as-studio-banner {
+      border-radius: 14px;
+      border: 1px solid rgba(52, 211, 153, 0.42);
+      background: linear-gradient(135deg, rgba(6, 36, 31, 0.72), rgba(7, 15, 30, 0.95));
+      padding: 14px 18px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 920px) {
+      .as-studio-banner { grid-template-columns: 1fr; }
+    }
     .as-studio-grid {
       display: grid;
-      grid-template-columns: 390px 1fr;
+      grid-template-columns: 395px 1fr;
       gap: 16px;
     }
     @media (max-width: 1024px) {
@@ -208,14 +417,14 @@
     .as-lbl { display: flex; flex-direction: column; gap: 4px; font-size: 0.71rem; font-weight: 700; color: #cbd5e1; }
     .as-editor {
       width: 100%;
-      min-height: 440px;
+      min-height: 455px;
       border-radius: 10px;
       border: 1px solid rgba(71, 85, 105, 0.9);
       background: #02060f;
       color: #e2e8f0;
       padding: 12px 14px;
       font-size: 0.74rem;
-      line-height: 1.5;
+      line-height: 1.52;
       resize: vertical;
       outline: none;
     }
@@ -258,52 +467,192 @@
   <div id="slxUnifiedHeaderMount"></div>
 
   <main class="as-wrap">
-    <!-- Hero -->
+    <!-- Hero: App Store & Directory + Create/Publish CTA + Zero-EC2 Value Proposition -->
     <section class="as-hero">
-      <div style="max-width:820px;">
-        <div class="as-pill mono">🧩 HPS #27 • On-Chain UI Bundle CAS + Zero-Redeploy App Store</div>
-        <h1 style="margin:8px 0 6px;font-size:1.45rem;font-weight:900;letter-spacing:-0.02em;">
-          SuperLexicon HFS App Store &amp; Live Publisher Studio
+      <div>
+        <div class="as-eyebrow mono">🧩 SuperLexicon App Store &amp; Directory • $0.00 Gas • $0/mo Cloud</div>
+        <h1>
+          Ship Full-Stack Apps With <span class="as-hero-grad">No Backend, No Database &amp; No EC2 Instance.</span>
         </h1>
-        <p style="margin:0;font-size:0.81rem;color:#cbd5e1;line-height:1.52;">
-          Every application UI is packaged as a <code>gzip</code>-compressed, <code>keccak256</code>-verified HTML bundle alongside its Haltproof WASM Subroutine (<code>app_store.wasm</code>). All <strong>12 SuperLexicon flagship use-cases</strong> + community sandbox apps run from this exact pattern—publish new apps or push UI updates on-chain in 1 block without redeploying the web client.
+        <p>
+          Every application in this directory consists solely of a deterministic <strong>Halt-Free Subroutine (<code>.wasm</code>)</strong> and a <strong><code>gzip</code>-compressed, <code>keccak256</code>-verified HTML UI bundle</strong> stored on-chain in <code>app_store.wasm</code>. Anyone can publish a new app—or push a live update—in <strong>1 block</strong> without provisioning servers, managing SQL databases, or redeploying the web client.
         </p>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-        <div class="mono" style="font-size:0.71rem;color:#93c5fd;">
-          AppStore HFS: <strong id="lblStoreAddr" style="color:#6ee7b7;">Probing Subnet 1…</strong>
+
+      <div class="as-hero-cta-box">
+        <button type="button" id="btnHeroCreateApp" class="as-cta-primary">
+          <span>➕</span>
+          <span>Create / Publish a New App</span>
+        </button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button type="button" id="btnToggleZeroGuide" class="as-btn" style="justify-content:center;">
+            📖 How It Works &amp; Guide
+          </button>
+          <button type="button" id="btnOpenArchSpec" class="as-btn as-btn-violet" style="justify-content:center;">
+            🏛️ Architecture Spec
+          </button>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button type="button" id="btnDeployStoreHfs" class="as-btn as-btn-amber">⛓️ Deploy AppStore HFS</button>
-          <button type="button" id="btnSyncAllCatalogOnChain" class="as-btn">📤 Sync Catalog On-Chain</button>
-          <button type="button" id="btnJumpStudio" class="as-btn as-btn-emerald">🛠️ + Publish / Edit App</button>
+        <div class="mono" style="display:flex;justify-content:space-between;font-size:0.67rem;color:#94a3b8;padding-top:2px;">
+          <span>0 AWS / EC2 Servers</span>
+          <span>•</span>
+          <span>0 SQL / RDS DBs</span>
+          <span>•</span>
+          <span>0 Client Redeploys</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4-Pillar "What You Eliminate Forever" Comparison Cards -->
+    <section class="as-zero-strip" aria-label="Zero-Infrastructure Architecture Overview">
+      <div class="as-zero-card">
+        <span class="as-zero-strike">AWS EC2 • Docker • Kubernetes • Express/Go APIs</span>
+        <div class="as-zero-title">🚫 No Backend Server</div>
+        <div class="as-zero-replace">✓ Halt-Free Subroutine (.wasm)</div>
+        <div class="as-zero-desc">
+          Business logic executes deterministically across physical <code>LR2021</code> RF validators at <strong>$0.00 gas</strong> (<code>108–169 TPS</code>). Compile-time bounded loops guarantee your app never hangs or goes offline.
+        </div>
+      </div>
+
+      <div class="as-zero-card">
+        <span class="as-zero-strike">RDS • Postgres • MongoDB • Supabase • Redis</span>
+        <div class="as-zero-title">🚫 No Cloud Database</div>
+        <div class="as-zero-replace">✓ Rooted HFS WorldState KV</div>
+        <div class="as-zero-desc">
+          Every subroutine reads &amp; writes persistent, atomic state (<code>host_state_get</code> / <code>host_state_set</code>) replicated across validators—zero DB bills, migrations, or connection-pool crashes.
+        </div>
+      </div>
+
+      <div class="as-zero-card">
+        <span class="as-zero-strike">Vercel • S3 • CloudFront • Nginx • DNS &amp; TLS</span>
+        <div class="as-zero-title">🚫 No Hosting or Redeploys</div>
+        <div class="as-zero-replace">✓ On-Chain Gzip HTML Bundle</div>
+        <div class="as-zero-desc">
+          Your single-file HTML/CSS/JS UI compresses to <code>2–40 KiB</code>, seals into <code>app_store.wasm</code> by <code>keccak256</code>, caches in <code>IndexedDB</code>, and syncs even off-grid over Radio 2 (~65 ms).
+        </div>
+      </div>
+
+      <div class="as-zero-card">
+        <span class="as-zero-strike">Auth0 • Clerk • OAuth • Passwords • JWT Cookies</span>
+        <div class="as-zero-title">🚫 No Auth Silos</div>
+        <div class="as-zero-replace">✓ Shared Identity HFS + window.slx</div>
+        <div class="as-zero-desc">
+          Apps receive instant <code>&lt;Nickname&gt; · &lt;4-char&gt;</code> login, ECIES messaging, and <code>Identity</code>-guarded signing inside a zero-trust <code>&lt;iframe sandbox="allow-scripts"&gt;</code>.
+        </div>
+      </div>
+    </section>
+
+    <!-- Collapsible Step-by-Step Developer Instructions & Code Blueprint -->
+    <section id="zeroInfraGuideDrawer" class="as-guide-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div>
+          <strong style="font-size:0.95rem;color:#6ee7b7;">📖 Developer Blueprint: How to Build &amp; Publish With Zero Backend, Zero Database &amp; Zero EC2</strong>
+          <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">
+            Three steps replace an entire AWS/Vercel/Postgres stack—and cost <strong>$0.00/month</strong> forever.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button type="button" id="btnGuideStartBuilding" class="as-btn as-btn-emerald">➕ Open Publisher Studio →</button>
+          <button type="button" id="btnCloseZeroGuide" class="as-btn">✕ Hide</button>
+        </div>
+      </div>
+
+      <div class="as-guide-grid">
+        <div class="as-step-card">
+          <div class="mono" style="font-size:0.7rem;color:#7dd3fc;font-weight:800;">STEP 1 • YOUR DATABASE &amp; BACKEND</div>
+          <strong style="font-size:0.84rem;">Write a Rust HFS (<code>.wasm</code>) — or Use Host State</strong>
+          <div style="font-size:0.73rem;color:#cbd5e1;line-height:1.45;">
+            Instead of spinning up an EC2 server and a Postgres database, write `#![no_std]` Rust handlers using `hps_sdk::storage`:
+          </div>
+          <pre class="as-code-snippet mono">// Replaces Express API + SQL Table:
+hps_entry! {
+  "postNote(string)" =&gt; handle_post,
+  "getNotes()"       =&gt; handle_list,
+}
+fn handle_post(r: &amp;CalldataReader) -&gt; Result&lt;(), i32&gt; {
+  let msg = r.dynamic_bytes(0).ok_or(-10)?;
+  storage::set(b"latest_note", msg); // Atomic L1 DB!
+  ret::write_bool(true);
+  Ok(())
+}</pre>
+        </div>
+
+        <div class="as-step-card">
+          <div class="mono" style="font-size:0.7rem;color:#6ee7b7;font-weight:800;">STEP 2 • YOUR FRONTEND UI</div>
+          <strong style="font-size:0.84rem;">Single-File HTML Calling <code>window.slx</code></strong>
+          <div style="font-size:0.73rem;color:#cbd5e1;line-height:1.45;">
+            No npm build servers, Auth0 SDKs, or RPC keys needed. Every sandboxed app automatically receives <code>window.slx</code>:
+          </div>
+          <pre class="as-code-snippet mono">// Instant Identity + $0-Gas Reads &amp; Writes:
+const ctx = await window.slx.getContext();
+console.log(ctx.user.nickname); // Instant Auth!
+
+// Read from HFS WorldState (replaces GET / SQL):
+const hex = await window.slx.callContract("getNotes()", []);
+
+// Write via Identity HFS (replaces POST / EC2):
+await window.slx.sendTransaction({
+  fnSig: "postNote(string)",
+  args: [["string", "Hello Mesh!"]]
+});</pre>
+        </div>
+
+        <div class="as-step-card">
+          <div class="mono" style="font-size:0.7rem;color:#fde68a;font-weight:800;">STEP 3 • 1-BLOCK ON-CHAIN PUBLISH</div>
+          <strong style="font-size:0.84rem;">Compress, Seal <code>keccak256</code> &amp; Go Live</strong>
+          <div style="font-size:0.73rem;color:#cbd5e1;line-height:1.45;">
+            Click <strong>➕ Create / Publish a New App</strong>, paste or upload your `.html` (and optional `.wasm`), preview in the zero-trust sandbox, and click <strong>Publish</strong>:
+          </div>
+          <pre class="as-code-snippet mono">1. Browser gzips HTML (e.g. 18 KiB -&gt; 4 KiB)
+2. Uploads .wasm -&gt; BYTECODE_STORE (0x0100)
+3. Seals UI chunks -&gt; app_store.wasm (keccak256)
+4. Registers slug under your Identity HFS
+✓ Live across every browser &amp; radio node!</pre>
         </div>
       </div>
     </section>
 
     <div id="asToast" class="as-toast mono"></div>
 
-    <!-- Navigation Tabs -->
+    <!-- Mode Switcher Bar -->
     <div class="as-tabs">
-      <button type="button" class="as-tab active" data-view="catalog">🏪 App Store Catalog (<span id="lblAppCount">15</span>)</button>
-      <button type="button" class="as-tab" data-view="runner">▶️ Sandboxed App Runner</button>
-      <button type="button" class="as-tab" data-view="studio">🛠️ Publish / Live Studio</button>
+      <div class="as-tab-group">
+        <button type="button" class="as-tab active" data-view="catalog">🏪 App Directory (<span id="lblAppCount">15</span>)</button>
+        <button type="button" class="as-tab" data-view="runner">▶️ Live Sandbox Runner</button>
+        <button type="button" class="as-tab" data-view="studio">➕ Create / Publish App</button>
+      </div>
+      <button type="button" id="btnToolbarCreateApp" class="as-btn as-btn-emerald">
+        ➕ Create / Publish New App
+      </button>
     </div>
 
-    <!-- VIEW 1: CATALOG -->
+    <!-- VIEW 1: APP DIRECTORY -->
     <section id="viewCatalog" style="display:flex;flex-direction:column;gap:14px;">
       <div class="as-toolbar">
-        <div id="catBar" class="as-cat-bar mono"></div>
+        <div id="catBar" class="as-cat-bar"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <input id="inSearchApps" class="as-in" placeholder="🔍 Search apps, slugs, uiHash…" style="min-width:220px;" />
+          <input id="inSearchApps" class="as-in" placeholder="🔍 Filter directory by name, use-case, .wasm…" style="min-width:245px;" />
           <div style="display:flex;gap:5px;">
-            <input id="inResolveHfsAddr" class="as-in" placeholder="0x… Run by HFS Address" style="width:205px;" />
-            <button type="button" id="btnResolveHfsAddr" class="as-btn">▶ Launch</button>
+            <input id="inResolveHfsAddr" class="as-in" placeholder="0x… Launch by HFS Address" style="width:205px;" />
+            <button type="button" id="btnResolveHfsAddr" class="as-btn">▶ Run</button>
           </div>
         </div>
       </div>
 
       <div id="appsGrid" class="as-grid"></div>
+
+      <!-- Subtle Collapsible Subnet 1 On-Chain Store Contract Admin Strip -->
+      <details style="margin-top:8px;border-radius:12px;border:1px solid rgba(51,65,85,0.7);background:rgba(6,12,24,0.8);padding:11px 15px;">
+        <summary class="mono" style="cursor:pointer;font-size:0.72rem;color:#94a3b8;font-weight:700;">
+          ⚙️ On-Chain <code>app_store.wasm</code> Subnet 1 Sync &amp; Contract Inspector (<span id="lblStoreAddr" style="color:#6ee7b7;">Probing…</span>)
+        </summary>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:0.74rem;color:#cbd5e1;">
+          <span>Deploy a fresh <code>app_store.wasm</code> (<code>23.7 KiB</code>) registry on a new subnet or batch-seal all 15 directory bundles on-chain:</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" id="btnDeployStoreHfs" class="as-btn as-btn-amber">⛓️ Deploy AppStore HFS</button>
+            <button type="button" id="btnSyncAllCatalogOnChain" class="as-btn">📤 Sync All 15 Bundles On-Chain</button>
+          </div>
+        </div>
+      </details>
     </section>
 
     <!-- VIEW 2: ZERO-TRUST SANDBOXED IFRAME RUNNER -->
@@ -311,15 +660,15 @@
       <div class="as-runner-shell">
         <div class="as-runner-bar mono">
           <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
-            <button type="button" id="btnRunnerBack" class="as-btn" style="padding:5px 10px;font-size:0.68rem;">← Catalog</button>
+            <button type="button" id="btnRunnerBack" class="as-btn" style="padding:5px 10px;font-size:0.68rem;">← Directory</button>
             <strong id="runnerTitle" style="font-size:0.86rem;color:#f8fafc;">Select an App</strong>
             <span id="runnerVerifyBadge" class="as-badge as-badge-emerald">✓ keccak256 Verified</span>
-            <span class="as-badge as-badge-sky" title="Opaque-origin iframe sandbox: zero access to parent localStorage or private keys">🛡️ iframe sandbox="allow-scripts"</span>
+            <span class="as-badge as-badge-sky" title="Opaque-origin iframe sandbox: zero access to parent localStorage or private keys">🛡️ Zero-Trust Sandbox • 0 Backend</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
             <button type="button" id="btnRunnerWhitelist" class="as-btn as-btn-emerald" style="padding:5px 9px;font-size:0.67rem;">✓ Whitelist HFS</button>
-            <button type="button" id="btnRunnerFork" class="as-btn as-btn-amber" style="padding:5px 9px;font-size:0.67rem;">✏ Inspect / Fork UI</button>
-            <a id="lnkRunnerStandalone" href="#" class="as-btn" style="padding:5px 9px;font-size:0.67rem;display:none;">↗ Full Page</a>
+            <button type="button" id="btnRunnerFork" class="as-btn as-btn-amber" style="padding:5px 9px;font-size:0.67rem;">✏ Fork / Edit UI</button>
+            <a id="lnkRunnerStandalone" href="#" class="as-btn" style="padding:5px 9px;font-size:0.67rem;display:none;">↗ Open Full Page</a>
           </div>
         </div>
         <iframe
@@ -332,22 +681,37 @@
       </div>
     </section>
 
-    <!-- VIEW 3: PUBLISH / LIVE STUDIO -->
+    <!-- VIEW 3: CREATE / PUBLISH A NEW APP (ZERO-SERVER STUDIO) -->
     <section id="viewStudio" style="display:none;">
+      <div class="as-studio-banner">
+        <div>
+          <div class="mono" style="font-size:0.68rem;font-weight:800;color:#6ee7b7;">① NO EC2 OR POSTGRES NEEDED</div>
+          <div style="font-size:0.76rem;color:#e2e8f0;margin-top:3px;">Attach an optional <code>.wasm</code> Halt-Free Subroutine (your backend + database) or build a pure <code>window.slx</code> app.</div>
+        </div>
+        <div>
+          <div class="mono" style="font-size:0.68rem;font-weight:800;color:#7dd3fc;">② SINGLE-FILE HTML FRONTEND</div>
+          <div style="font-size:0.76rem;color:#e2e8f0;margin-top:3px;">Write standard HTML/CSS/JS—compressed automatically via <code>gzip</code> and sealed by <code>keccak256</code>.</div>
+        </div>
+        <div>
+          <div class="mono" style="font-size:0.68rem;font-weight:800;color:#fde68a;">③ LIVE IN 1 BLOCK ($0/MO FOREVER)</div>
+          <div style="font-size:0.76rem;color:#e2e8f0;margin-top:3px;">Preview inside the isolated sandbox, then publish to the Directory with zero web-client redeploys.</div>
+        </div>
+      </div>
+
       <div class="as-studio-grid">
-        <!-- Left Metadata & Starter Picker -->
+        <!-- Left Metadata & HFS Binding -->
         <div class="as-panel">
-          <strong class="mono" style="font-size:0.84rem;color:#7dd3fc;">1. App Metadata &amp; HFS Binding</strong>
+          <strong class="mono" style="font-size:0.84rem;color:#7dd3fc;">1. App Directory Listing &amp; HFS Subroutine</strong>
 
           <label class="as-lbl mono">
-            <span>Load Starter Template or Existing App UI</span>
+            <span>Start From Template or Fork Existing Directory App</span>
             <select id="selStudioTemplate" class="as-in"></select>
           </label>
 
           <div style="display:grid;grid-template-columns:1.3fr 0.7fr;gap:8px;">
             <label class="as-lbl mono">
-              <span>App Slug (Immutable ID) *</span>
-              <input id="inStudioSlug" class="as-in" value="my-mesh-app" maxlength="40" />
+              <span>App Slug (Unique ID) *</span>
+              <input id="inStudioSlug" class="as-in" value="my-zero-server-app" maxlength="40" />
             </label>
             <label class="as-lbl mono">
               <span>Version *</span>
@@ -361,13 +725,13 @@
               <input id="inStudioIcon" class="as-in" value="⚡" maxlength="8" />
             </label>
             <label class="as-lbl mono">
-              <span>App Display Title *</span>
-              <input id="inStudioTitle" class="as-in" value="My Mesh HFS App" maxlength="64" />
+              <span>App Title *</span>
+              <input id="inStudioTitle" class="as-in" value="My Zero-Server HFS App" maxlength="64" />
             </label>
           </div>
 
           <label class="as-lbl mono">
-            <span>Category</span>
+            <span>Directory Category</span>
             <select id="selStudioCategory" class="as-in">
               <option value="6">⚡ RF &amp; Utility Tools</option>
               <option value="1">📈 DeFi &amp; Markets</option>
@@ -379,49 +743,54 @@
           </label>
 
           <label class="as-lbl mono">
-            <span>Short Summary (max 240 chars)</span>
-            <input id="inStudioSummary" class="as-in" value="Custom single-file HTML/JS UI bound to a Haltproof WASM Subroutine." maxlength="240" />
+            <span>Plain-English Description (max 240 chars)</span>
+            <input id="inStudioSummary" class="as-in" value="Runs 100% on-chain via Halt-Free Subroutines &amp; gzipped HTML—zero backend, zero database, zero EC2." maxlength="240" />
           </label>
 
           <label class="as-lbl mono">
-            <span>Optional: Attach Compiled HFS <code>.wasm</code> Binary</span>
+            <span>Optional: Upload Compiled HFS <code>.wasm</code> (Replaces Backend + DB)</span>
             <input id="inStudioWasmFile" type="file" accept=".wasm,application/wasm" class="as-in" />
           </label>
 
           <label class="as-lbl mono">
-            <span>Linked HFS WASM <code>codeHash</code> (bytes32)</span>
-            <input id="inStudioWasmHash" class="as-in" placeholder="0x… (optional or auto-computed)" />
+            <span>HFS WASM <code>codeHash</code> (bytes32)</span>
+            <input id="inStudioWasmHash" class="as-in" placeholder="0x… (auto-filled when .wasm uploaded)" />
           </label>
 
           <label class="as-lbl mono">
-            <span>Default Deployed HFS Instance (0x… optional)</span>
-            <input id="inStudioDefaultHfs" class="as-in" placeholder="0x0000… (or check Deploy below)" />
+            <span>Default HFS Instance Address (0x… optional)</span>
+            <input id="inStudioDefaultHfs" class="as-in" placeholder="0x0000… (or check Instantiate below)" />
           </label>
 
           <label style="display:flex;align-items:center;gap:7px;font-size:0.72rem;color:#cbd5e1;cursor:pointer;">
             <input id="chkStudioDeployInst" type="checkbox" />
-            <span>Instantiate fresh HFS instance from <code>codeHash</code> on publish</span>
+            <span>Instantiate fresh HFS contract from <code>codeHash</code> on publish</span>
           </label>
 
           <div id="studioBundleMeter" class="mono" style="padding:10px 12px;border-radius:10px;background:#030711;border:1px solid rgba(52,211,153,0.4);font-size:0.69rem;line-height:1.55;color:#bae6fd;"></div>
 
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="button" id="btnStudioPreview" class="as-btn" style="flex:1;">👁️ Preview in Sandbox</button>
-            <button type="button" id="btnStudioPublish" class="as-btn as-btn-emerald" style="flex:1.3;">🚀 Publish App Bundle</button>
+            <button type="button" id="btnStudioPreview" class="as-btn" style="flex:1;justify-content:center;">👁️ Sandbox Preview</button>
+            <button type="button" id="btnStudioPublish" class="as-btn as-btn-emerald" style="flex:1.35;justify-content:center;">🚀 Publish to App Store</button>
           </div>
         </div>
 
-        <!-- Right Single-File HTML/CSS/JS Editor -->
+        <!-- Right Single-File HTML/CSS/JS Editor + Snippet Helpers -->
         <div class="as-panel">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-            <strong class="mono" style="font-size:0.84rem;color:#6ee7b7;">2. Single-File HTML + CSS + JS Bundle Source</strong>
-            <label class="as-btn mono" style="padding:5px 10px;font-size:0.68rem;cursor:pointer;">
-              📂 Load .html File
-              <input id="inStudioHtmlFile" type="file" accept=".html,text/html" style="display:none;" />
-            </label>
+            <strong class="mono" style="font-size:0.84rem;color:#6ee7b7;">2. Single-File HTML + CSS + JS Frontend Bundle</strong>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button type="button" class="as-btn" data-snippet="identity" style="padding:4px 8px;font-size:0.66rem;">+ Identity Login</button>
+              <button type="button" class="as-btn" data-snippet="read" style="padding:4px 8px;font-size:0.66rem;">+ HFS Read (No DB)</button>
+              <button type="button" class="as-btn" data-snippet="write" style="padding:4px 8px;font-size:0.66rem;">+ $0-Gas Write (No EC2)</button>
+              <label class="as-btn mono" style="padding:4px 9px;font-size:0.66rem;cursor:pointer;">
+                📂 Import .html
+                <input id="inStudioHtmlFile" type="file" accept=".html,text/html" style="display:none;" />
+              </label>
+            </div>
           </div>
-          <div style="font-size:0.72rem;color:#94a3b8;">
-            Sandboxed community apps automatically receive <code>window.slx</code> (<code>getContext()</code>, <code>callContract()</code>, <code>sendTransaction()</code>, <code>getAppStorage()</code>, <code>onNewBlock()</code>). Core verified apps can also import <code>@superlexicon/sdk</code> directly.
+          <div style="font-size:0.73rem;color:#94a3b8;">
+            No S3, Vercel, or API keys needed—<code>window.slx</code> connects your HTML directly to the user’s <code>Identity</code> HFS and Subnet 1 validators.
           </div>
           <textarea id="txtStudioHtml" class="as-editor mono" spellcheck="false"></textarea>
         </div>
@@ -437,7 +806,7 @@
         <span class="as-badge as-badge-sky mono">$0.00 GAS</span>
       </div>
       <div style="font-size:0.75rem;color:#cbd5e1;line-height:1.5;">
-        Sandboxed app <strong id="txModalAppName" style="color:#f8fafc;">App</strong> is requesting your signature via your <code>Identity</code> HFS:
+        Sandboxed app <strong id="txModalAppName" style="color:#f8fafc;">App</strong> is requesting an on-chain action via your <code>Identity</code> HFS:
       </div>
       <div id="txModalDetails" class="mono" style="padding:10px 12px;border-radius:9px;background:#030712;border:1px solid rgba(71,85,105,0.85);font-size:0.7rem;color:#bae6fd;word-break:break-all;line-height:1.5;"></div>
       <label style="display:flex;align-items:center;gap:7px;font-size:0.72rem;color:#cbd5e1;cursor:pointer;">

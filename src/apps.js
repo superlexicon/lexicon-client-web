@@ -1,5 +1,9 @@
 /**
- * SuperLexicon On-Chain HFS App Store, Sandboxed Iframe Runner & Live Studio (`src/apps.js`)
+ * SuperLexicon App Store & Zero-Infrastructure Directory (`src/apps.js`)
+ *
+ * Showcases and runs all 12 converted SuperLexicon flagship HFS apps + community zero-trust
+ * sandboxed apps from `gzip`-compressed, `keccak256`-verified UI bundles (`app_store.wasm`)—with
+ * zero backend servers, zero databases, and zero EC2 instances.
  */
 
 import {
@@ -19,7 +23,11 @@ import {
   buildSandboxedIframeSrcdoc,
   attachSandboxedAppBridge,
 } from '@superlexicon/sdk';
-import { mountSlxUnifiedHeader } from '@superlexicon/sdk/ui';
+import {
+  mountSlxUnifiedHeader,
+  openSlxUseCaseDescription,
+  USECASE_DESCRIPTIONS,
+} from '@superlexicon/sdk/ui';
 import { loadGenesisAppCatalog, resolveEffectiveAppMeta } from './app-host-runtime.js';
 
 const wallet = new SlxWalletManager();
@@ -32,16 +40,36 @@ mountSlxUnifiedHeader({
   activeAppId: 'apps',
   wallet,
   client,
-  appTitle: 'HFS App Store & Live Publisher Studio',
-  appSubtitle: 'Content-Addressed UI Bundles (app_store.wasm) • Zero Web-Client Redeploys',
+  title: 'HFS App Store & Directory',
+  subtitle: 'Zero Backend • Zero Database • Zero EC2 • On-Chain WASM + Gzipped HTML Bundles',
 });
 
+const WASM_LABELS_BY_SLUG = {
+  accounting: 'accounting_ledger.wasm + confidential_ledger.wasm',
+  charter: 'corporate_charter.wasm + share_capital.wasm',
+  dex: 'dex_clob.wasm + asset_ledger.wasm',
+  commerce: 'product_ledger.wasm + accounting_ledger.wasm',
+  crowdfunding: 'crowdfunding.wasm + accounting_ledger.wasm',
+  rewards: 'reward_voucher.wasm',
+  ballot: 'secret_ballot.wasm',
+  social: 'social_charter.wasm + messaging.wasm',
+  battleship: 'battleship.wasm',
+  'cipher-noir': 'cipher_noir.wasm',
+  hegemony: 'hegemony.wasm',
+  lottery: 'lottery.wasm + vrf_beacon.wasm',
+};
+
+const STUDIO_SNIPPETS = {
+  identity: `\n// Instant cryptographic login (replaces Auth0 / JWT / User DB):\nconst ctx = await window.slx.getContext();\nconsole.log('Logged in as:', ctx.user.nickname, ctx.user.identityAddr);\n`,
+  read: `\n// Read directly from on-chain HFS WorldState (replaces Postgres SELECT + REST GET):\nconst rawHex = await window.slx.callContract('totalCount()', []);\n`,
+  write: `\n// $0.00-gas signed state write via Identity HFS (replaces EC2 API POST + SQL INSERT):\nconst receipt = await window.slx.sendTransaction({\n  fnSig: 'submitEntry(string)',\n  args: [['string', 'Stored directly in HFS WorldState!']],\n  summary: 'Record entry in Halt-Free Subroutine'\n});\n`,
+};
+
 const state = {
-  activeView: 'catalog', // 'catalog' | 'runner' | 'studio'
-  selectedCategory: 0, // 0 = All
+  activeView: 'catalog',
+  selectedCategory: 0,
   searchQuery: '',
   storeAddr: '',
-  online: false,
   busy: false,
   apps: [],
   runningApp: null,
@@ -53,38 +81,51 @@ const BLANK_STARTER_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Custom HFS App</title>
+  <title>Zero-Server HFS App</title>
   <style>
+    * { box-sizing: border-box; }
     body { margin: 0; padding: 24px; background: #050b16; color: #f8fafc; font-family: system-ui, sans-serif; }
-    .card { max-width: 640px; margin: 0 auto; padding: 20px; border-radius: 14px; background: #0a1428; border: 1px solid rgba(56,189,248,0.45); }
-    button { padding: 8px 14px; border-radius: 8px; border: 1px solid #34d399; background: rgba(16,185,129,0.22); color: #d1fae5; font-family: monospace; font-weight: 700; cursor: pointer; }
+    .card { max-width: 660px; margin: 0 auto; padding: 22px; border-radius: 16px; background: #0a1428; border: 1px solid rgba(52,211,153,0.45); }
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 999px; background: rgba(16,185,129,0.18); border: 1px solid rgba(52,211,153,0.5); color: #6ee7b7; font-family: monospace; font-size: 11px; font-weight: 800; }
+    input { width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid #334155; background: #030712; color: #f8fafc; font-family: monospace; margin-top: 10px; }
+    button { margin-top: 10px; padding: 9px 15px; border-radius: 9px; border: 1px solid #34d399; background: rgba(16,185,129,0.24); color: #d1fae5; font-family: monospace; font-weight: 800; cursor: pointer; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2 style="margin-top:0;">⚡ Hello from On-Chain HFS UI Bundle!</h2>
-    <p id="who" style="color:#94a3b8;font-family:monospace;font-size:13px;">Connecting to window.slx…</p>
-    <button onclick="pingChain()">✍️ Sign Test Action via Identity HFS</button>
-    <pre id="out" style="margin-top:14px;padding:10px;border-radius:8px;background:#030712;color:#7dd3fc;font-size:12px;"></pre>
+    <span class="tag">0 EC2 Servers • 0 SQL Databases • $0.00 Gas</span>
+    <h2 style="margin:12px 0 4px;">⚡ My Zero-Server HFS App</h2>
+    <p id="who" style="color:#94a3b8;font-family:monospace;font-size:12.5px;margin:0;">Connecting to window.slx…</p>
+    <input id="noteIn" placeholder="Write a note to commit via your Identity HFS…" />
+    <button onclick="saveNote()">✍️ Sign &amp; Commit ($0.00 Gas)</button>
+    <div id="notesOut" style="margin-top:14px;font-family:monospace;font-size:12px;color:#bae6fd;"></div>
   </div>
   <script>
+    let items = [];
     async function boot() {
       const ctx = await window.slx.getContext();
       document.getElementById('who').textContent =
-        'Connected: ' + ctx.user.nickname + ' · ' + ctx.user.tag4 + ' | Block #' + ctx.blockNumber;
+        'Identity: ' + ctx.user.nickname + ' · ' + ctx.user.tag4 + ' | Subnet Block #' + ctx.blockNumber;
+      items = (await window.slx.getAppStorage('notes')) || [];
+      render();
     }
-    async function pingChain() {
-      const out = document.getElementById('out');
-      try {
-        const res = await window.slx.sendTransaction({
-          fnSig: 'ping(uint64)',
-          args: [['uint64', Date.now()]],
-          summary: 'Ping HFS subroutine from sandboxed UI'
-        });
-        out.textContent = JSON.stringify(res, null, 2);
-      } catch (err) {
-        out.textContent = 'Rejected: ' + err.message;
-      }
+    function render() {
+      document.getElementById('notesOut').innerHTML = items.map(x =>
+        '<div style="padding:7px 0;border-bottom:1px solid #1e293b;">✓ ' + x.replace(/</g, '&lt;') + '</div>'
+      ).join('');
+    }
+    async function saveNote() {
+      const val = document.getElementById('noteIn').value.trim();
+      if (!val) return;
+      const res = await window.slx.sendTransaction({
+        fnSig: 'recordNote(string)',
+        args: [['string', val]],
+        summary: 'Commit note: "' + val.slice(0, 40) + '"'
+      });
+      items.unshift(val + ' (' + String(res.txHash).slice(0, 12) + '…)');
+      await window.slx.setAppStorage('notes', items);
+      document.getElementById('noteIn').value = '';
+      render();
     }
     boot();
   <\/script>
@@ -119,6 +160,11 @@ function setView(viewName) {
   document.getElementById('viewCatalog').style.display = viewName === 'catalog' ? 'flex' : 'none';
   document.getElementById('viewRunner').style.display = viewName === 'runner' ? 'flex' : 'none';
   document.getElementById('viewStudio').style.display = viewName === 'studio' ? 'block' : 'none';
+}
+
+function openCreateNewAppStudio() {
+  loadAppIntoStudio('__blank__');
+  document.getElementById('viewStudio')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function refreshMergedCatalog() {
@@ -192,12 +238,12 @@ function renderHeaderStatus() {
   document.getElementById('lblAppCount').textContent = String(state.apps.length);
 
   if (state.storeAddr) {
-    lbl.textContent = `${shortHex(state.storeAddr, 8, 6)} (Live Subnet 1)`;
+    lbl.textContent = `${shortHex(state.storeAddr, 8, 6)} • Live Subnet 1`;
     btnDep.textContent = '✓ AppStore Deployed';
     btnDep.disabled = true;
     btnSync.disabled = state.busy;
   } else {
-    lbl.textContent = 'Local Verified CAS (Click Deploy for Subnet 1)';
+    lbl.textContent = 'Verified Local CAS (Deployable to Subnet 1)';
     btnDep.textContent = '⛓️ Deploy AppStore HFS';
     btnDep.disabled = state.busy;
     btnSync.disabled = true;
@@ -207,7 +253,7 @@ function renderHeaderStatus() {
 function renderCategories() {
   const bar = document.getElementById('catBar');
   const pills = [
-    { id: 0, label: `All Apps (${state.apps.length})` },
+    { id: 0, label: `All Directory (${state.apps.length})` },
     ...Object.values(APP_CATEGORIES).map((c) => ({
       id: c.id,
       label: `${c.icon} ${c.label}`,
@@ -233,77 +279,99 @@ function renderAppsGrid() {
       String(a.title || '').toLowerCase().includes(q) ||
       String(a.slug || '').toLowerCase().includes(q) ||
       String(a.summary || '').toLowerCase().includes(q) ||
+      String(WASM_LABELS_BY_SLUG[a.slug] || '').toLowerCase().includes(q) ||
       String(a.uiHash || '').toLowerCase().includes(q)
     );
   });
 
-  if (!filtered.length) {
-    grid.innerHTML = `<div class="mono" style="grid-column:1/-1;padding:28px;text-align:center;color:#94a3b8;">No matching HFS apps found.</div>`;
-    return;
-  }
-
-  grid.innerHTML = filtered
+  const appCardsHtml = filtered
     .map((a) => {
+      const catMeta = APP_CATEGORIES[a.category] || APP_CATEGORIES[6];
       const gzKb = a.compressedLen ? (a.compressedLen / 1024).toFixed(1) + ' KiB gz' : 'Verified CAS';
-      const chunks = a.chunkCount || 1;
       const isHostCore = a.execMode === APP_EXEC_MODE.VERIFIED_HOST || a.isSystemCore;
-      const modeBadge = isHostCore
-        ? `<span class="as-badge as-badge-emerald mono">🏛️ Verified Host Bundle</span>`
-        : `<span class="as-badge as-badge-sky mono">🛡️ Sandboxed Iframe</span>`;
-      const srcBadge =
-        a.source === 'onchain'
-          ? `<span class="as-badge as-badge-amber mono">⛓️ On-Chain #${a.appId}</span>`
-          : `<span class="as-badge as-badge-sky mono">📦 CAS Verified</span>`;
-      const primaryRunBtn = isHostCore && a.route
-        ? `<a href="${a.route}" class="as-btn as-btn-emerald" style="flex:1;justify-content:center;">▶ Open App</a>`
-        : `<button type="button" class="as-btn as-btn-emerald" style="flex:1;justify-content:center;" data-sandbox-slug="${a.slug}">▶ Run in Sandbox</button>`;
+      const wasmName =
+        WASM_LABELS_BY_SLUG[a.slug] ||
+        (a.wasmCodeHash && a.wasmCodeHash !== ZERO_BYTES32
+          ? `HFS ${shortHex(a.wasmCodeHash, 8, 6)}`
+          : 'window.slx Host State');
+      const hasArchDoc = Boolean(USECASE_DESCRIPTIONS[a.slug]);
+
+      const primaryRunBtn =
+        isHostCore && a.route
+          ? `<a href="${a.route}" class="as-btn as-btn-emerald" style="flex:1;justify-content:center;">▶ Launch App</a>`
+          : `<button type="button" class="as-btn as-btn-emerald" style="flex:1;justify-content:center;" data-sandbox-slug="${a.slug}">▶ Launch App</button>`;
 
       return `
         <article class="as-card">
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-              <div style="display:flex;align-items:center;gap:9px;">
-                <span style="font-size:1.55rem;">${a.icon || '🧩'}</span>
-                <div>
-                  <div style="font-size:0.94rem;font-weight:800;color:#f8fafc;">${String(a.title).replace(/</g, '&lt;')}</div>
-                  <div class="mono" style="font-size:0.67rem;color:#94a3b8;">/${a.slug} • v${a.version || '1.0.0'}</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+              <div style="display:flex;align-items:center;gap:11px;min-width:0;">
+                <div class="as-app-icon">${a.icon || '🧩'}</div>
+                <div style="min-width:0;">
+                  <div style="font-size:0.96rem;font-weight:800;color:#f8fafc;line-height:1.25;">${String(a.title).replace(/</g, '&lt;')}</div>
+                  <div class="mono" style="font-size:0.67rem;color:#94a3b8;margin-top:2px;">
+                    ${catMeta.label} • v${a.version || '1.0.0'}
+                  </div>
                 </div>
               </div>
-              ${srcBadge}
+              <span class="as-badge ${a.source === 'onchain' ? 'as-badge-amber' : 'as-badge-emerald'} mono">
+                ${a.source === 'onchain' ? `⛓️ On-Chain #${a.appId}` : '✓ Zero-EC2'}
+              </span>
             </div>
 
-            <div style="font-size:0.75rem;color:#cbd5e1;line-height:1.46;">
+            <div style="font-size:0.76rem;color:#cbd5e1;line-height:1.48;">
               ${String(a.summary || '').replace(/</g, '&lt;')}
             </div>
 
-            <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
-              ${modeBadge}
-              <span class="mono" style="font-size:0.65rem;color:#93c5fd;">${gzKb} (${chunks} chunk${chunks === 1 ? '' : 's'})</span>
-            </div>
-
-            <div class="mono" style="padding:7px 9px;border-radius:8px;background:#030814;border:1px solid rgba(51,65,85,0.7);font-size:0.65rem;color:#94a3b8;line-height:1.45;">
-              uiHash: <span style="color:#6ee7b7;">${shortHex(a.uiHash || '', 10, 8)}</span><br/>
-              wasm: <span style="color:#7dd3fc;">${
-                a.wasmCodeHash && a.wasmCodeHash !== ZERO_BYTES32
-                  ? shortHex(a.wasmCodeHash, 10, 8)
-                  : 'UI / Host Bridge'
-              }</span>
+            <div class="as-stack-row mono">
+              <span title="Replaces EC2 / API Backend">⚙️ <strong style="color:#7dd3fc;">${wasmName}</strong></span>
+              <span>•</span>
+              <span title="Gzipped Single-File HTML UI Bundle">📦 <strong style="color:#6ee7b7;">${gzKb}</strong></span>
+              <span>•</span>
+              <span title="keccak256 UI Bundle Digest">🔒 ${shortHex(a.uiHash || '', 6, 4)}</span>
             </div>
           </div>
 
           <div style="display:flex;gap:7px;flex-wrap:wrap;">
             ${primaryRunBtn}
             ${
-              isHostCore
-                ? `<button type="button" class="as-btn" data-sandbox-slug="${a.slug}" title="Preview inside opaque iframe">🛡️ Sandbox</button>`
+              hasArchDoc
+                ? `<button type="button" class="as-btn as-btn-violet" data-doc-slug="${a.slug}" title="View Zero-Server HFS Architecture & Cryptographic Spec">🏛️ Spec</button>`
+                : isHostCore
+                ? `<button type="button" class="as-btn" data-sandbox-slug="${a.slug}" title="Run inside isolated iframe">🛡️ Sandbox</button>`
                 : ''
             }
-            <button type="button" class="as-btn as-btn-amber" data-fork-slug="${a.slug}" title="Inspect or edit single-file HTML/CSS/JS source & publish update">✏ Studio</button>
+            <button type="button" class="as-btn as-btn-amber" data-fork-slug="${a.slug}" title="Inspect HTML/CSS/JS source or publish an updated version">✏ Fork</button>
           </div>
         </article>
       `;
     })
     .join('');
+
+  const createCardHtml = `
+    <article class="as-card as-card-create">
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div class="as-app-icon" style="border-color:rgba(52,211,153,0.55);background:rgba(16,185,129,0.2);">➕</div>
+        <div style="font-size:0.98rem;font-weight:800;color:#6ee7b7;">Build &amp; Publish a New App</div>
+        <div style="font-size:0.76rem;color:#cbd5e1;line-height:1.5;">
+          Have an idea for a DAO tool, marketplace, RF utility, or multiplayer game? Package your HTML UI + Halt-Free Subroutine directly into this Directory—<strong>no backend server, no database, and no EC2 instance required</strong>.
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;width:100%;flex-wrap:wrap;">
+        <button type="button" id="btnCardCreateNew" class="as-btn as-btn-emerald" style="flex:1;justify-content:center;">➕ Create / Publish App →</button>
+        <button type="button" id="btnCardReadGuide" class="as-btn" style="justify-content:center;">📖 Read Guide</button>
+      </div>
+    </article>
+  `;
+
+  grid.innerHTML = appCardsHtml + createCardHtml;
+
+  document.getElementById('btnCardCreateNew')?.addEventListener('click', openCreateNewAppStudio);
+  document.getElementById('btnCardReadGuide')?.addEventListener('click', () => {
+    const drawer = document.getElementById('zeroInfraGuideDrawer');
+    drawer?.classList.add('open');
+    drawer?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 function promptHostTxConfirmation({ appMeta, target, fnSig, summary, dataHex }) {
@@ -393,10 +461,10 @@ function populateStudioTemplates() {
   const sel = document.getElementById('selStudioTemplate');
   const prev = sel.value;
   const opts = [
-    `<option value="__blank__">✨ Blank Sandboxed App (window.slx Starter)</option>`,
+    `<option value="__blank__">✨ New Blank Zero-Server App (window.slx Starter)</option>`,
     ...state.apps.map(
       (a) =>
-        `<option value="${a.slug}">${a.icon || '🧩'} Fork / Edit: ${a.title} (${a.slug})</option>`
+        `<option value="${a.slug}">${a.icon || '🧩'} Fork / Edit Directory App: ${a.title} (${a.slug})</option>`
     ),
   ];
   sel.innerHTML = opts.join('');
@@ -405,13 +473,14 @@ function populateStudioTemplates() {
 
 async function loadAppIntoStudio(slug) {
   if (slug === '__blank__') {
-    document.getElementById('inStudioSlug').value = 'my-mesh-app';
-    document.getElementById('inStudioTitle').value = 'My Mesh HFS App';
+    document.getElementById('selStudioTemplate').value = '__blank__';
+    document.getElementById('inStudioSlug').value = 'my-zero-server-app';
+    document.getElementById('inStudioTitle').value = 'My Zero-Server HFS App';
     document.getElementById('inStudioIcon').value = '⚡';
     document.getElementById('inStudioVersion').value = '1.0.0';
     document.getElementById('selStudioCategory').value = '6';
     document.getElementById('inStudioSummary').value =
-      'Custom single-file HTML/JS UI bound to a Haltproof WASM Subroutine.';
+      'Runs 100% on-chain via Halt-Free Subroutines & gzipped HTML—zero backend, zero database, zero EC2.';
     document.getElementById('inStudioWasmHash').value = '';
     document.getElementById('inStudioDefaultHfs').value = '';
     document.getElementById('txtStudioHtml').value = BLANK_STARTER_HTML;
@@ -447,7 +516,7 @@ async function loadAppIntoStudio(slug) {
   await updateStudioMeter();
   setView('studio');
   showToast(
-    `Loaded "${appMeta.title}" (${(verified.uncompressedLen / 1024).toFixed(1)} KiB HTML) into Studio — edit & click Publish to push v${verParts.join('.')} without redeploying the web client!`,
+    `Loaded "${appMeta.title}" (${(verified.uncompressedLen / 1024).toFixed(1)} KiB HTML) into Studio — edit & click Publish to ship v${verParts.join('.')} with zero servers & zero client redeploys!`,
     'info'
   );
 }
@@ -455,11 +524,11 @@ async function loadAppIntoStudio(slug) {
 async function updateStudioMeter() {
   const html = document.getElementById('txtStudioHtml').value || '';
   const packed = await compressAppUiBundle(html);
-  const airtimeMs = Math.max(8, Math.round((packed.compressedLen * 8) / 2_600)); // 2.6 Mbps LR2021 FLRC
+  const airtimeMs = Math.max(8, Math.round((packed.compressedLen * 8) / 2_600));
   document.getElementById('studioBundleMeter').innerHTML =
     `Raw HTML+CSS+JS: <strong style="color:#f8fafc;">${(packed.uncompressedLen / 1024).toFixed(1)} KiB</strong><br/>` +
-    `Gzip Bundle: <strong style="color:#6ee7b7;">${(packed.compressedLen / 1024).toFixed(1)} KiB</strong> (${packed.chunkCount} chunk${packed.chunkCount === 1 ? '' : 's'} @ 32 KiB)<br/>` +
-    `Est. LR2021 Radio-2 Burst: <strong style="color:#7dd3fc;">~${airtimeMs} ms</strong><br/>` +
+    `Gzip On-Chain Bundle: <strong style="color:#6ee7b7;">${(packed.compressedLen / 1024).toFixed(1)} KiB</strong> (${packed.chunkCount} chunk${packed.chunkCount === 1 ? '' : 's'} @ 32 KiB)<br/>` +
+    `LR2021 Radio-2 Air Sync: <strong style="color:#7dd3fc;">~${airtimeMs} ms</strong> • Cloud Bill: <strong style="color:#6ee7b7;">$0.00/mo</strong><br/>` +
     `uiHash: <code>${shortHex(packed.uiHash, 12, 8)}</code>`;
 }
 
@@ -467,7 +536,24 @@ async function updateStudioMeter() {
 document.querySelectorAll('.as-tab').forEach((btn) => {
   btn.addEventListener('click', () => setView(btn.dataset.view));
 });
-document.getElementById('btnJumpStudio').addEventListener('click', () => setView('studio'));
+document.getElementById('btnHeroCreateApp').addEventListener('click', openCreateNewAppStudio);
+document.getElementById('btnToolbarCreateApp').addEventListener('click', openCreateNewAppStudio);
+document.getElementById('btnGuideStartBuilding').addEventListener('click', openCreateNewAppStudio);
+
+document.getElementById('btnToggleZeroGuide').addEventListener('click', () => {
+  const drawer = document.getElementById('zeroInfraGuideDrawer');
+  drawer.classList.toggle('open');
+  if (drawer.classList.contains('open')) {
+    drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+});
+document.getElementById('btnCloseZeroGuide').addEventListener('click', () => {
+  document.getElementById('zeroInfraGuideDrawer').classList.remove('open');
+});
+document.getElementById('btnOpenArchSpec').addEventListener('click', () => {
+  openSlxUseCaseDescription('apps', 'codification', { currentPageAppId: 'apps' });
+});
+
 document.getElementById('btnRunnerBack').addEventListener('click', () => setView('catalog'));
 
 document.getElementById('catBar').addEventListener('click', (ev) => {
@@ -484,6 +570,11 @@ document.getElementById('inSearchApps').addEventListener('input', (ev) => {
 });
 
 document.getElementById('appsGrid').addEventListener('click', async (ev) => {
+  const docBtn = ev.target.closest('[data-doc-slug]');
+  if (docBtn) {
+    openSlxUseCaseDescription(docBtn.dataset.docSlug, 'codification', { currentPageAppId: 'apps' });
+    return;
+  }
   const sbBtn = ev.target.closest('[data-sandbox-slug]');
   if (sbBtn) {
     await launchInSandboxRunner(sbBtn.dataset.sandboxSlug);
@@ -493,6 +584,24 @@ document.getElementById('appsGrid').addEventListener('click', async (ev) => {
   if (fkBtn) {
     await loadAppIntoStudio(fkBtn.dataset.forkSlug);
   }
+});
+
+document.querySelectorAll('[data-snippet]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const key = btn.getAttribute('data-snippet');
+    const snippet = STUDIO_SNIPPETS[key];
+    if (!snippet) return;
+    const ed = document.getElementById('txtStudioHtml');
+    const cur = ed.value;
+    const closeIdx = cur.lastIndexOf('</script>');
+    if (closeIdx >= 0) {
+      ed.value = cur.slice(0, closeIdx) + snippet + cur.slice(closeIdx);
+    } else {
+      ed.value = cur + `\n<script>${snippet}<\/script>\n`;
+    }
+    updateStudioMeter();
+    showToast(`Inserted "${key}" window.slx snippet into HTML bundle.`, 'ok');
+  });
 });
 
 document.getElementById('btnResolveHfsAddr').addEventListener('click', async () => {
@@ -682,7 +791,7 @@ document.getElementById('btnStudioPublish').addEventListener('click', async () =
     showToast(
       `🎉 Published "${published.title}" v${published.version} (uiHash ${shortHex(
         published.uiHash
-      )})! Live immediately without redeploying the web client.`,
+      )})! Live in the App Directory immediately—no EC2, no DB, no web-client redeploy.`,
       'ok'
     );
     setView('catalog');
@@ -700,8 +809,12 @@ await updateStudioMeter();
 await refreshMergedCatalog();
 
 const params = new URLSearchParams(window.location.search);
-if (params.get('edit')) {
+if (params.get('create') === '1') {
+  openCreateNewAppStudio();
+} else if (params.get('edit')) {
   await loadAppIntoStudio(params.get('edit'));
 } else if (params.get('run')) {
   await launchInSandboxRunner(params.get('run'));
+} else if (params.get('guide') === '1') {
+  document.getElementById('zeroInfraGuideDrawer').classList.add('open');
 }

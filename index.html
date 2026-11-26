@@ -89,26 +89,40 @@
 
     <main class="slx-hub-wrap">
       <section class="slx-hub-hero">
-        <div>
-          <div style="font-size: 1.2rem; font-weight: 800; letter-spacing: -0.01em;">
-            SuperLexicon Subnet Client Suite &amp; HFS Applications
+        <div style="max-width: 780px;">
+          <div style="font-size: 1.24rem; font-weight: 800; letter-spacing: -0.01em;">
+            SuperLexicon App Directory &amp; Block Explorer — Zero Backend, Zero Database, Zero EC2
           </div>
-          <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;">
-            Select any active subnet in the top telemetry bar (or connect a custom subnet RPC) to interact with live Haltproof WASM Subroutines at $0.00 gas.
+          <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px; line-height: 1.5;">
+            Every application runs 100% from a Halt-Free Subroutine (<code>.wasm</code>) and an on-chain <code>gzip</code>ped HTML UI bundle at $0.00 gas—no API servers, no SQL databases, and no EC2 instances.
           </div>
         </div>
-        <a
-          href="/explorer.html"
-          style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.6); background: rgba(14, 165, 233, 0.2); color: #e0f2fe; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700;"
-        >
-          🔎 Full-Screen Block Explorer →
-        </a>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <a
+            href="/apps.html?create=1"
+            style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(52, 211, 153, 0.75); background: rgba(16, 185, 129, 0.24); color: #d1fae5; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 800;"
+          >
+            ➕ Create / Publish New App →
+          </a>
+          <a
+            href="/apps.html"
+            style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.6); background: rgba(14, 165, 233, 0.2); color: #e0f2fe; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700;"
+          >
+            🧩 App Store Directory →
+          </a>
+          <a
+            href="/explorer.html"
+            style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.45); background: rgba(15, 23, 42, 0.75); color: #cbd5e1; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700;"
+          >
+            🔎 Block Explorer →
+          </a>
+        </div>
       </section>
 
       <section class="slx-hub-grid">
         <a class="slx-hub-card" href="/apps.html" style="border-color: rgba(52, 211, 153, 0.65); background: linear-gradient(135deg, rgba(6, 42, 35, 0.68), rgba(9, 16, 32, 0.94));">
-          <div style="font-size: 0.92rem; font-weight: 800; color: #6ee7b7;">🧩 HFS App Store &amp; Publisher Studio</div>
-          <div style="font-size: 0.72rem; color: #cbd5e1;">Publish &amp; run gzipped, keccak256-verified HTML UI bundles alongside HFS without redeploying</div>
+          <div style="font-size: 0.92rem; font-weight: 800; color: #6ee7b7;">🧩 App Store &amp; Directory (0 EC2 / 0 DB)</div>
+          <div style="font-size: 0.72rem; color: #cbd5e1;">Browse all 15+ verified HFS apps or publish a new app in 1 block without servers or redeploys</div>
         </a>
         <a class="slx-hub-card" href="/crowdfunding.html">
           <div style="font-size: 0.92rem; font-weight: 800;">🚀 Hardware Pre-Order Crowdfunding</div>
