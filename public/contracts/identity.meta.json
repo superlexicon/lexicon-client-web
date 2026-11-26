@@ -1,6 +1,6 @@
 {
   "artifact": "dist/identity.wasm",
-  "code_hash": "0x76ea486f595517f47cac5e927bd280f5c4afd16f0253076254ee942e2b8cbddc",
+  "code_hash": "0xcc46a2588c305b47ce5407b744b2c730479459d60fbe3aae1d001a6d740f19cb",
   "exports": [
     "memory",
     "main"
@@ -20,6 +20,6 @@
   ],
   "initial_memory_pages": 32,
   "max_memory_pages": 64,
-  "optimized_wasm_bytes": 88946,
-  "raw_wasm_bytes": 88949
+  "optimized_wasm_bytes": 91810,
+  "raw_wasm_bytes": 91813
 }

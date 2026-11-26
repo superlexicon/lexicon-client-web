@@ -47,12 +47,57 @@ import {
 const BYTECODE_STORE_ADDR = '0x0000000000000000000000000000000000000100';
 const STORAGE_CF_MAP_KEY = 'slx_crowdfunding_campaigns_v2';
 const STORAGE_CHARTER_RES_KEY = 'slx_gamified_charter_resolutions_v2';
+const STORAGE_PREORDER_TOKENS_KEY = 'slx_preorder_auth_tokens_v1';
+const STORAGE_ORACLE_URL_KEY = 'slx_banking_oracle_url_v1';
 
 const DEFAULT_REWARD_SKUS = [
-  { skuIndex: 0, skuCode: 1, name: 'SLX-L1 USB/LoRa Mesh Node', unitPrice: 149, maxUnits: 2000, voucherTierBps: 15_000, soldUnits: 0 },
-  { skuIndex: 1, skuCode: 2, name: 'SLX-V1 Handheld Validator', unitPrice: 299, maxUnits: 2000, voucherTierBps: 15_000, soldUnits: 0 },
-  { skuIndex: 2, skuCode: 3, name: 'SLX-G1 HaLow + LoRa Gateway', unitPrice: 499, maxUnits: 1000, voucherTierBps: 15_000, soldUnits: 0 },
+  {
+    skuIndex: 0,
+    skuCode: 1,
+    name: 'Lexicon Dual-RF USB Dongle',
+    unitPrice: 198,
+    maxUnits: 5000,
+    voucherTierBps: 2_000,
+    soldUnits: 0,
+    estTimeline: 'T+6m (Best-Efforts Indication)',
+    shipBaseUsd: 16,
+    shipAddlUsd: 5,
+  },
+  {
+    skuIndex: 1,
+    skuCode: 2,
+    name: 'Lexicon Watch Ultra',
+    unitPrice: 888,
+    maxUnits: 2500,
+    voucherTierBps: 2_000,
+    soldUnits: 0,
+    estTimeline: 'T+12m (Best-Efforts Indication)',
+    shipBaseUsd: 29,
+    shipAddlUsd: 11,
+  },
+  {
+    skuIndex: 2,
+    skuCode: 3,
+    name: 'Lexicon Multi-Radio Slate Pro',
+    unitPrice: 1288,
+    maxUnits: 2000,
+    voucherTierBps: 2_000,
+    soldUnits: 0,
+    estTimeline: 'T+9m (Best-Efforts Indication)',
+    shipBaseUsd: 38,
+    shipAddlUsd: 16,
+  },
 ];
+
+const SHIPPING_REGIONS = {
+  SG: { label: 'Singapore (Domestic Tracked Courier)', shipMult: 0.45, dutyPct: 0.0, vatPct: 0.09, vatName: '9% SG GST' },
+  US: { label: 'United States (Air Express • HS 8517.62 ITA)', shipMult: 1.0, dutyPct: 0.0, vatPct: 0.075, vatName: '~0–8.5% State Use/Brokerage Est.' },
+  EU: { label: 'European Union / UK (Air Express • HS 8517.62)', shipMult: 1.12, dutyPct: 0.0, vatPct: 0.2, vatName: '~19–21% Import VAT' },
+  EA: { label: 'Japan / South Korea / Taiwan (Air Express)', shipMult: 0.85, dutyPct: 0.0, vatPct: 0.1, vatName: '~5–10% Consumption/VAT' },
+  AU: { label: 'Australia / New Zealand (Air Express)', shipMult: 0.95, dutyPct: 0.0, vatPct: 0.1, vatName: '10–15% GST' },
+  ASEAN: { label: 'ASEAN / Middle East (Air Express)', shipMult: 0.78, dutyPct: 0.03, vatPct: 0.08, vatName: '~0–5% Duty + 5–12% VAT/GST' },
+  ROW: { label: 'Rest of World (DHL/FedEx Lithium-Ion Express)', shipMult: 1.35, dutyPct: 0.05, vatPct: 0.15, vatName: '~0–10% Duty + Local Import VAT' },
+};
 
 function defaultBudgetTiersForMode(mode, baseTarget = 150_000) {
   if (mode !== CROWDFUNDING_MODE.MULTI_TIER_GROWTH_BUDGET) {
@@ -109,7 +154,7 @@ function defaultBudgetTiersForMode(mode, baseTarget = 150_000) {
 }
 
 const companyCtx = {
-  companyName: 'Nvidya Systems Pte. Ltd.',
+  companyName: 'Superlexicon Pte. Ltd.',
   accountingLedger: ZERO_ADDR,
   corporateCharter: ZERO_ADDR,
   fiatLedger: ZERO_ADDR,
@@ -229,7 +274,7 @@ async function hydrateCompanyAndLiveCampaign() {
   }
   const inst = session.inst;
   if (inst && session.online) {
-    companyCtx.companyName = inst.companyName || 'Nvidya Systems Pte. Ltd.';
+    companyCtx.companyName = inst.companyName || 'Superlexicon Pte. Ltd.';
     companyCtx.accountingLedger = (inst.accountingLedger || ZERO_ADDR).toLowerCase();
     companyCtx.fiatLedger = (inst.fiatLedger || ZERO_ADDR).toLowerCase();
     companyCtx.treasuryIdentity = (inst.treasuryIdentity || ZERO_ADDR).toLowerCase();
@@ -434,7 +479,11 @@ function recomputeDerived() {
     if (p.status === PLEDGE_STATUS.FINALIZED_CAPTURED) totalCaptured += p.amount;
   }
 
-  if (app.state === CROWDFUNDING_STATE.LIVE || app.state === CROWDFUNDING_STATE.SETTLED_SUCCEEDED) {
+  if (app.state === CROWDFUNDING_STATE.LIVE) {
+    for (const t of app.tiers) {
+      t.unlocked = totalCommitted >= t.threshold;
+    }
+  } else if (app.state === CROWDFUNDING_STATE.SETTLED_SUCCEEDED) {
     for (const t of app.tiers) {
       if (totalCommitted >= t.threshold) t.unlocked = true;
     }
@@ -710,6 +759,24 @@ function renderAll() {
     chkTag.textContent = '🔒 LOCKED UNTIL STEP 3 LIVE';
   }
 
+  const quickBanner = document.getElementById('quickEnableBanner');
+  if (quickBanner) {
+    quickBanner.style.display =
+      !isLive && app.state !== CROWDFUNDING_STATE.SETTLED_SUCCEEDED ? 'flex' : 'none';
+  }
+
+  const idBadge = document.getElementById('buyerIdBadge');
+  if (idBadge && session.wallet) {
+    const idRec = session.wallet.getIdentityRecord();
+    if (idRec?.identityAddr) {
+      idBadge.className = 'cf-badge cf-badge-ok mono';
+      idBadge.textContent = `${idRec.nickname || 'Identity'} • ${shortAddr(idRec.identityAddr)}`;
+    } else {
+      idBadge.className = 'cf-badge cf-badge-hold mono';
+      idBadge.textContent = 'Auto-Deploys on Save / Order';
+    }
+  }
+
   document.getElementById('btnSubmitPledge').disabled = busy || !isLive;
   document.getElementById('btnSimWave').disabled = busy || !isLive;
   document.getElementById('btnFinalizeSuccess').disabled = busy || !isLive;
@@ -770,11 +837,11 @@ function renderAll() {
 
   // SKU Selector
   const selSku = document.getElementById('selRewardSku');
-  const prevSku = selSku.value || '1';
+  const prevSku = selSku.value || '0';
   selSku.innerHTML = app.skus
     .map(
       (s) =>
-        `<option value="${s.skuIndex}">${s.name} — $${s.unitPrice} (${s.soldUnits}/${s.maxUnits} reserved)</option>`
+        `<option value="${s.skuIndex}">${s.name} — $${s.unitPrice.toLocaleString()} (${s.soldUnits}/${s.maxUnits} reserved)</option>`
     )
     .join('');
   if ([...selSku.options].some((o) => o.value === prevSku)) selSku.value = prevSku;
@@ -813,12 +880,12 @@ function renderAll() {
   if ([...selDisb.options].some((o) => o.value === prevDisb)) selDisb.value = prevDisb;
 
   // Pledges Table
-  document.getElementById('pledgeSummaryTag').textContent = `${app.pledges.length} Pledge(s)`;
+  document.getElementById('pledgeSummaryTag').textContent = `${app.pledges.length} Pre-Order(s)`;
   const plgBody = document.getElementById('pledgesTbody');
   if (!app.pledges.length) {
     plgBody.innerHTML = `<tr><td colspan="6" style="color:#64748b;text-align:center;padding:16px;">${
       isLive
-        ? 'Campaign is STATE_LIVE — commit a hardware pre-order on the left or click "Simulate Backer Wave".'
+        ? 'Campaign is STATE_LIVE — review the Pre-Order Agreement & submit a credit authorization on the left.'
         : 'Pre-orders are locked until Step 1 (Proposal) → Step 2 (Board Vote) → Step 3 (Activate Resolution → LIVE) complete!'
     }</td></tr>`;
   } else {
@@ -831,32 +898,60 @@ function renderAll() {
         if (p.status === PLEDGE_STATUS.ESCROWED_ONCHAIN) {
           badge = '<span class="cf-badge cf-badge-ok">ESCROWED L1</span>';
         } else if (p.status === PLEDGE_STATUS.PREAUTH_HOLD_ORACLE) {
-          badge = '<span class="cf-badge cf-badge-hold">CARD HOLD ($0 CHARGED)</span>';
+          badge = '<span class="cf-badge cf-badge-hold">CREDIT AUTH ($0 CHARGED)</span>';
         } else if (p.status === PLEDGE_STATUS.FINALIZED_CAPTURED) {
-          badge = '<span class="cf-badge cf-badge-ok">BANK CAPTURED</span>';
+          badge = '<span class="cf-badge cf-badge-ok">CHARGED • COMMITTED TO EMS</span>';
         } else {
-          badge = '<span class="cf-badge cf-badge-void">VOIDED / 100% REFUNDED</span>';
+          badge = '<span class="cf-badge cf-badge-void">CANCELED / REFUNDED</span>';
         }
 
-        let actionHtml = '—';
+        const actions = [];
         if (
+          app.state === CROWDFUNDING_STATE.LIVE &&
+          p.status === PLEDGE_STATUS.PREAUTH_HOLD_ORACLE
+        ) {
+          actions.push(
+            `<button type="button" class="cf-btn cf-btn-rose" style="padding:4px 8px;font-size:0.64rem;" data-cancel-hold-id="${p.id}">✕ Cancel Auth ($0)</button>`
+          );
+        } else if (
           app.state === CROWDFUNDING_STATE.FAILED_REFUNDABLE &&
           (p.status === PLEDGE_STATUS.ESCROWED_ONCHAIN || p.status === PLEDGE_STATUS.PREAUTH_HOLD_ORACLE)
         ) {
-          actionHtml = `<button type="button" class="cf-btn cf-btn-rose" style="padding:4px 8px;font-size:0.65rem;" data-refund-id="${p.id}">↩ Refund / Void</button>`;
+          actions.push(
+            `<button type="button" class="cf-btn cf-btn-rose" style="padding:4px 8px;font-size:0.64rem;" data-refund-id="${p.id}">↩ Refund / Release Hold</button>`
+          );
+        } else if (p.status === PLEDGE_STATUS.FINALIZED_CAPTURED) {
+          actions.push(
+            `<span style="color:#94a3b8;font-size:0.64rem;" title="User self-cancellation is disabled after card capture">🔒 Non-Cancelable</span>`
+          );
+          if (!p.voucherIssued && app.state === CROWDFUNDING_STATE.SETTLED_SUCCEEDED) {
+            actions.push(
+              `<button type="button" class="cf-btn cf-btn-emerald" style="padding:3px 7px;font-size:0.63rem;" data-voucher-id="${p.id}">🎁 SLXR</button>`
+            );
+          }
+          if (companyCtx.myIsDirector || !app.isOnChain) {
+            actions.push(
+              `<button type="button" class="cf-btn cf-btn-amber" style="padding:3px 7px;font-size:0.62rem;" data-discretionary-refund-id="${p.id}" title="Sole Discretion of Superlexicon Pte. Ltd.">⚖️ Co. Refund</button>`
+            );
+          }
         } else if (
           app.state === CROWDFUNDING_STATE.SETTLED_SUCCEEDED &&
-          (p.status === PLEDGE_STATUS.ESCROWED_ONCHAIN || p.status === PLEDGE_STATUS.FINALIZED_CAPTURED) &&
+          p.status === PLEDGE_STATUS.ESCROWED_ONCHAIN &&
           !p.voucherIssued
         ) {
-          actionHtml = `<button type="button" class="cf-btn cf-btn-emerald" style="padding:4px 8px;font-size:0.65rem;" data-voucher-id="${p.id}">🎁 Issue SLXR Voucher</button>`;
+          actions.push(
+            `<button type="button" class="cf-btn cf-btn-emerald" style="padding:4px 8px;font-size:0.64rem;" data-voucher-id="${p.id}">🎁 Issue SLXR Voucher</button>`
+          );
         } else if (p.voucherIssued) {
-          actionHtml = `<span style="color:#6ee7b7;font-size:0.67rem;">✓ Voucher Issued</span>`;
+          actions.push(`<span style="color:#6ee7b7;font-size:0.67rem;">✓ Voucher Issued</span>`);
         }
+
+        const actionHtml = actions.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">${actions.join('')}</div>` : '—';
+        const shortSku = sku ? sku.name.replace(/^Lexicon\s+/i, '') : 'SKU';
 
         return `<tr>
           <td>#${p.id}</td>
-          <td>${sku ? sku.name.split(' ')[0] : 'SKU'} × ${p.quantity}</td>
+          <td>${shortSku} × ${p.quantity}</td>
           <td>${fmtUsd(p.amount)}</td>
           <td>${p.railLabel}</td>
           <td>${badge}</td>
@@ -878,16 +973,18 @@ function renderOrderPreview() {
   const sku = app.skus[skuIdx] || app.skus[0];
   const total = sku.unitPrice * qty;
   const slxr = computeExpectedSlxrEntitlement(sku.skuCode, sku.voucherTierBps, total);
+  const bonusPct = Math.round((sku.voucherTierBps || 2_000) / 100);
+  const estEta = sku.estTimeline || DEFAULT_REWARD_SKUS[skuIdx]?.estTimeline || 'Best-Efforts Indication (≤12m post-campaign)';
 
   const railNote =
     rail === 'onchain_escrow'
-      ? 'Escrowed on Subnet 1 ($0.00 gas); sweeps to AccountingLedger 2300 ONLY if goal met, otherwise 100% refundable.'
-      : 'Card / PayNow pre-authorization hold via banking-oracle — $0.00 charged unless campaign hits target!';
+      ? 'Escrowed on Subnet 1 ($0.00 gas); sweeps to AccountingLedger 2300 ONLY if minimum target met.'
+      : 'Airwallex Credit Authorization ONLY ($0.00 charged upfront) — charged ONLY when minimum target is reached. Cancel anytime before charge; non-cancelable once charged (refunds at sole company discretion).';
 
   document.getElementById('orderCalcBox').innerHTML =
-    `Order Total: <strong style="color:#f8fafc;">${fmtUsd(total)}</strong> (${qty} × $${sku.unitPrice})<br/>` +
-    `90-Day Validator Reward: <strong style="color:#6ee7b7;">${slxr.toLocaleString()} SLXR</strong> (150% Early-Bird)<br/>` +
-    `Blinded Commitment: <span style="color:#93c5fd;">${activeBundle.voucherCommitment.slice(0, 26)}…</span><br/>` +
+    `Device Subtotal (Excl. Ship &amp; Tax): <strong style="color:#f8fafc;">${fmtUsd(total)}</strong> (${qty} × $${sku.unitPrice.toLocaleString()})<br/>` +
+    `Target Delivery Window: <strong style="color:#7dd3fc;">${estEta}</strong><br/>` +
+    `90-Day Validator Allocation: <strong style="color:#6ee7b7;">${slxr.toLocaleString()} SLXR</strong> (+${bonusPct}% Early-Backer)<br/>` +
     `<span style="color:#fde68a;">${railNote}</span>`;
 }
 
@@ -1313,9 +1410,259 @@ async function activatePassedResolutionStep3() {
 }
 
 // ---------------------------------------------------------------------------
-// Step 3 Live Pre-Order Execution & Step 4 Settlement / Budget Disbursement
+// Identity HFS Customer Profile, Shipping/Tax Estimator & Pre-Order Agreement
 // ---------------------------------------------------------------------------
-async function submitPledge(skuIdx, qty, rail) {
+function loadPreorderTokenMap() {
+  if (typeof localStorage === 'undefined') return {};
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_PREORDER_TOKENS_KEY) || '{}');
+  } catch (_) {
+    return {};
+  }
+}
+
+function savePreorderTokenMeta(key, meta) {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const map = loadPreorderTokenMap();
+    map[String(key)] = meta;
+    localStorage.setItem(STORAGE_PREORDER_TOKENS_KEY, JSON.stringify(map));
+  } catch (_) {}
+}
+
+function getConfiguredOracleUrl() {
+  const inp = document.getElementById('inOracleApiUrl');
+  return String(inp?.value || '').trim().replace(/\/+$/, '');
+}
+
+function hydrateBuyerIdentityInputs({ overwriteClean = false } = {}) {
+  const rec = session.wallet?.getIdentityRecord?.() || null;
+  const nickInp = document.getElementById('inBuyerNickname');
+  const fnInp = document.getElementById('inBuyerFullName');
+  const billInp = document.getElementById('inBuyerBillingAddr');
+  const shipInp = document.getElementById('inBuyerShippingAddr');
+  const sameChk = document.getElementById('chkSameShipping');
+  const shipWrap = document.getElementById('buyerShippingWrap');
+  if (!nickInp || !fnInp || !billInp || !shipInp) return;
+
+  const fallbackNick =
+    rec?.nickname ||
+    session.wallet?.getPreferredNickname?.() ||
+    (session.wallet?.keypair?.address ? `Backer_${session.wallet.keypair.address.slice(-4)}` : '');
+
+  if (overwriteClean || !nickInp.value) nickInp.value = fallbackNick;
+  if ((overwriteClean || !fnInp.value) && rec?.fullName) fnInp.value = rec.fullName;
+  if ((overwriteClean || !billInp.value) && rec?.billingAddress) billInp.value = rec.billingAddress;
+  if ((overwriteClean || !shipInp.value) && rec?.shippingAddress) {
+    shipInp.value = rec.shippingAddress;
+    if (sameChk && rec.billingAddress && rec.shippingAddress !== rec.billingAddress) {
+      sameChk.checked = false;
+      if (shipWrap) shipWrap.style.display = 'block';
+    }
+  }
+}
+
+function readCheckoutBuyerProfile() {
+  const nickname = String(document.getElementById('inBuyerNickname')?.value || '').trim().slice(0, 24);
+  const fullName = String(document.getElementById('inBuyerFullName')?.value || '').trim().slice(0, 160);
+  const billingAddress = String(document.getElementById('inBuyerBillingAddr')?.value || '').trim().slice(0, 480);
+  const sameAsBill = Boolean(document.getElementById('chkSameShipping')?.checked);
+  const shippingAddress = sameAsBill
+    ? billingAddress
+    : String(document.getElementById('inBuyerShippingAddr')?.value || '').trim().slice(0, 480);
+  return { nickname, fullName, billingAddress, shippingAddress, sameAsBill };
+}
+
+async function saveBuyerProfileToIdentityHfs({ requireAllOrderFields = false } = {}) {
+  const prof = readCheckoutBuyerProfile();
+  if (!prof.nickname) {
+    throw new Error('Please enter a Nickname (1–24 characters) for your Identity HFS.');
+  }
+  if (requireAllOrderFields && (!prof.fullName || !prof.billingAddress || !prof.shippingAddress)) {
+    throw new Error(
+      'Full Legal Name (as per credit card), Billing Address, and Shipping Address are required for every pre-order.'
+    );
+  }
+
+  const existing = session.wallet.getIdentityRecord();
+  const unchanged =
+    existing?.identityAddr &&
+    existing.nickname === prof.nickname &&
+    existing.fullName === prof.fullName &&
+    existing.billingAddress === prof.billingAddress &&
+    existing.shippingAddress === prof.shippingAddress;
+
+  if (unchanged) return existing;
+
+  if (session.online) {
+    const updated = await session.wallet.updateIdentityProfile(
+      {
+        nickname: prof.nickname,
+        fullName: prof.fullName,
+        billingAddress: prof.billingAddress,
+        shippingAddress: prof.shippingAddress,
+      },
+      { rpcUrl: session.rpcUrl }
+    );
+    return updated;
+  }
+
+  // Offline / Guided Sandbox fallback: seal locally to Identity record so checkout & tests work seamlessly
+  const fallbackIdAddr =
+    existing?.identityAddr ||
+    '0x' + keccak256Hex(utf8ToBytes('id:' + session.wallet.keypair.address)).slice(26);
+  return session.wallet.saveIdentityRecord({
+    identityAddr: fallbackIdAddr,
+    nickname: prof.nickname,
+    handle: prof.nickname.toLowerCase(),
+    fullName: prof.fullName,
+    billingAddress: prof.billingAddress,
+    shippingAddress: prof.shippingAddress,
+  });
+}
+
+// Shipping & Import Duty Estimator Modal
+function renderShippingTaxEstimate() {
+  const regKey = document.getElementById('selShipEstRegion')?.value || 'SG';
+  const reg = SHIPPING_REGIONS[regKey] || SHIPPING_REGIONS.US;
+  const skuIdx = Number(document.getElementById('selShipEstSku')?.value || 0);
+  const qty = Math.max(1, Number(document.getElementById('inShipEstQty')?.value || 1));
+  const sku = app.skus[skuIdx] || DEFAULT_REWARD_SKUS[skuIdx] || DEFAULT_REWARD_SKUS[0];
+  const baseShip = DEFAULT_REWARD_SKUS[skuIdx]?.shipBaseUsd || 24;
+  const addlShip = DEFAULT_REWARD_SKUS[skuIdx]?.shipAddlUsd || 9;
+
+  const subtotal = sku.unitPrice * qty;
+  const estShipping = Math.round((baseShip + Math.max(0, qty - 1) * addlShip) * reg.shipMult);
+  const cifValue = subtotal + estShipping;
+  const estDuty = Math.round(cifValue * reg.dutyPct);
+  const estVat = Math.round((cifValue + estDuty) * reg.vatPct);
+  const estShipAndTaxTotal = estShipping + estDuty + estVat;
+
+  const box = document.getElementById('shipEstBreakdownBox');
+  if (!box) return;
+  box.innerHTML =
+    `Destination: <strong style="color:#f8fafc;">${reg.label}</strong><br/>` +
+    `Order Item: <strong style="color:#7dd3fc;">${qty} × ${sku.name}</strong> ($${sku.unitPrice.toLocaleString()}/unit)<br/>` +
+    `──────────────────────────────────────────────────────────<br/>` +
+    `Pre-Order Credit Auth Today: <strong style="color:#fde68a;">${fmtUsd(subtotal)}</strong> ($0.00 charged until min target)<br/>` +
+    `Est. Tracked Air Express Shipping: <strong style="color:#e2e8f0;">~${fmtUsd(estShipping)}</strong><br/>` +
+    `Est. Customs Tariff (HS 8517.62): <strong style="color:#e2e8f0;">~${fmtUsd(estDuty)}</strong> (${(reg.dutyPct * 100).toFixed(1)}%)<br/>` +
+    `Est. Import GST / VAT (${reg.vatName}): <strong style="color:#e2e8f0;">~${fmtUsd(estVat)}</strong><br/>` +
+    `──────────────────────────────────────────────────────────<br/>` +
+    `Indicative Shipping + Taxes Due at Dispatch: <strong style="color:#6ee7b7;">~${fmtUsd(estShipAndTaxTotal)}</strong><br/>` +
+    `<span style="color:#93c5fd;">⚡ Dispatch SLA: Ships within 48 hours of payment of final shipping &amp; tax invoice.</span>`;
+}
+
+function openShippingTaxEstimateModal() {
+  const modal = document.getElementById('shippingTaxEstimateModal');
+  const selEstSku = document.getElementById('selShipEstSku');
+  const curSku = document.getElementById('selRewardSku')?.value || '0';
+  const curQty = document.getElementById('inQty')?.value || '1';
+  if (selEstSku) {
+    selEstSku.innerHTML = app.skus
+      .map((s) => `<option value="${s.skuIndex}">${s.name} ($${s.unitPrice.toLocaleString()})</option>`)
+      .join('');
+    selEstSku.value = curSku;
+  }
+  const qtyEl = document.getElementById('inShipEstQty');
+  if (qtyEl) qtyEl.value = curQty;
+  renderShippingTaxEstimate();
+  modal?.classList.add('open');
+}
+
+function closeShippingTaxEstimateModal() {
+  document.getElementById('shippingTaxEstimateModal')?.classList.remove('open');
+}
+
+// Mandatory Pre-Order Agreement Flow (Displayed BEFORE Airwallex API Call)
+let pendingAgreementOrder = null;
+
+async function openPreorderAgreementFlow(skuIdx, qty, rail) {
+  if (app.state !== CROWDFUNDING_STATE.LIVE) {
+    showToast('ERR_CAMPAIGN_NOT_LIVE (-20): Campaign must be in STATE_LIVE (2) before placing a pre-order.', 'err');
+    return;
+  }
+  const sku = app.skus[skuIdx];
+  if (!sku || sku.soldUnits + qty > sku.maxUnits) {
+    showToast(`ERR_SKU_SOLD_OUT (-32): Exceeds ${sku?.maxUnits} max units for ${sku?.name}.`, 'err');
+    return;
+  }
+  const amount = sku.unitPrice * qty;
+  const dBefore = recomputeDerived();
+  if (
+    app.mode === CROWDFUNDING_MODE.SINGLE_HARD_CAP &&
+    dBefore.totalCommitted + amount > app.baseTarget
+  ) {
+    showToast(
+      `ERR_TARGET_CAP_EXCEEDED (-31): Hard-Cap Mode strictly blocks pre-orders above ${fmtUsd(
+        app.baseTarget
+      )} (remaining capacity: ${fmtUsd(app.baseTarget - dBefore.totalCommitted)}).`,
+      'err'
+    );
+    return;
+  }
+
+  let prof = readCheckoutBuyerProfile();
+  if (!prof.fullName || !prof.billingAddress || !prof.shippingAddress) {
+    try {
+      await session.wallet.ensureIdentityWithPrompt({
+        rpcUrl: session.rpcUrl,
+        appName: 'Superlexicon Hardware Pre-Order',
+        requireOrderProfile: true,
+      });
+      hydrateBuyerIdentityInputs({ overwriteClean: true });
+      prof = readCheckoutBuyerProfile();
+    } catch (_) {}
+  }
+
+  if (!prof.nickname || !prof.fullName || !prof.billingAddress || !prof.shippingAddress) {
+    showToast(
+      'Please enter your Nickname, Full Legal Name (as per credit card), Billing Address, and Shipping Address in your Identity HFS profile before continuing.',
+      'err'
+    );
+    document.getElementById('inBuyerFullName')?.focus();
+    return;
+  }
+
+  const idRec = session.wallet.getIdentityRecord();
+  const idDisplay = idRec?.identityAddr ? shortAddr(idRec.identityAddr) : 'Will deploy & seal upon confirmation';
+  const slxr = computeExpectedSlxrEntitlement(sku.skuCode, sku.voucherTierBps, amount);
+  const estEta = sku.estTimeline || DEFAULT_REWARD_SKUS[skuIdx]?.estTimeline || 'Best-Efforts Indication (≤12m post-campaign)';
+
+  pendingAgreementOrder = { skuIdx, qty, rail, amount, sku, prof, slxr, estEta };
+
+  const sumBox = document.getElementById('preorderSummaryBox');
+  if (sumBox) {
+    sumBox.innerHTML =
+      `Seller Entity: <strong style="color:#f8fafc;">Superlexicon Pte. Ltd.</strong> (Singapore)<br/>` +
+      `Buyer Cardholder Name: <strong style="color:#fde68a;">${prof.fullName.replace(/</g, '&lt;')}</strong> (${prof.nickname.replace(/</g, '&lt;')} • Identity HFS: <code>${idDisplay}</code>)<br/>` +
+      `Billing Address: <span style="color:#e2e8f0;">${prof.billingAddress.replace(/</g, '&lt;')}</span><br/>` +
+      `Shipping Address: <span style="color:#e2e8f0;">${prof.shippingAddress.replace(/</g, '&lt;')}</span><br/>` +
+      `Order Item: <strong style="color:#7dd3fc;">${qty} × ${sku.name}</strong> — <strong style="color:#f8fafc;">${fmtUsd(amount)} USD</strong> (Excl. Shipping &amp; Taxes) • Est: ${estEta}<br/>` +
+      `Payment Terms: <strong style="color:#6ee7b7;">Airwallex Credit Authorization ONLY ($0.00 Charged Upfront)</strong> • Charged ONLY at ${fmtUsd(app.baseTarget)} Min Target`;
+  }
+
+  const chk = document.getElementById('chkAcceptPreorderAgreement');
+  const confirmBtn = document.getElementById('btnConfirmPreorderAgreement');
+  if (chk) chk.checked = false;
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  document.getElementById('preorderAgreementModal')?.classList.add('open');
+}
+
+function closePreorderAgreementModal() {
+  document.getElementById('preorderAgreementModal')?.classList.remove('open');
+}
+
+// ---------------------------------------------------------------------------
+// Step 3 Live Pre-Order Execution (Called ONLY After Agreement Acceptance!)
+// ---------------------------------------------------------------------------
+async function submitPledge(skuIdx, qty, rail, { skipAgreementForSim = false, buyerProfile = null } = {}) {
+  if (!skipAgreementForSim && !buyerProfile) {
+    await openPreorderAgreementFlow(skuIdx, qty, rail);
+    return;
+  }
+
   if (app.state !== CROWDFUNDING_STATE.LIVE) {
     showToast('ERR_CAMPAIGN_NOT_LIVE (-20): Campaign must be in STATE_LIVE (2).', 'err');
     return;
@@ -1334,19 +1681,76 @@ async function submitPledge(skuIdx, qty, rail) {
     showToast(
       `ERR_TARGET_CAP_EXCEEDED (-31): Hard-Cap Mode strictly blocks pre-orders above ${fmtUsd(
         app.baseTarget
-      )} (remaining capacity: ${fmtUsd(app.baseTarget - dBefore.totalCommitted)}).`,
+      )}.`,
       'err'
     );
     return;
   }
 
-  const refHash = keccak256Hex(utf8ToBytes(`pledge:${Date.now()}:${Math.random()}`));
-  const isOnChainEscrow = rail === 'onchain_escrow';
+  busy = true;
+  renderAll();
+  try {
+    let resolvedIdRec = session.wallet.getIdentityRecord();
+    if (!skipAgreementForSim) {
+      showToast('Step 1/2: Sealing Full Name, Billing & Shipping Address to your Identity HFS…', 'info');
+      resolvedIdRec = await saveBuyerProfileToIdentityHfs({ requireAllOrderFields: true });
+      renderAll();
+    }
 
-  if (app.isOnChain && session.online) {
-    busy = true;
-    renderAll();
-    try {
+    const isOnChainEscrow = rail === 'onchain_escrow';
+    const oracleUrl = getConfiguredOracleUrl();
+    let refHash = keccak256Hex(utf8ToBytes(`pledge:${Date.now()}:${Math.random()}`));
+    let oracleAuthMeta = null;
+
+    // Call Airwallex `banking-oracle` (`POST /v1/public/preorders/authorize`) ONLY AFTER agreement acceptance!
+    if (!skipAgreementForSim && !isOnChainEscrow && oracleUrl) {
+      showToast(
+        `Step 2/2: Requesting Airwallex Credit Authorization (${fmtUsd(amount)} • auto_capture=false, $0 charged)…`,
+        'info'
+      );
+      const prof = buyerProfile || readCheckoutBuyerProfile();
+      const resp = await fetch(`${oracleUrl}/v1/public/preorders/authorize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identity_addr: resolvedIdRec?.identityAddr || session.wallet.keypair.address,
+          nickname: prof.nickname,
+          full_name: prof.fullName,
+          billing_address: prof.billingAddress,
+          shipping_address: prof.shippingAddress,
+          sku_code: sku.skuCode,
+          sku_name: sku.name,
+          quantity: qty,
+          amount_minor: Math.round(amount * 100),
+          currency: 'USD',
+          voucher_commitment: activeBundle.voucherCommitment,
+          crowdfunding_hfs: app.crowdfundingAddr || ZERO_ADDR,
+          agreement_accepted: true,
+          agreement_version: 'SLX-PREORDER-TESLA-SIAC-V1',
+          is_dollar_test: false,
+        }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data.error || `Airwallex Banking-Oracle HTTP ${resp.status}`);
+      }
+      if (data.payment_ref_hash) refHash = data.payment_ref_hash;
+      oracleAuthMeta = {
+        paymentIntentId: data.payment_intent_id,
+        cancelToken: data.cancel_token,
+        clientSecretOrUrl: data.client_secret_or_url,
+        oracleUrl,
+        paymentRefHash: refHash,
+      };
+      if (
+        typeof data.client_secret_or_url === 'string' &&
+        /^https?:\/\//i.test(data.client_secret_or_url)
+      ) {
+        window.open(data.client_secret_or_url, '_blank', 'noopener,noreferrer');
+      }
+    }
+
+    if (app.isOnChain && session.online) {
       await session.ensureMyIdentity((m) => showToast(m, 'info'));
       const inner = isOnChainEscrow
         ? CrowdfundingAbi.pledgeOnChain({
@@ -1370,69 +1774,284 @@ async function submitPledge(skuIdx, qty, rail) {
         [app.crowdfundingAddr]
       );
       await syncFromOnChainCampaign(app.crowdfundingAddr, { quiet: true });
-      showToast(`✅ Recorded on-chain pre-order (${fmtUsd(amount)}) on Subnet 1!`, 'ok');
-    } catch (err) {
-      showToast(`Pre-order error: ${err.message || err}`, 'err');
-    } finally {
-      busy = false;
-      renderAll();
+      if (oracleAuthMeta && app.pledges.length) {
+        const newestId = app.pledges[app.pledges.length - 1].id;
+        savePreorderTokenMeta(`${app.crowdfundingAddr}:${newestId}`, oracleAuthMeta);
+      }
+      showToast(
+        `✅ Authorized Pre-Order (${fmtUsd(amount)} • $0.00 charged upfront) & linked to Identity HFS ${shortAddr(
+          resolvedIdRec?.identityAddr || ''
+        )}! You may cancel anytime prior to minimum-target card capture.`,
+        'ok'
+      );
+      return;
     }
+
+    const prevUnlocked = app.tiers.filter((t) => t.unlocked).length;
+    sku.soldUnits += qty;
+    const id = app.pledges.length + 1;
+    app.pledges.push({
+      id,
+      skuIndex: skuIdx,
+      quantity: qty,
+      amount,
+      railLabel:
+        rail === 'onchain_escrow'
+          ? 'On-Chain Escrow'
+          : rail === 'ocbc_paynow'
+          ? 'OCBC PayNow Pre-Auth'
+          : oracleAuthMeta
+          ? 'Airwallex Live Auth'
+          : 'Airwallex Credit Auth',
+      status: isOnChainEscrow ? PLEDGE_STATUS.ESCROWED_ONCHAIN : PLEDGE_STATUS.PREAUTH_HOLD_ORACLE,
+      paymentRefHash: refHash,
+      voucherCommitment: activeBundle.voucherCommitment,
+      voucherIssued: false,
+      oracleAuthMeta,
+    });
+    if (oracleAuthMeta) {
+      savePreorderTokenMeta(`sandbox:${id}`, oracleAuthMeta);
+    }
+
+    app.lastCalldataLabel = isOnChainEscrow
+      ? `Crowdfunding.pledgeOnChain(sku=${skuIdx}, qty=${qty})`
+      : `Crowdfunding.recordOraclePreorderHold(sku=${skuIdx}, qty=${qty}) • auto_capture=false`;
+    app.lastCalldataHex = isOnChainEscrow
+      ? CrowdfundingAbi.pledgeOnChain({
+          skuIndex: skuIdx,
+          quantity: qty,
+          voucherCommitment: activeBundle.voucherCommitment,
+        })
+      : CrowdfundingAbi.recordOraclePreorderHold({
+          paymentRefHash: refHash,
+          skuIndex: skuIdx,
+          quantity: qty,
+          voucherCommitment: activeBundle.voucherCommitment,
+        });
+
+    const dAfter = recomputeDerived();
+    const nowUnlocked = app.tiers.filter((t) => t.unlocked).length;
+    if (nowUnlocked > prevUnlocked) {
+      const newest = app.tiers.filter((t) => t.unlocked).slice(-1)[0];
+      showToast(
+        `🎉 Pre-Order #${id} (${fmtUsd(amount)} Credit Auth • $0 Charged) UNLOCKED Stretch Tier ${
+          newest.tierIndex
+        }: "${newest.title}" (+${fmtUsd(newest.budgetAllocation)} IFRS growth budget)!`,
+        'ok'
+      );
+    } else {
+      showToast(
+        `✅ Authorized Pre-Order #${id} (${fmtUsd(amount)} • $0.00 charged upfront; cancelable anytime before target capture) — Committed: ${fmtUsd(
+          dAfter.totalCommitted
+        )}.`,
+        'ok'
+      );
+    }
+  } catch (err) {
+    showToast(`Pre-order authorization error: ${err.message || err}`, 'err');
+  } finally {
+    busy = false;
+    renderAll();
+  }
+}
+
+// Cancel Pre-Order Credit Authorization ($0 Charged — Allowed Anytime Prior to Card Capture!)
+async function cancelPreorderHoldById(pledgeId) {
+  const p = app.pledges.find((x) => x.id === pledgeId);
+  if (!p) return;
+  if (p.status === PLEDGE_STATUS.FINALIZED_CAPTURED) {
+    showToast(
+      'ERR_ALREADY_CHARGED_NO_USER_CANCEL (-43): Cards have already been charged. Refunds after capture are at the sole discretion of Superlexicon Pte. Ltd.',
+      'err'
+    );
+    return;
+  }
+  if (p.status !== PLEDGE_STATUS.PREAUTH_HOLD_ORACLE) return;
+
+  busy = true;
+  renderAll();
+  try {
+    const tokenMap = loadPreorderTokenMap();
+    const metaKey = app.isOnChain ? `${app.crowdfundingAddr}:${pledgeId}` : `sandbox:${pledgeId}`;
+    const meta = p.oracleAuthMeta || tokenMap[metaKey] || null;
+    if (meta?.oracleUrl && meta?.paymentIntentId && meta?.cancelToken) {
+      const resp = await fetch(`${meta.oracleUrl}/v1/public/preorders/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payment_intent_id: meta.paymentIntentId,
+          identity_addr: session.wallet.getIdentityRecord()?.identityAddr || session.wallet.keypair.address,
+          cancel_token: meta.cancelToken,
+        }),
+      });
+      const cData = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(cData.error || `Oracle cancel HTTP ${resp.status}`);
+      }
+    }
+
+    const cancelCd = CrowdfundingAbi.cancelPreorderAuthorization(pledgeId);
+    if (app.isOnChain && session.online) {
+      await session.ensureMyIdentity((m) => showToast(m, 'info'));
+      await session.sendAsMyIdentity(
+        encodeAbi('execute(address,bytes)', [
+          ['address', app.crowdfundingAddr],
+          ['bytes', hexToBytes(cancelCd)],
+        ]),
+        `Crowdfunding.cancelPreorderAuthorization(#${pledgeId})`,
+        'Crowdfunding',
+        [app.crowdfundingAddr]
+      );
+      await syncFromOnChainCampaign(app.crowdfundingAddr, { quiet: true });
+    } else {
+      p.status = PLEDGE_STATUS.REFUNDED_OR_VOIDED;
+      const sku = app.skus[p.skuIndex];
+      if (sku) sku.soldUnits = Math.max(0, sku.soldUnits - p.quantity);
+      app.lastCalldataLabel = `Crowdfunding.cancelPreorderAuthorization(pledgeId=${pledgeId}) -> Released ($0 Charged)`;
+      app.lastCalldataHex = cancelCd;
+    }
+
+    showToast(
+      `✓ Canceled Pre-Order #${pledgeId} credit authorization (${fmtUsd(p.amount)} hold released — $0.00 charged).`,
+      'ok'
+    );
+  } catch (err) {
+    showToast(`Cancel authorization error: ${err.message || err}`, 'err');
+  } finally {
+    busy = false;
+    renderAll();
+  }
+}
+
+// Company-Only Discretionary Post-Capture Refund (`grantDiscretionaryRefund`)
+async function grantCompanyDiscretionaryRefund(pledgeId) {
+  const p = app.pledges.find((x) => x.id === pledgeId);
+  if (!p || p.status !== PLEDGE_STATUS.FINALIZED_CAPTURED) return;
+
+  busy = true;
+  renderAll();
+  try {
+    const cd = CrowdfundingAbi.grantDiscretionaryRefund(pledgeId);
+    if (app.isOnChain && session.online) {
+      await session.ensureMyIdentity((m) => showToast(m, 'info'));
+      await session.sendAsMyIdentity(
+        encodeAbi('execute(address,bytes)', [
+          ['address', app.crowdfundingAddr],
+          ['bytes', hexToBytes(cd)],
+        ]),
+        `Crowdfunding.grantDiscretionaryRefund(#${pledgeId})`,
+        'Crowdfunding',
+        [app.crowdfundingAddr]
+      );
+      await syncFromOnChainCampaign(app.crowdfundingAddr, { quiet: true });
+    } else {
+      p.status = PLEDGE_STATUS.REFUNDED_OR_VOIDED;
+      const sku = app.skus[p.skuIndex];
+      if (sku) sku.soldUnits = Math.max(0, sku.soldUnits - p.quantity);
+      app.lastCalldataLabel = `Crowdfunding.grantDiscretionaryRefund(pledgeId=${pledgeId}) [Company Officer Only]`;
+      app.lastCalldataHex = cd;
+    }
+    showToast(
+      `⚖️ Executed Company Discretionary Refund on Pledge #${pledgeId} (${fmtUsd(
+        p.amount
+      )}) by sole discretion of Superlexicon Pte. Ltd.`,
+      'ok'
+    );
+  } catch (err) {
+    showToast(`Discretionary refund error: ${err.message || err}`, 'err');
+  } finally {
+    busy = false;
+    renderAll();
+  }
+}
+
+// $1.00 Live Airwallex -> Banking-Oracle -> AccountingLedger Smoke Test
+async function runDollarIntegrationTest() {
+  const oracleUrl = getConfiguredOracleUrl();
+  const outBox = document.getElementById('dollarTestResultBox');
+  if (!oracleUrl) {
+    showToast(
+      'Enter your running Banking-Oracle URL (e.g. http://127.0.0.1:9088) to run the live $1.00 Airwallex + AccountingLedger test.',
+      'err'
+    );
+    document.getElementById('inOracleApiUrl')?.focus();
     return;
   }
 
-  const prevUnlocked = app.tiers.filter((t) => t.unlocked).length;
-  sku.soldUnits += qty;
-  const id = app.pledges.length + 1;
-  app.pledges.push({
-    id,
-    skuIndex: skuIdx,
-    quantity: qty,
-    amount,
-    railLabel:
-      rail === 'onchain_escrow'
-        ? 'On-Chain Escrow'
-        : rail === 'ocbc_paynow'
-        ? 'OCBC PayNow Hold'
-        : 'Card Pre-Auth Hold',
-    status: isOnChainEscrow ? PLEDGE_STATUS.ESCROWED_ONCHAIN : PLEDGE_STATUS.PREAUTH_HOLD_ORACLE,
-    paymentRefHash: refHash,
-    voucherCommitment: activeBundle.voucherCommitment,
-    voucherIssued: false,
-  });
-
-  app.lastCalldataLabel = isOnChainEscrow
-    ? `Crowdfunding.pledgeOnChain(sku=${skuIdx}, qty=${qty})`
-    : `Crowdfunding.recordOraclePreorderHold(sku=${skuIdx}, qty=${qty})`;
-  app.lastCalldataHex = isOnChainEscrow
-    ? CrowdfundingAbi.pledgeOnChain({
-        skuIndex: skuIdx,
-        quantity: qty,
-        voucherCommitment: activeBundle.voucherCommitment,
-      })
-    : CrowdfundingAbi.recordOraclePreorderHold({
-        paymentRefHash: refHash,
-        skuIndex: skuIdx,
-        quantity: qty,
-        voucherCommitment: activeBundle.voucherCommitment,
+  let prof = readCheckoutBuyerProfile();
+  if (!prof.fullName || !prof.billingAddress || !prof.shippingAddress) {
+    try {
+      await session.wallet.ensureIdentityWithPrompt({
+        rpcUrl: session.rpcUrl,
+        appName: 'Superlexicon $1.00 Airwallex Oracle Test',
+        requireOrderProfile: true,
       });
-
-  const dAfter = recomputeDerived();
-  const nowUnlocked = app.tiers.filter((t) => t.unlocked).length;
-  if (nowUnlocked > prevUnlocked) {
-    const newest = app.tiers.filter((t) => t.unlocked).slice(-1)[0];
-    showToast(
-      `🎉 Pre-Order #${id} (${fmtUsd(amount)}) UNLOCKED Stretch Tier ${newest.tierIndex}: "${
-        newest.title
-      }" (+${fmtUsd(newest.budgetAllocation)} in company IFRS growth budget)!`,
-      'ok'
-    );
-  } else {
-    showToast(
-      `Recorded Pre-Order #${id} (${fmtUsd(amount)}) — Total Committed: ${fmtUsd(dAfter.totalCommitted)}.`,
-      'ok'
-    );
+      hydrateBuyerIdentityInputs({ overwriteClean: true });
+      prof = readCheckoutBuyerProfile();
+    } catch (_) {}
   }
+  if (!prof.nickname || !prof.fullName || !prof.billingAddress || !prof.shippingAddress) {
+    showToast('Fill in Nickname, Full Name, Billing & Shipping Address first to run the $1.00 test.', 'err');
+    return;
+  }
+
+  busy = true;
   renderAll();
+  try {
+    const idRec = await saveBuyerProfileToIdentityHfs({ requireAllOrderFields: true });
+    showToast('Submitting $1.00 Immediate-Capture Test to Airwallex Banking-Oracle…', 'info');
+    const resp = await fetch(`${oracleUrl}/v1/public/preorders/authorize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        identity_addr: idRec.identityAddr,
+        nickname: prof.nickname,
+        full_name: prof.fullName,
+        billing_address: prof.billingAddress,
+        shipping_address: prof.shippingAddress,
+        sku_code: 99,
+        sku_name: 'Superlexicon Pte. Ltd. $1.00 Oracle & AccountingLedger Test',
+        quantity: 1,
+        amount_minor: 100,
+        currency: 'USD',
+        voucher_commitment: activeBundle.voucherCommitment,
+        crowdfunding_hfs: app.crowdfundingAddr || ZERO_ADDR,
+        agreement_accepted: true,
+        agreement_version: 'SLX-DOLLAR-SMOKE-TEST-V1',
+        is_dollar_test: true,
+      }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      throw new Error(data.error || `Banking-Oracle HTTP ${resp.status}`);
+    }
+    if (outBox) {
+      const maybeLink =
+        typeof data.client_secret_or_url === 'string' && /^https?:\/\//i.test(data.client_secret_or_url)
+          ? `<br/><a href="${data.client_secret_or_url}" target="_blank" rel="noopener noreferrer" style="color:#6ee7b7;font-weight:700;">↗ Complete $1.00 Airwallex Card Payment → Triggers Webhook → AccountingLedger</a>`
+          : `<br/>Client Secret / Token: <code>${String(data.client_secret_or_url || '').slice(0, 42)}…</code>`;
+      outBox.style.display = 'block';
+      outBox.innerHTML =
+        `<strong style="color:#6ee7b7;">✓ $1.00 Airwallex PaymentIntent Created (${data.capture_mode})</strong><br/>` +
+        `Intent ID: <code>${data.payment_intent_id}</code><br/>` +
+        `Ref Hash: <code>${data.payment_ref_hash}</code><br/>` +
+        `Linked AccountingLedger: <code>${companyCtx.accountingLedger !== ZERO_ADDR ? shortAddr(companyCtx.accountingLedger) : 'Configured in banking-oracle env'}</code>` +
+        maybeLink;
+    }
+    showToast(
+      `✓ $1.00 Airwallex PaymentIntent (${data.payment_intent_id}) created! Complete payment to verify live webhook posting into AccountingLedger.`,
+      'ok'
+    );
+  } catch (err) {
+    if (outBox) {
+      outBox.style.display = 'block';
+      outBox.innerHTML = `<span style="color:#fda4af;">⚠ $1.00 Test Error: ${(err.message || String(err)).replace(/</g, '&lt;')}</span>`;
+    }
+    showToast(`$1.00 Oracle test error: ${err.message || err}`, 'err');
+  } finally {
+    busy = false;
+    renderAll();
+  }
 }
 
 // Event Listeners
@@ -1466,15 +2085,88 @@ document.getElementById('btnSignBoardRes').addEventListener('click', signBoardRe
 document.getElementById('btnTestPreLiveGuard').addEventListener('click', testPreActivationGuard);
 document.getElementById('btnActivateLive').addEventListener('click', activatePassedResolutionStep3);
 
+document.getElementById('btnQuickEnableLive')?.addEventListener('click', () => {
+  if (app.state === CROWDFUNDING_STATE.UNINITIALIZED) {
+    proposeCampaignSandbox();
+  }
+  app.boardAuthStatus = 2;
+  app.accumBoardWeight = app.requiredBoardWeight;
+  activatePassedResolutionStep3();
+});
+
 document.getElementById('selRewardSku').addEventListener('change', renderOrderPreview);
 document.getElementById('inQty').addEventListener('input', renderOrderPreview);
 document.getElementById('selPaymentRail').addEventListener('change', renderOrderPreview);
+
+document.getElementById('chkSameShipping')?.addEventListener('change', (ev) => {
+  const wrap = document.getElementById('buyerShippingWrap');
+  if (wrap) wrap.style.display = ev.currentTarget.checked ? 'none' : 'block';
+});
+
+document.getElementById('btnSaveBuyerIdentity')?.addEventListener('click', async () => {
+  if (busy) return;
+  busy = true;
+  renderAll();
+  try {
+    const saved = await saveBuyerProfileToIdentityHfs({ requireAllOrderFields: false });
+    showToast(
+      `✓ Updated Identity HFS (${shortAddr(saved.identityAddr)}) — Nickname "${saved.nickname}" & encrypted order addresses saved!`,
+      'ok'
+    );
+  } catch (err) {
+    showToast(`Identity profile save error: ${err.message || err}`, 'err');
+  } finally {
+    busy = false;
+    renderAll();
+  }
+});
+
+document.getElementById('btnOpenShipEstTop')?.addEventListener('click', openShippingTaxEstimateModal);
+document.getElementById('btnOpenShipEstCheckout')?.addEventListener('click', openShippingTaxEstimateModal);
+document.getElementById('btnOpenShipEstFromLegal')?.addEventListener('click', openShippingTaxEstimateModal);
+document.getElementById('btnCloseShipEst')?.addEventListener('click', closeShippingTaxEstimateModal);
+document.getElementById('btnDoneShipEst')?.addEventListener('click', closeShippingTaxEstimateModal);
+document.getElementById('shippingTaxEstimateModal')?.addEventListener('click', (ev) => {
+  if (ev.target.id === 'shippingTaxEstimateModal') closeShippingTaxEstimateModal();
+});
+document.getElementById('selShipEstRegion')?.addEventListener('change', renderShippingTaxEstimate);
+document.getElementById('selShipEstSku')?.addEventListener('change', renderShippingTaxEstimate);
+document.getElementById('inShipEstQty')?.addEventListener('input', renderShippingTaxEstimate);
+
+document.getElementById('chkAcceptPreorderAgreement')?.addEventListener('change', (ev) => {
+  const btn = document.getElementById('btnConfirmPreorderAgreement');
+  if (btn) btn.disabled = !ev.currentTarget.checked;
+});
+document.getElementById('btnClosePreorderAgreement')?.addEventListener('click', closePreorderAgreementModal);
+document.getElementById('btnCancelPreorderAgreement')?.addEventListener('click', closePreorderAgreementModal);
+document.getElementById('preorderAgreementModal')?.addEventListener('click', (ev) => {
+  if (ev.target.id === 'preorderAgreementModal') closePreorderAgreementModal();
+});
+document.getElementById('btnConfirmPreorderAgreement')?.addEventListener('click', async () => {
+  if (!pendingAgreementOrder) return;
+  const ord = pendingAgreementOrder;
+  pendingAgreementOrder = null;
+  closePreorderAgreementModal();
+  await submitPledge(ord.skuIdx, ord.qty, ord.rail, {
+    skipAgreementForSim: false,
+    buyerProfile: ord.prof,
+  });
+});
+
+document.getElementById('inOracleApiUrl')?.addEventListener('change', (ev) => {
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(STORAGE_ORACLE_URL_KEY, ev.currentTarget.value.trim());
+    } catch (_) {}
+  }
+});
+document.getElementById('btnRunDollarTest')?.addEventListener('click', runDollarIntegrationTest);
 
 document.getElementById('btnSubmitPledge').addEventListener('click', () => {
   const skuIdx = Number(document.getElementById('selRewardSku').value || 0);
   const qty = Math.max(1, Number(document.getElementById('inQty').value || 1));
   const rail = document.getElementById('selPaymentRail').value;
-  submitPledge(skuIdx, qty, rail);
+  openPreorderAgreementFlow(skuIdx, qty, rail);
 });
 
 document.getElementById('btnDownloadVoucher').addEventListener('click', () => {
@@ -1496,9 +2188,9 @@ document.getElementById('btnSimWave').addEventListener('click', () => {
     }
     const unitPrice = app.skus[1].unitPrice;
     const maxFit = Math.max(1, Math.floor(Math.min(75_000, rem) / unitPrice));
-    submitPledge(1, maxFit, 'oracle_card_hold');
+    submitPledge(1, maxFit, 'oracle_card_hold', { skipAgreementForSim: true });
   } else {
-    submitPledge(2, 250, 'oracle_card_hold'); // 250 x $499 = $124,750
+    submitPledge(2, 100, 'oracle_card_hold', { skipAgreementForSim: true }); // 100 x $1,288 = $128,800
   }
 });
 
@@ -1506,9 +2198,9 @@ document.getElementById('btnFinalizeSuccess').addEventListener('click', async ()
   const d = recomputeDerived();
   if (d.totalCommitted < app.baseTarget) {
     showToast(
-      `Cannot settle as SUCCEEDED yet: ${fmtUsd(d.totalCommitted)} committed < ${fmtUsd(
+      `Cannot charge cards or settle yet: ${fmtUsd(d.totalCommitted)} committed < ${fmtUsd(
         app.baseTarget
-      )} Base Target!`,
+      )} Minimum Target!`,
       'err'
     );
     return;
@@ -1544,9 +2236,7 @@ document.getElementById('btnFinalizeSuccess').addEventListener('click', async ()
       }
       await syncFromOnChainCampaign(app.crowdfundingAddr, { quiet: true });
       showToast(
-        `🏆 Campaign Settled on Subnet 1! Proceeds swept to AccountingLedger (2300 Contract Liabilities) & ${
-          app.tiers.filter((t) => t.unlocked).length
-        } IFRS budget tiers unlocked!`,
+        `🏆 Minimum Target Reached & Settled on Subnet 1! Authorized cards captured, proceeds swept to AccountingLedger (2300 Contract Liabilities), and user self-cancellations locked!`,
         'ok'
       );
     } catch (err) {
@@ -1567,14 +2257,12 @@ document.getElementById('btnFinalizeSuccess').addEventListener('click', async ()
   const dAfter = recomputeDerived();
   app.sweptToIfrs2300 = dAfter.realizedCash;
   app.lastCalldataLabel =
-    'Step 4A — Crowdfunding.finalizeCampaign() -> Sweeps Dr 1010 Cash / Cr 2300 Contract Liabilities on AccountingLedger';
+    'Step 4A — Minimum Target Reached: Capture Airwallex Pre-Auth Holds & Sweep to IFRS 2300 (User Self-Cancel Locked)';
   app.lastCalldataHex = CrowdfundingAbi.finalizeCampaign();
   showToast(
-    `🏆 Step 4A Complete! Captured pre-auth holds, swept ${fmtUsd(
+    `🏆 Minimum Target Reached! Charged all authorized cards (${fmtUsd(
       dAfter.realizedCash
-    )} into AccountingLedger Account 2300 (Contract Liabilities — IFRS 15), and unlocked ${fmtUsd(
-      dAfter.totalUnlockedBudget
-    )} across ${app.tiers.filter((t) => t.unlocked).length} corporate growth budget line(s)!`,
+    )}), swept to AccountingLedger Account 2300, and locked user self-cancellations (post-charge refunds now solely at Superlexicon Pte. Ltd. discretion).`,
     'ok'
   );
   renderAll();
@@ -1727,6 +2415,20 @@ document.getElementById('btnDisburseBudget').addEventListener('click', async () 
 });
 
 document.getElementById('pledgesTbody').addEventListener('click', async (e) => {
+  const cancelHoldBtn = e.target.closest('[data-cancel-hold-id]');
+  if (cancelHoldBtn) {
+    const id = Number(cancelHoldBtn.dataset.cancelHoldId);
+    await cancelPreorderHoldById(id);
+    return;
+  }
+
+  const discRefBtn = e.target.closest('[data-discretionary-refund-id]');
+  if (discRefBtn) {
+    const id = Number(discRefBtn.dataset.discretionaryRefundId);
+    await grantCompanyDiscretionaryRefund(id);
+    return;
+  }
+
   const refBtn = e.target.closest('[data-refund-id]');
   if (refBtn) {
     const id = Number(refBtn.dataset.refundId);
@@ -1735,7 +2437,7 @@ document.getElementById('pledgesTbody').addEventListener('click', async (e) => {
       p.status = PLEDGE_STATUS.REFUNDED_OR_VOIDED;
       app.lastCalldataLabel = `Crowdfunding.claimFullRefund(pledgeId=${id})`;
       app.lastCalldataHex = CrowdfundingAbi.claimFullRefund(id);
-      showToast(`↩ Refunded 100% (${fmtUsd(p.amount)}) on Pledge #${id}.`, 'ok');
+      showToast(`↩ Released / Refunded 100% (${fmtUsd(p.amount)}) on Pledge #${id}.`, 'ok');
       renderAll();
     }
     return;
@@ -1764,6 +2466,54 @@ document.getElementById('btnSyncLiveRpc').addEventListener('click', async () => 
   await syncFromOnChainCampaign(addr, { quiet: false });
 });
 
+// Restore saved Oracle URL & apply URL query `?sku=1|2|3|dongle|watch|slate` deep-link from Hardware Page
+(function initUrlAndSavedConfig() {
+  if (typeof localStorage !== 'undefined') {
+    const savedOracle = localStorage.getItem(STORAGE_ORACLE_URL_KEY);
+    const inp = document.getElementById('inOracleApiUrl');
+    if (inp) {
+      if (savedOracle !== null) {
+        inp.value = savedOracle;
+      } else if (
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ) {
+        inp.value = 'http://127.0.0.1:9088';
+      }
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const rawSku = (params.get('sku') || '').trim().toLowerCase();
+    let targetSkuIdx = null;
+    if (rawSku === '1' || rawSku === 'dongle') targetSkuIdx = 0;
+    else if (rawSku === '2' || rawSku === 'watch') targetSkuIdx = 1;
+    else if (rawSku === '3' || rawSku === 'slate') targetSkuIdx = 2;
+
+    if (targetSkuIdx !== null) {
+      setTimeout(() => {
+        const sel = document.getElementById('selRewardSku');
+        if (sel) {
+          sel.value = String(targetSkuIdx);
+          renderOrderPreview();
+        }
+        document.getElementById('preorder-checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
+    } else if (window.location.hash === '#preorder-checkout') {
+      setTimeout(() => {
+        document.getElementById('preorder-checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
+    }
+  }
+})();
+
 refreshProposalCalldataPreview();
 renderAll();
 await session.boot();
+hydrateBuyerIdentityInputs({ overwriteClean: true });
+session.wallet?.onChange?.(() => {
+  hydrateBuyerIdentityInputs({ overwriteClean: true });
+  renderAll();
+});
+renderAll();
