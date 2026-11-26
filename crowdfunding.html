@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milestone Crowdfunding &amp; Stretch-Goal Growth Budget HFS — SuperLexicon</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 15% 0%, #0d1f3a 0%, #050a14 55%, #03060d 100%);
+      color: #f8fafc;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+    }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .cf-wrap { max-width: 1320px; margin: 0 auto; padding: 18px 20px 60px; display: flex; flex-direction: column; gap: 18px; }
+    .cf-hero {
+      border-radius: 16px;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: linear-gradient(135deg, rgba(8, 25, 48, 0.94), rgba(6, 13, 26, 0.96));
+      padding: 20px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .cf-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #7dd3fc;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .cf-mode-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 920px) {
+      .cf-mode-bar { grid-template-columns: 1fr; }
+    }
+    .cf-mode-tab {
+      text-align: left;
+      padding: 14px 16px;
+      border-radius: 13px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: rgba(7, 14, 28, 0.92);
+      color: #e2e8f0;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .cf-mode-tab:hover { border-color: rgba(56, 189, 248, 0.6); }
+    .cf-mode-tab.active {
+      border-color: #34d399;
+      background: linear-gradient(135deg, rgba(6, 38, 35, 0.82), rgba(7, 18, 34, 0.95));
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.35);
+    }
+    .cf-mode-title { font-size: 0.84rem; font-weight: 800; color: #f8fafc; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .cf-mode-desc { font-size: 0.73rem; color: #94a3b8; line-height: 1.45; }
+
+    .cf-stat-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 900px) {
+      .cf-stat-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+    .cf-kpi {
+      border-radius: 12px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: #060d1b;
+      padding: 13px 15px;
+      border-left: 4px solid #38bdf8;
+    }
+    .cf-kpi-lbl { font-size: 0.68rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
+    .cf-kpi-val { font-size: 1.24rem; font-weight: 800; color: #f8fafc; margin-top: 4px; }
+    .cf-kpi-sub { font-size: 0.68rem; color: #64748b; margin-top: 3px; }
+
+    .cf-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .cf-col-5 { grid-column: span 5; }
+    .cf-col-7 { grid-column: span 7; }
+    .cf-col-6 { grid-column: span 6; }
+    .cf-col-12 { grid-column: span 12; }
+    @media (max-width: 1040px) {
+      .cf-col-5, .cf-col-7, .cf-col-6 { grid-column: span 12; }
+    }
+
+    .cf-card {
+      border-radius: 14px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: rgba(6, 12, 24, 0.94);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+    .cf-card h2 {
+      margin: 0;
+      font-size: 0.94rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 9px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.95);
+    }
+
+    .cf-thermo-wrap { position: relative; padding: 14px 0 26px; }
+    .cf-thermo-track {
+      width: 100%;
+      height: 18px;
+      border-radius: 999px;
+      background: #0b1324;
+      border: 1px solid rgba(71, 85, 105, 0.85);
+      overflow: hidden;
+      position: relative;
+    }
+    .cf-thermo-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #0ea5e9 0%, #10b981 65%, #a855f7 100%);
+      transition: width 0.35s ease;
+    }
+    .cf-thermo-pins { position: relative; height: 28px; margin-top: 6px; }
+    .cf-pin {
+      position: absolute;
+      transform: translateX(-50%);
+      font-size: 0.66rem;
+      white-space: nowrap;
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .cf-pin.unlocked { color: #6ee7b7; font-weight: 800; }
+
+    label.cf-lbl { display: flex; flex-direction: column; gap: 5px; font-size: 0.72rem; font-weight: 700; color: #cbd5e1; }
+    input.cf-in, select.cf-in {
+      width: 100%;
+      padding: 8px 11px;
+      border-radius: 8px;
+      border: 1px solid rgba(71, 85, 105, 0.85);
+      background: #030813;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      outline: none;
+    }
+    .cf-btn {
+      padding: 9px 13px;
+      border-radius: 9px;
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      background: rgba(14, 165, 233, 0.18);
+      color: #e0f2fe;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .cf-btn:hover { background: rgba(14, 165, 233, 0.3); }
+    .cf-btn-emerald { border-color: rgba(52, 211, 153, 0.65); background: rgba(16, 185, 129, 0.2); color: #d1fae5; }
+    .cf-btn-emerald:hover { background: rgba(16, 185, 129, 0.34); }
+    .cf-btn-amber { border-color: rgba(251, 191, 36, 0.65); background: rgba(245, 158, 11, 0.18); color: #fef3c7; }
+    .cf-btn-rose { border-color: rgba(244, 63, 94, 0.65); background: rgba(225, 29, 72, 0.18); color: #ffe4e6; }
+
+    .cf-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    .cf-table th {
+      text-align: left;
+      padding: 8px 9px;
+      color: #94a3b8;
+      font-size: 0.67rem;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.85);
+    }
+    .cf-table td {
+      padding: 9px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.75);
+      vertical-align: middle;
+    }
+    .cf-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.66rem;
+      font-weight: 800;
+    }
+    .cf-badge-ok { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(52, 211, 153, 0.5); }
+    .cf-badge-lock { background: rgba(71, 85, 105, 0.25); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.45); }
+    .cf-badge-hold { background: rgba(245, 158, 11, 0.2); color: #fde68a; border: 1px solid rgba(251, 191, 36, 0.45); }
+    .cf-badge-void { background: rgba(244, 63, 94, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.45); }
+
+    .cf-codebox {
+      border-radius: 9px;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      background: #030711;
+      padding: 10px 12px;
+      font-size: 0.72rem;
+      color: #bae6fd;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+    .cf-toast {
+      display: none;
+      padding: 9px 12px;
+      border-radius: 9px;
+      font-size: 0.74rem;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: rgba(14, 165, 233, 0.15);
+      color: #e0f2fe;
+    }
+  </style>
+</head>
+<body>
+  <div id="slxUnifiedHeaderMount"></div>
+
+  <div class="cf-wrap">
+    <!-- Hero -->
+    <section class="cf-hero">
+      <div style="max-width:850px;">
+        <div class="cf-pill mono">🚀 Crowdfunding HFS (#26) • All-or-Nothing Escrow + Stretch-Goal Corporate Budget</div>
+        <h1 style="margin:8px 0 6px;font-size:1.52rem;font-weight:900;letter-spacing:-0.02em;">
+          Trustless Hardware Pre-Order Crowdfunding &amp; Ring-Fenced Growth Budget HFS
+        </h1>
+        <p style="margin:0;font-size:0.84rem;color:#cbd5e1;line-height:1.55;">
+          Zero token ICO required &amp; zero platform cut (<code>$0.00</code> L1 gas): choose a <strong>Single Hard-Cap Target</strong> (blocks excess pre-orders; if missed, <strong>no-one is charged</strong>) or <strong>Multi-Tier Stretch Targets</strong> where crossing each milestone automatically unlocks a ring-fenced line item in the company’s codified IFRS growth budget.
+        </p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <a href="/rewards.html" class="cf-btn mono" style="text-decoration:none;">🎁 90-Day SLXR Vouchers →</a>
+          <a href="/accounting.html" class="cf-btn mono" style="text-decoration:none;">📒 IFRS Ledger →</a>
+        </div>
+        <span id="cfStatePill" class="cf-badge cf-badge-ok mono">🟢 CAMPAIGN ACTIVE</span>
+      </div>
+    </section>
+
+    <!-- 3 Campaign Mode Tabs -->
+    <div class="cf-mode-bar">
+      <button type="button" class="cf-mode-tab" data-mode="1">
+        <div class="cf-mode-title mono"><span>1. Single Target • Hard-Cap MOQ</span><span>MODE 1</span></div>
+        <div class="cf-mode-desc">Caps pre-orders strictly at <code>$150,000</code> (never oversells batch capacity). If <code>$150,000</code> is not met by deadline, <strong>no-one is charged</strong> (100% escrow refund &amp; card holds voided).</div>
+      </button>
+      <button type="button" class="cf-mode-tab" data-mode="2">
+        <div class="cf-mode-title mono"><span>2. Single Target • Flexible All-or-Nothing</span><span>MODE 2</span></div>
+        <div class="cf-mode-desc">Requires <code>$150,000</code> minimum (below target = <strong>no-one is charged</strong>), while allowing unlimited pre-orders above target up to per-SKU hardware caps.</div>
+      </button>
+      <button type="button" class="cf-mode-tab active" data-mode="3">
+        <div class="cf-mode-title mono"><span>3. Multi-Tier • Stretch Growth Budget</span><span>MODE 3</span></div>
+        <div class="cf-mode-desc">Crossing <code>$150k → $300k → $600k → $1.0M</code> automatically unlocks codified R&amp;D, FCC/CE cert, SMT CapEx &amp; repeater growth line items in the company’s budget!</div>
+      </button>
+    </div>
+
+    <!-- Live KPI Strip -->
+    <div class="cf-stat-strip mono">
+      <div class="cf-kpi">
+        <div class="cf-kpi-lbl">Total Committed Pre-Orders</div>
+        <div id="kpiCommitted" class="cf-kpi-val">$0</div>
+        <div id="kpiCommittedSub" class="cf-kpi-sub">Base Target: $150,000 (0.0%)</div>
+      </div>
+      <div class="cf-kpi" style="border-left-color:#f59e0b;">
+        <div class="cf-kpi-lbl">Escrow vs. Uncharged Card Holds</div>
+        <div id="kpiRailSplit" class="cf-kpi-val">$0 / $0</div>
+        <div id="kpiRailSub" class="cf-kpi-sub">Card holds charged $0 until target met</div>
+      </div>
+      <div class="cf-kpi" style="border-left-color:#10b981;">
+        <div class="cf-kpi-lbl">Unlocked Growth Budget</div>
+        <div id="kpiBudgetUnlocked" class="cf-kpi-val">$0</div>
+        <div id="kpiBudgetSub" class="cf-kpi-sub">0 / 4 budget tiers unlocked</div>
+      </div>
+      <div class="cf-kpi" style="border-left-color:#a855f7;">
+        <div class="cf-kpi-lbl">Deadline &amp; Backer Count</div>
+        <div id="kpiDeadline" class="cf-kpi-val">Blk #1,200 / #50,000</div>
+        <div id="kpiBackersSub" class="cf-kpi-sub">0 pre-order pledges recorded</div>
+      </div>
+    </div>
+
+    <!-- Milestone Progress Thermometer -->
+    <section class="cf-card">
+      <h2 class="mono">
+        <span style="color:#7dd3fc;">📊 Live Campaign &amp; Stretch-Goal Budget Thermometer</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" id="btnSimWave" class="cf-btn">⚡ Simulate Backer Wave (+$125k)</button>
+          <button type="button" id="btnFinalizeSuccess" class="cf-btn cf-btn-emerald">🏁 Finalize &amp; Capture Holds</button>
+          <button type="button" id="btnSimMissedDeadline" class="cf-btn cf-btn-rose">⏱️ Test Missed Deadline (No-One Charged)</button>
+          <button type="button" id="btnResetCampaign" class="cf-btn">↺ Reset</button>
+        </div>
+      </h2>
+      <div class="cf-thermo-wrap">
+        <div class="cf-thermo-track">
+          <div id="thermoFill" class="cf-thermo-fill" style="width:0%;"></div>
+        </div>
+        <div id="thermoPins" class="cf-thermo-pins mono"></div>
+      </div>
+      <div id="globalToast" class="cf-toast mono"></div>
+    </section>
+
+    <div class="cf-grid">
+      <!-- Left: Hardware Pre-Order Checkout -->
+      <div class="cf-card cf-col-5">
+        <h2 class="mono">
+          <span style="color:#6ee7b7;">1. Backer Hardware Pre-Order</span>
+          <span style="font-size:0.68rem;color:#94a3b8;">Zero Token Required</span>
+        </h2>
+
+        <label class="cf-lbl mono">
+          <span>Select Hardware Reward Tier</span>
+          <select id="selRewardSku" class="cf-in"></select>
+        </label>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <label class="cf-lbl mono">
+            <span>Quantity (Units)</span>
+            <input id="inQty" type="number" min="1" max="2000" value="2" class="cf-in" />
+          </label>
+          <label class="cf-lbl mono">
+            <span>Payment Rail</span>
+            <select id="selPaymentRail" class="cf-in">
+              <option value="oracle_card_hold">💳 Foreign/Local Card Hold ($0 Charged Until Goal Met)</option>
+              <option value="onchain_escrow">⛓️ On-Chain Escrowed Cash (100% Refundable)</option>
+              <option value="ocbc_paynow">🏦 OCBC PayNow Corporate / MEPS+ Hold</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="orderCalcBox" class="cf-codebox mono"></div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" id="btnSubmitPledge" class="cf-btn cf-btn-emerald" style="flex:1;">🚀 Commit Hardware Pre-Order</button>
+          <button type="button" id="btnDownloadVoucher" class="cf-btn">💾 Save Blinded Voucher Key</button>
+        </div>
+
+        <!-- Custom Stretch Tier Adder (Mode 3) -->
+        <details style="margin-top:6px;border-top:1px solid rgba(30,41,59,0.9);padding-top:10px;">
+          <summary class="mono" style="cursor:pointer;font-size:0.75rem;font-weight:700;color:#93c5fd;">
+            ➕ Add Custom Stretch-Goal Budget Line Item (CFO / Founder)
+          </summary>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <label class="cf-lbl mono">
+                <span>Stretch Target (USD)</span>
+                <input id="inNewTierTarget" type="number" value="1500000" class="cf-in" />
+              </label>
+              <label class="cf-lbl mono">
+                <span>Unlocked Budget (USD)</span>
+                <input id="inNewTierAlloc" type="number" value="300000" class="cf-in" />
+              </label>
+            </div>
+            <label class="cf-lbl mono">
+              <span>IFRS Budget Category</span>
+              <select id="selNewTierCat" class="cf-in">
+                <option value="2">6100-RND • Next-Gen ASIC / Firmware Engineering</option>
+                <option value="3">1600-CAPEX • Automated Factory Test &amp; SMT Tooling</option>
+                <option value="4">6300-CERT • Global Aviation / Maritime RF Certs</option>
+                <option value="5">6200-GROWTH • Global Mesh Gateway Seed Fleet</option>
+              </select>
+            </label>
+            <label class="cf-lbl mono">
+              <span>Budget Line-Item Description</span>
+              <input id="inNewTierTitle" value="Custom LR2021 Dual-Band Daughterboard" class="cf-in" />
+            </label>
+            <button type="button" id="btnAddStretchTier" class="cf-btn">➕ Append Stretch-Goal Budget Tier</button>
+          </div>
+        </details>
+      </div>
+
+      <!-- Right: Corporate Growth Budget Table & Governed Disbursement -->
+      <div class="cf-card cf-col-7">
+        <h2 class="mono">
+          <span style="color:#fde68a;">2. Company Growth Budget Ledger (Auto-Unlocked by Stretch Tiers)</span>
+          <span style="font-size:0.68rem;color:#94a3b8;">Ring-Fenced in HFS</span>
+        </h2>
+
+        <div style="overflow-x:auto;">
+          <table class="cf-table mono">
+            <thead>
+              <tr>
+                <th>Tier &amp; Target</th>
+                <th>Corporate Budget Line Item</th>
+                <th>IFRS Code</th>
+                <th>Allocation</th>
+                <th>Disbursed</th>
+                <th>State</th>
+              </tr>
+            </thead>
+            <tbody id="budgetTiersTbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Governed Disbursement Tester -->
+        <div style="border-top:1px solid rgba(30,41,59,0.95);padding-top:12px;display:flex;flex-direction:column;gap:9px;">
+          <div class="mono" style="font-size:0.77rem;font-weight:800;color:#e2e8f0;">
+            🏛️ Governed Corporate Disbursement (<code>disburseUnlockedBudgetLine</code>)
+          </div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;">
+            <label class="cf-lbl mono">
+              <span>Budget Line Item</span>
+              <select id="selDisburseTier" class="cf-in"></select>
+            </label>
+            <label class="cf-lbl mono">
+              <span>Amount (USD)</span>
+              <input id="inDisburseUsd" type="number" value="45000" class="cf-in" />
+            </label>
+            <label class="cf-lbl mono">
+              <span>Vendor Identity (0x…)</span>
+              <input id="inVendorAddr" value="0x8800000000000000000000000000000000000088" class="cf-in" />
+            </label>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button type="button" id="btnDisburseBudget" class="cf-btn cf-btn-amber">💸 Execute Governed Budget Disbursement</button>
+            <span style="font-size:0.7rem;color:#94a3b8;">Locked tiers revert with <code>ERR_BUDGET_TIER_LOCKED (-40)</code>; overspends revert with <code>ERR_BUDGET_LINE_EXCEEDED (-41)</code>.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom: Pledge Ledger & Deterministic HFS Calldata -->
+      <div class="cf-card cf-col-7">
+        <h2 class="mono">
+          <span style="color:#c084fc;">3. Backer Pre-Order Ledger (Refund / Void &amp; Voucher Actions)</span>
+          <span id="pledgeSummaryTag" style="font-size:0.68rem;color:#94a3b8;">0 Pledges</span>
+        </h2>
+        <div style="overflow-x:auto;max-height:290px;">
+          <table class="cf-table mono">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>SKU &amp; Qty</th>
+                <th>Amount</th>
+                <th>Payment Rail</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="pledgesTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="cf-card cf-col-5">
+        <h2 class="mono">
+          <span style="color:#38bdf8;">4. Deterministic HFS Calldata &amp; Live RPC</span>
+          <span style="font-size:0.68rem;color:#94a3b8;">crowdfunding.wasm (25 KB)</span>
+        </h2>
+        <label class="cf-lbl mono">
+          <span>Deployed Crowdfunding HFS Address (Optional Live Node Sync)</span>
+          <div style="display:flex;gap:6px;">
+            <input id="inCrowdfundAddr" value="0xcf000000000000000000000000000000000000cf" class="cf-in" />
+            <button type="button" id="btnSyncLiveRpc" class="cf-btn">📡 Query</button>
+          </div>
+        </label>
+        <div id="lastCalldataBox" class="cf-codebox mono" style="max-height:210px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/crowdfunding.js"></script>
+</body>
+</html>
