@@ -31,7 +31,7 @@
   "webrtcSignal": {
     "contractAddr": "0x95eada4348b88464bc777f38e54070ea82807d64",
     "abiVersion": 2,
-    "label": "Subnet 1 EtherCall v2 Hub (Calls, Discord Channels & Live Broadcasts)"
+    "label": "Subnet 1 LexiCall v2 Hub (Calls, Discord Channels & Live Broadcasts)"
   },
   "battleship": {
     "contractAddr": "0xabb7f6c0ea97ed6f946a51b5d0a944f98226cab1",

@@ -1,5 +1,5 @@
 /**
- * EtherCall v2 — Serverless WebRTC 1:1 Calls, Discord Persistent Channels & P2P Broadcast Stage
+ * LexiCall v2 — Serverless WebRTC 1:1 Calls, Discord Persistent Channels & P2P Broadcast Stage
  * (`app-sources/telephony/app.js`)
  *
  * Pure use-case UI controller: all reusable WebRTC, secp256k1 ECDH + Gzip SDP/ICE envelope codecs,
@@ -424,7 +424,7 @@ async function publishPresenceTx() {
   try {
     if (btn) btn.disabled = true;
     setStatus('Confirming Identity & publishing secp256k1 WebRTC signaling key…');
-    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall WebRTC' });
+    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'LexiCall WebRTC' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
     const labelInput = document.getElementById('inpDisplayLabel')?.value.trim();
     const displayLabel = labelInput || idRec?.nickname || shortAddr(myId);
@@ -764,7 +764,7 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
     document.getElementById('hudCallState').textContent = '🟡 Dialing…';
     setStatus('1/3 Verifying Identity & requesting Camera/Microphone…');
 
-    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall WebRTC' });
+    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'LexiCall WebRTC' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
     if (myId === callee) {
       const selfMsg = 'Cannot dial your own Identity — click 🧪 Loopback Test or open a second browser/device!';
@@ -866,7 +866,7 @@ async function acceptIncomingCallTx(acceptMediaKind) {
     cleanupDirectCallUi('Answering Incoming Call…', `1/3 Opening Call #${callId} Offer & verifying Caller DTLS-SRTP…`);
     document.getElementById('hudCallState').textContent = '🟡 Answering…';
     setStatus(`1/3 Opening Call #${callId} Offer & verifying Caller DTLS-SRTP fingerprint…`);
-    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall WebRTC' });
+    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'LexiCall WebRTC' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
     const myKeys = deriveRtcSignalingKeys(wallet.keypair.privateKey, myId);
 
@@ -1362,7 +1362,7 @@ async function createDiscordChannelTx() {
   }
   try {
     setStatus(`Creating persistent Discord channel "#${rawName}" on Subnet 1…`);
-    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall Channels' });
+    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'LexiCall Channels' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
     const channelKind = Number(document.getElementById('selChannelKind')?.value || RTC_CHANNEL_KIND.VIDEO);
 
@@ -1399,7 +1399,7 @@ async function joinDiscordChannelTx(channelId) {
     if (!targetCh) throw new Error('Channel not found.');
 
     setStatus(`Joining #${targetCh.name}…`);
-    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall Channels' });
+    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'LexiCall Channels' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
 
     const wantVideo = targetCh.channelKind !== RTC_CHANNEL_KIND.VOICE;
@@ -1876,7 +1876,7 @@ async function startLiveBroadcastTx() {
     }
     setStageTab('broadcast');
     setStatus(`Acquiring broadcast source & launching P2P Fanout Tree stream "${title}"…`);
-    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall Broadcast' });
+    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'LexiCall Broadcast' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
     const mediaKind = Number(document.getElementById('selBroadcastMedia')?.value || RTC_MEDIA_KIND.VIDEO);
     const fanoutK = Number(document.getElementById('selBroadcastFanout')?.value || 4);
@@ -1933,7 +1933,7 @@ async function watchBroadcastTx(streamId) {
       'Requesting P2P relay slot from webrtc_signal.wasm (0 camera/mic permissions needed)…';
     setStatus(`Joining Live Broadcast #${streamId}…`);
 
-    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall Broadcast' });
+    const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'LexiCall Broadcast' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
 
     await rtcClient.joinBroadcast({
@@ -2510,7 +2510,7 @@ async function syncState() {
     await reconcileActiveDiscordChannel();
     await reconcileActiveBroadcast();
   } catch (err) {
-    console.warn('[EtherCall v2 syncState]', err);
+    console.warn('[LexiCall v2 syncState]', err);
   } finally {
     syncInFlight = false;
     if (syncQueued) {
@@ -2578,12 +2578,12 @@ async function boot() {
     mountContainer: document.getElementById('slxUnifiedHeaderMount'),
     wallet,
     activeAppId: 'telephony',
-    title: 'EtherCall — Calls, Discord Channels & Broadcasts',
+    title: 'LexiCall — Calls, Discord Channels & Broadcasts',
     subtitle:
       'Halt-Free Signaling v2 (webrtc_signal.wasm) • Persistent Channels • K-ary P2P Broadcast Tree • $0 Gas',
     rpcUrlFn: () => rpcUrl,
     getContractAddr: () => hubAddr || '',
-    getContractLabel: () => 'Subnet 1 EtherCall v2 Hub',
+    getContractLabel: () => 'Subnet 1 LexiCall v2 Hub',
     onWalletSwitch: () => {
       autoPublishedOnce = false;
       syncState();
