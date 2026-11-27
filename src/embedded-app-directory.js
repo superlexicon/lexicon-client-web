@@ -115,11 +115,11 @@ export function mountEmbeddedAppDirectory(
       <div class="slx-ed-top">
         <div style="display:flex;flex-direction:column;gap:3px;max-width:760px;">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:7px;">
-            <span class="slx-ed-mono" style="padding:2px 8px;border-radius:6px;background:#34d399;color:#020617;font-size:.64rem;font-weight:900;text-transform:uppercase;">Zero Backend • Zero DB • Zero EC2</span>
-            <strong style="font-size:.94rem;color:#f8fafc;">Categorized HFS App Store Directory &amp; Personal App Container (<code class="slx-ed-mono" style="font-size:.78rem;color:#6ee7b7;">app_store.wasm</code>)</strong>
+            <span class="slx-ed-mono" style="padding:2px 8px;border-radius:6px;background:#34d399;color:#020617;font-size:.64rem;font-weight:900;text-transform:uppercase;">0 DB • 0 Backend • 0 EC2 • 0 Web Server</span>
+            <strong style="font-size:.94rem;color:#f8fafc;">Live Decentralized App Store &amp; Personal App Container (<code class="slx-ed-mono" style="font-size:.78rem;color:#6ee7b7;">app_store.wasm</code>)</strong>
           </div>
           <div style="font-size:.75rem;color:#cbd5e1;line-height:1.45;">
-            Every SuperLexicon &amp; community-submitted use case runs as a <code class="slx-ed-mono">gzip</code>ped, <code class="slx-ed-mono">keccak256</code>-verified HTML bundle alongside its Halt-Free Subroutine. Click <strong>⬇ Install</strong> to pin apps into your Personal Container &amp; cache their HTML locally for instant loads.
+            Every flagship &amp; authorized-developer app runs from an on-chain <code class="slx-ed-mono">gzip</code>ped, <code class="slx-ed-mono">keccak256</code>-verified UI bundle paired directly with its Halt-Free Subroutine. Click <strong>⬇ Install</strong> to pin apps into your Personal Container &amp; cache their UI locally for instant offline-ready loads.
           </div>
         </div>
         <div style="display:flex;align-items:center;flex-wrap:wrap;gap:7px;">
