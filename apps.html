@@ -300,9 +300,10 @@
       gap: 14px;
     }
     .as-card {
-      border-radius: 15px;
-      border: 1px solid rgba(51, 65, 85, 0.88);
-      background: linear-gradient(180deg, rgba(9, 17, 34, 0.95) 0%, rgba(5, 11, 22, 0.96) 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(18, 27, 46, 0.78);
+      backdrop-filter: blur(16px);
       padding: 17px 18px;
       display: flex;
       flex-direction: column;
@@ -311,9 +312,9 @@
       transition: border-color 0.16s ease, transform 0.14s ease, box-shadow 0.16s ease;
     }
     .as-card:hover {
-      border-color: rgba(56, 189, 248, 0.68);
+      border-color: rgba(10, 132, 255, 0.52);
       transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.42);
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.38);
     }
     .as-card-create {
       border: 1px dashed rgba(52, 211, 153, 0.6);
@@ -321,15 +322,15 @@
       align-items: flex-start;
     }
     .as-app-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: rgba(14, 165, 233, 0.14);
-      border: 1px solid rgba(56, 189, 248, 0.35);
+      width: 50px;
+      height: 50px;
+      border-radius: 13px;
+      background: linear-gradient(145deg, #38bdf8 0%, #2563eb 60%, #4f46e5 100%);
+      box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, 0.42), inset 0 -1.5px 2px rgba(0, 0, 0, 0.22), 0 6px 14px rgba(2, 6, 23, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.35rem;
+      font-size: 1.45rem;
       flex-shrink: 0;
     }
     .as-badge {

@@ -49,6 +49,22 @@ mountSlxUnifiedHeader({
   subtitle: 'Zero Backend • Zero Database • Zero EC2 • On-Chain WASM + Gzipped HTML Bundles',
 });
 
+const ICON_GRADIENTS_BY_SLUG = {
+  telephony: 'linear-gradient(145deg, #38bdf8 0%, #2563eb 55%, #4f46e5 100%)',
+  accounting: 'linear-gradient(145deg, #34d399 0%, #059669 55%, #0f766e 100%)',
+  charter: 'linear-gradient(145deg, #818cf8 0%, #4f46e5 58%, #312e81 100%)',
+  dex: 'linear-gradient(145deg, #a78bfa 0%, #7c3aed 56%, #4c1d95 100%)',
+  commerce: 'linear-gradient(145deg, #fbbf24 0%, #d97706 58%, #9a3412 100%)',
+  crowdfunding: 'linear-gradient(145deg, #fb7185 0%, #e11d48 58%, #9f1239 100%)',
+  rewards: 'linear-gradient(145deg, #facc15 0%, #ca8a04 58%, #854d0e 100%)',
+  ballot: 'linear-gradient(145deg, #2dd4bf 0%, #0d9488 58%, #115e59 100%)',
+  social: 'linear-gradient(145deg, #22d3ee 0%, #0284c7 58%, #075985 100%)',
+  battleship: 'linear-gradient(145deg, #38bdf8 0%, #0369a1 54%, #0f172a 100%)',
+  'cipher-noir': 'linear-gradient(145deg, #c084fc 0%, #7e22ce 55%, #1e1b4b 100%)',
+  hegemony: 'linear-gradient(145deg, #f43f5e 0%, #be123c 55%, #4c0519 100%)',
+  lottery: 'linear-gradient(145deg, #fbbf24 0%, #f97316 58%, #c2410c 100%)',
+};
+
 const WASM_LABELS_BY_SLUG = {
   accounting: 'accounting_ledger.wasm + confidential_ledger.wasm',
   charter: 'corporate_charter.wasm + share_capital.wasm',
@@ -425,7 +441,7 @@ function renderSingleAppCardHtml(a) {
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
           <div style="display:flex;align-items:center;gap:11px;min-width:0;">
-            <div class="as-app-icon">${a.icon || '🧩'}</div>
+            <div class="as-app-icon" style="${ICON_GRADIENTS_BY_SLUG[a.slug] ? `background:${ICON_GRADIENTS_BY_SLUG[a.slug]};` : ''}">${a.icon || '🧩'}</div>
             <div style="min-width:0;">
               <div style="font-size:0.95rem;font-weight:800;color:#f8fafc;line-height:1.25;">${String(a.title).replace(/</g, '&lt;')}</div>
               <div class="mono" style="font-size:0.66rem;color:#94a3b8;margin-top:2px;">
