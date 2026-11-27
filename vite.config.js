@@ -1,8 +1,19 @@
 import { defineConfig } from 'vite';
+import { readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = import.meta.dirname || fileURLToPath(new URL('.', import.meta.url));
+
+function discoverHtmlInputs(dir) {
+  const inputs = {};
+  for (const name of readdirSync(dir)) {
+    if (!name.endsWith('.html')) continue;
+    const key = name === 'index.html' ? 'main' : name.slice(0, -5);
+    inputs[key] = resolve(dir, name);
+  }
+  return inputs;
+}
 
 export default defineConfig({
   define: {
@@ -30,25 +41,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      input: {
-        main: resolve(rootDir, 'index.html'),
-        apps: resolve(rootDir, 'apps.html'),
-        explorer: resolve(rootDir, 'explorer.html'),
-        battleship: resolve(rootDir, 'battleship.html'),
-        social: resolve(rootDir, 'social.html'),
-        dex: resolve(rootDir, 'dex.html'),
-        charter: resolve(rootDir, 'charter.html'),
-        commerce: resolve(rootDir, 'commerce.html'),
-        hegemony: resolve(rootDir, 'hegemony.html'),
-        cipherNoir: resolve(rootDir, 'cipher-noir.html'),
-        lottery: resolve(rootDir, 'lottery.html'),
-        ballot: resolve(rootDir, 'ballot.html'),
-        accounting: resolve(rootDir, 'accounting.html'),
-        rewards: resolve(rootDir, 'rewards.html'),
-        crowdfunding: resolve(rootDir, 'crowdfunding.html'),
-        telephony: resolve(rootDir, 'telephony.html'),
-        volatileVoles: resolve(rootDir, 'volatile-voles.html'),
-      },
+      input: discoverHtmlInputs(rootDir),
     },
   },
   server: {
