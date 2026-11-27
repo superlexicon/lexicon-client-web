@@ -259,34 +259,90 @@ async function ensureLocalStream(mediaKind = RTC_MEDIA_KIND.VIDEO, { allowSynthe
   return localStream;
 }
 
+let activePeerDisplayName = '';
+
+function maybeRevealRemoteVideo() {
+  const rv = document.getElementById('remoteVideo');
+  const overlay = document.getElementById('stageCenterOverlay');
+  if (!rv || !overlay) return;
+  const activeSess = peerSession || loopbackHandle?.callerSession;
+  const pc = activeSess?.pc;
+  const iceLive =
+    pc?.connectionState === 'connected' ||
+    pc?.iceConnectionState === 'connected' ||
+    pc?.iceConnectionState === 'completed';
+  const hasActiveVideoTrack = Boolean(
+    activeSess?.remoteStream?.getVideoTracks?.().some((t) => t.readyState === 'live' && !t.muted)
+  );
+  if (rv.videoWidth > 0 || (iceLive && hasActiveVideoTrack)) {
+    overlay.classList.add('hidden');
+  }
+}
+
 function bindRemoteVideoStream(remStream) {
   const rv = document.getElementById('remoteVideo');
   const unmuteBtn = document.getElementById('btnUnmuteRemote');
   if (!rv || !remStream) return;
 
-  const hasLiveVideo = remStream.getVideoTracks().length > 0;
-  if (hasLiveVideo) {
-    document.getElementById('stageCenterOverlay').classList.add('hidden');
-  }
+  rv.onresize = () => maybeRevealRemoteVideo();
+  rv.onloadeddata = () => maybeRevealRemoteVideo();
   attachStreamToVideoElement(rv, remStream, {
     muted: false,
     onAutoplayMuted: () => {
       if (unmuteBtn) unmuteBtn.style.display = 'inline-flex';
     },
+  }).then(() => {
+    maybeRevealRemoteVideo();
   });
 }
 
-function handlePeerConnectionState({ connectionState, iceConnectionState }) {
-  const stateLabel = connectionState || iceConnectionState || 'connecting';
-  document.getElementById('hudCallState').textContent =
-    stateLabel === 'connected' ? `🟢 Connected (P2P)` : `🟡 ${stateLabel}`;
+function syncLiveConnectionBadges({ connectionState, iceConnectionState } = {}) {
+  const pc = peerSession?.pc;
+  const conn = connectionState || pc?.connectionState || '';
+  const ice = iceConnectionState || pc?.iceConnectionState || '';
+  const isConnected =
+    conn === 'connected' || ice === 'connected' || ice === 'completed';
+  const isFailed = conn === 'failed' || ice === 'failed';
+  const peerTxt = activePeerDisplayName || 'Peer';
 
-  if (iceConnectionState === 'failed' || connectionState === 'failed') {
+  if (isConnected) {
+    document.getElementById('hudCallState').textContent = '🟢 Connected (P2P)';
+    document.getElementById('stageHeadline').textContent = `Connected with ${peerTxt}`;
+    document.getElementById('stageSubline').textContent =
+      activeCallMeta?.mediaKind === RTC_MEDIA_KIND.VOICE
+        ? '🎙️ Encrypted P2P DTLS-SRTP Voice Call Live'
+        : '📹 Direct P2P DTLS-SRTP Video & Audio Live';
+    maybeRevealRemoteVideo();
+    return;
+  }
+
+  if (isFailed) {
+    document.getElementById('hudCallState').textContent = '🔴 NAT / Firewall Blocked';
+    document.getElementById('stageCenterOverlay')?.classList.remove('hidden');
+    document.getElementById('stageHeadline').textContent = '⚠️ Direct P2P Path Blocked by NAT';
+    document.getElementById('stageSubline').textContent =
+      'Connect both devices to Wi-Fi, or add a TURN relay under "🌐 Optional Custom TURN / NAT Relay" on the left.';
     setStatus(
-      '⚠️ Direct P2P UDP path blocked by symmetric NAT/firewall. Open "🌐 Optional Custom TURN / NAT Relay" on the left or connect on the same Wi-Fi/VPN.',
+      '⚠️ Direct P2P UDP path blocked by symmetric NAT/firewall (e.g. 5G CGNAT). Connect on Wi-Fi or configure a TURN relay on the left.',
       true
     );
+    return;
   }
+
+  if (answerApplied && activeCallId) {
+    document.getElementById('hudCallState').textContent = `🟡 Handshaking ICE (#${activeCallId})…`;
+    document.getElementById('stageHeadline').textContent = `Connecting P2P Media with ${peerTxt}…`;
+    document.getElementById('stageSubline').textContent =
+      'DTLS-SRTP verified on Subnet 1 — negotiating direct UDP/STUN media path…';
+  } else if (activeCallId && !answerApplied) {
+    document.getElementById('hudCallState').textContent = `🔔 Ringing #${activeCallId}`;
+  } else if (conn || ice) {
+    document.getElementById('hudCallState').textContent = `🟡 ${conn || ice}`;
+  }
+}
+
+function handlePeerConnectionState(stateObj) {
+  syncLiveConnectionBadges(stateObj);
 }
 
 function startStatsLoop() {
@@ -299,10 +355,10 @@ function startStatsLoop() {
     const activeSess = peerSession || loopbackHandle?.callerSession;
     if (!activeSess) return;
 
+    const elapsedSec = callConnectedAt > 0 ? Math.max(0, Math.floor((Date.now() - callConnectedAt) / 1000)) : 0;
     if (callConnectedAt > 0 && timerEl) {
-      const sec = Math.max(0, Math.floor((Date.now() - callConnectedAt) / 1000));
-      const mm = String(Math.floor(sec / 60)).padStart(2, '0');
-      const ss = String(sec % 60).padStart(2, '0');
+      const mm = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+      const ss = String(elapsedSec % 60).padStart(2, '0');
       timerEl.textContent = `${mm}:${ss}`;
     }
 
@@ -313,6 +369,25 @@ function startStatsLoop() {
     document.getElementById('hudRtcStats').textContent =
       `⚡ ${rttTxt} • ${st.localCandidateType}/${st.protocol} • ↑ ${kbUp} KB ↓ ${kbDown} KB`;
 
+    maybeRevealRemoteVideo();
+    if (!loopbackHandle) {
+      syncLiveConnectionBadges({
+        connectionState: st.connectionState,
+        iceConnectionState: st.iceConnectionState,
+      });
+      if (
+        answerApplied &&
+        elapsedSec >= 12 &&
+        st.connectionState !== 'connected' &&
+        st.iceConnectionState !== 'connected' &&
+        st.iceConnectionState !== 'completed' &&
+        st.bytesReceived === 0
+      ) {
+        document.getElementById('stageSubline').textContent =
+          'Still probing UDP… If one device is on 4G/5G cellular (CGNAT), switch to Wi-Fi or add a TURN relay on the left.';
+      }
+    }
+
     const dc = activeSess.dataChannel;
     const dcBadge = document.getElementById('dcStateBadge');
     if (dcBadge) {
@@ -320,7 +395,7 @@ function startStatsLoop() {
       dcBadge.textContent = open ? '🟢 P2P Open (0ms)' : st.connectionState;
       dcBadge.className = `ec-pill-mini${open ? ' online' : ''}`;
     }
-  }, 1200);
+  }, 1000);
 }
 
 function stopStatsLoop() {
@@ -349,6 +424,7 @@ function cleanupDirectCallUi(headline = 'Serverless WebRTC Ready', subline = '')
   }
   activeCallId = 0;
   activeCallMeta = null;
+  activePeerDisplayName = '';
   appliedCallerIceBatches = 0;
   appliedCalleeIceBatches = 0;
   answerApplied = false;
@@ -357,6 +433,9 @@ function cleanupDirectCallUi(headline = 'Serverless WebRTC Ready', subline = '')
 
   const rv = document.getElementById('remoteVideo');
   if (rv) {
+    rv.onresize = null;
+    rv.onloadeddata = null;
+    rv._slxAutoplayMuted = false;
     rv.srcObject = null;
     rv._slxTrackSig = '';
   }
@@ -636,6 +715,7 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
     peerSession.enableTrickleDispatch();
 
     const peerName = await resolveDisplayName(callee);
+    activePeerDisplayName = peerName;
     document.getElementById('hudCallState').textContent = `🔔 Ringing #${callId}`;
     document.getElementById('stageHeadline').textContent = `Calling ${peerName}…`;
     document.getElementById('stageSubline').textContent =
@@ -764,16 +844,14 @@ async function acceptIncomingCallTx(acceptMediaKind) {
 
     activeCallId = callId;
     activeCallMeta = session;
+    activePeerDisplayName = await resolveDisplayName(session.caller);
     answerApplied = true;
     ringingCallMeta = null;
     peerSession.enableTrickleDispatch();
 
-    document.getElementById('hudCallState').textContent = `🟢 Call #${callId} Active`;
     document.getElementById('hudDtlsBadge').style.display = 'inline-flex';
     document.getElementById('btnHangup').disabled = false;
-    document.getElementById('stageHeadline').textContent =
-      `Connected with ${await resolveDisplayName(session.caller)}`;
-    document.getElementById('stageSubline').textContent = 'Negotiating Direct P2P DTLS-SRTP Media…';
+    syncLiveConnectionBadges();
 
     updateInspector({
       envelopeLabel: `${sealedAnswer.rawJsonBytes} B → ${sealedAnswer.wireBytes} B (${answerBundle.candidates.length} ICE)`,
@@ -858,20 +936,17 @@ async function reconcileActiveDirectCall() {
       await peerSession.applyBundledAnswer(openedAns.payload, sess.calleeDtlsFp);
       answerApplied = true;
       const calleeName = await resolveDisplayName(sess.callee);
-      document.getElementById('hudCallState').textContent = `🟢 Call #${sess.callId} Active`;
+      activePeerDisplayName = calleeName;
+      callConnectedAt = Date.now();
       document.getElementById('hudDtlsBadge').style.display = 'inline-flex';
-      document.getElementById('stageHeadline').textContent = `Connected with ${calleeName}`;
-      document.getElementById('stageSubline').textContent =
-        sess.mediaKind === RTC_MEDIA_KIND.VOICE
-          ? '🎙️ Encrypted P2P DTLS-SRTP Voice Call Active'
-          : '📹 Direct P2P DTLS-SRTP Video & Audio Active';
+      syncLiveConnectionBadges();
       updateInspector({
         callerFp: sess.callerDtlsFp,
         calleeFp: sess.calleeDtlsFp,
         mitmStatus: '✅ Verified (Zero-CA Match)',
         mitmOk: true,
       });
-      setStatus(`🟢 ${calleeName} accepted Call #${sess.callId} — P2P DTLS-SRTP media live!`);
+      setStatus(`🟢 ${calleeName} answered Call #${sess.callId} — completing P2P DTLS-SRTP handshake!`);
     }
   }
 
@@ -1346,6 +1421,7 @@ async function boot() {
   document.getElementById('btnUnmuteRemote')?.addEventListener('click', () => {
     const rv = document.getElementById('remoteVideo');
     if (rv) {
+      rv._slxAutoplayMuted = false;
       rv.muted = false;
       rv.play().catch(() => {});
     }
