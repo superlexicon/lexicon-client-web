@@ -598,6 +598,14 @@
         <div id="heroDevGateBadge" class="mono" style="padding:7px 10px;border-radius:9px;background:rgba(15,23,42,0.88);border:1px solid rgba(56,189,248,0.35);font-size:0.66rem;line-height:1.45;color:#cbd5e1;">
           🔒 <strong>Web RPC Publish Gate:</strong> Requires <code>Superlexicon · Developers</code> group membership (or direct <code>LR2021</code> RF hardware).
         </div>
+        <div class="mono" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:0.65rem;color:#94a3b8;padding-top:1px;">
+          <span style="color:#6ee7b7;font-weight:800;">GitHub:</span>
+          <a href="https://github.com/superlexicon/haltproof-subroutines" target="_blank" rel="noopener" style="color:#7dd3fc;text-decoration:none;">haltproof-subroutines ↗</a>
+          <span>•</span>
+          <a href="https://github.com/superlexicon/lexicon-js-sdk" target="_blank" rel="noopener" style="color:#7dd3fc;text-decoration:none;">lexicon-js-sdk ↗</a>
+          <span>•</span>
+          <a href="https://github.com/superlexicon/lexicon-bin" target="_blank" rel="noopener" style="color:#7dd3fc;text-decoration:none;">lexicon-bin ↗</a>
+        </div>
       </div>
     </section>
 
@@ -658,7 +666,7 @@
       <div class="as-guide-grid">
         <div class="as-step-card">
           <div class="mono" style="font-size:0.7rem;color:#7dd3fc;font-weight:800;">STEP 1 • YOUR DATABASE &amp; BACKEND</div>
-          <strong style="font-size:0.84rem;">Write a Rust HFS (<code>.wasm</code>) — or Use Host State</strong>
+          <strong style="font-size:0.84rem;">Write a Rust HFS (<code>.wasm</code>) — <a href="https://github.com/superlexicon/haltproof-subroutines" target="_blank" rel="noopener" style="color:#38bdf8;">haltproof-subroutines ↗</a></strong>
           <div style="font-size:0.73rem;color:#cbd5e1;line-height:1.45;">
             Instead of spinning up an EC2 server and a Postgres database, write `#![no_std]` Rust handlers using `hps_sdk::storage`:
           </div>
@@ -677,7 +685,7 @@ fn handle_post(r: &amp;CalldataReader) -&gt; Result&lt;(), i32&gt; {
 
         <div class="as-step-card">
           <div class="mono" style="font-size:0.7rem;color:#6ee7b7;font-weight:800;">STEP 2 • YOUR FRONTEND UI</div>
-          <strong style="font-size:0.84rem;">Single-File HTML Calling <code>window.slx</code></strong>
+          <strong style="font-size:0.84rem;">HTML/JS Calling <code>window.slx</code> — <a href="https://github.com/superlexicon/lexicon-js-sdk" target="_blank" rel="noopener" style="color:#6ee7b7;">lexicon-js-sdk ↗</a></strong>
           <div style="font-size:0.73rem;color:#cbd5e1;line-height:1.45;">
             No npm build servers, Auth0 SDKs, or RPC keys needed. Every sandboxed app automatically receives <code>window.slx</code>:
           </div>
@@ -697,9 +705,9 @@ await window.slx.sendTransaction({
 
         <div class="as-step-card">
           <div class="mono" style="font-size:0.7rem;color:#fde68a;font-weight:800;">STEP 3 • BUILD .HTML.GZ &amp; UPLOAD</div>
-          <strong style="font-size:0.84rem;">Bundle via <code>cargo-hps</code> &amp; Seal On-Chain</strong>
+          <strong style="font-size:0.84rem;">Bundle via <code>cargo-hps</code> &amp; Test on <a href="https://github.com/superlexicon/lexicon-bin" target="_blank" rel="noopener" style="color:#fde68a;">lexicon-bin ↗</a></strong>
           <div style="font-size:0.73rem;color:#cbd5e1;line-height:1.45;">
-            Package a deterministic <code>.html.gz</code> archive locally in <code>haltproof-subroutines</code>, then drag-and-drop your <code>dist/</code> release into <strong>➕ Submit Release</strong>:
+            Package a deterministic <code>.html.gz</code> archive locally in <a href="https://github.com/superlexicon/haltproof-subroutines" target="_blank" rel="noopener" style="color:#7dd3fc;">haltproof-subroutines</a>, then drag-and-drop your <code>dist/</code> release into <strong>➕ Submit App Release</strong>:
           </div>
           <pre class="as-code-snippet mono">$ cargo hps new my-app --with-ui
 $ ./scripts/build-app-bundle.sh ./my-app
@@ -902,13 +910,17 @@ $ ./scripts/build-app-bundle.sh ./my-app
           </div>
 
           <div style="padding:11px 13px;border-radius:10px;background:#030711;border:1px solid rgba(51,65,85,0.85);display:flex;flex-direction:column;gap:5px;">
-            <div class="mono" style="font-size:0.68rem;color:#7dd3fc;font-weight:800;">BUILD IN <code>haltproof-subroutines</code> REPOSITORY:</div>
-            <pre id="preStudioCliRecipe" class="as-code-snippet mono" style="margin:0;">cargo hps new my-app --with-ui
+            <div class="mono" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;font-size:0.68rem;color:#7dd3fc;font-weight:800;">
+              <span>BUILD WITH <a href="https://github.com/superlexicon/haltproof-subroutines" target="_blank" rel="noopener" style="color:#6ee7b7;text-decoration:underline;">github.com/superlexicon/haltproof-subroutines ↗</a></span>
+              <span style="display:inline-flex;gap:8px;font-weight:700;">
+                <a href="https://github.com/superlexicon/lexicon-js-sdk" target="_blank" rel="noopener" style="color:#bae6fd;text-decoration:none;">JS SDK ↗</a>
+                <a href="https://github.com/superlexicon/lexicon-client-web" target="_blank" rel="noopener" style="color:#bae6fd;text-decoration:none;">Reference UIs ↗</a>
+              </span>
+            </div>
+            <pre id="preStudioCliRecipe" class="as-code-snippet mono" style="margin:0;">git clone https://github.com/superlexicon/haltproof-subroutines.git &amp;&amp; cd haltproof-subroutines
+cargo run -p cargo-hps -- new my-app --with-ui
 ./scripts/build-app-bundle.sh ./my-app
-# Outputs in ./my-app/dist/:
-#   my-app.html.gz        (deterministic mtime=0 gzip UI archive)
-#   my_app.wasm           (stripped #![no_std] HFS subroutine)
-#   my-app.manifest.json  (auto-fills listing metadata &amp; hashes)</pre>
+# Outputs in ./my-app/dist/: my-app.html.gz + my_app.wasm + my-app.manifest.json</pre>
           </div>
 
           <!-- Unified Drag & Drop Release Dropzone -->

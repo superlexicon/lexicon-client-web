@@ -719,7 +719,8 @@ export function mountEmbeddedAppDirectory(
           <a href="/apps.html?create=1" class="slx-store-submit-btn">＋ Submit App</a>
           <div style="display:flex;justify-content:space-between;padding-top:2px;font-size:11px;">
             <a href="/apps.html" style="color:var(--st-nav-active-text);text-decoration:none;font-weight:600;">Full Store ↗</a>
-            <button type="button" data-ed="archBtn" style="background:none;border:none;padding:0;color:var(--st-muted);font-size:11px;font-weight:600;cursor:pointer;">How It Works</button>
+            <a href="https://github.com/superlexicon/haltproof-subroutines" target="_blank" rel="noopener" style="color:var(--st-nav-active-text);text-decoration:none;font-weight:600;" title="Build .wasm HFS &amp; .html.gz bundles with cargo-hps">HFS Repo ↗</a>
+            <button type="button" data-ed="archBtn" style="background:none;border:none;padding:0;color:var(--st-muted);font-size:11px;font-weight:600;cursor:pointer;">Spec</button>
           </div>
         </div>
       </aside>
@@ -731,7 +732,8 @@ export function mountEmbeddedAppDirectory(
             <div class="slx-store-heading" data-ed="heading">Discover</div>
             <div class="slx-store-sub" data-ed="subheading">On-chain apps served directly from your local node — zero databases, zero EC2, zero web servers.</div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <a href="https://github.com/superlexicon" target="_blank" rel="noopener" class="slx-pill-get" style="text-decoration:none;" title="Explore all 8 public SuperLexicon repositories on GitHub">GitHub ↗</a>
             <a href="/apps.html" class="slx-pill-get" style="text-decoration:none;">Open App Center ↗</a>
           </div>
         </div>
