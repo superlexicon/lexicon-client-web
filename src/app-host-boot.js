@@ -8,6 +8,7 @@
 
 import {
   AppStoreClient,
+  SlxPersonalAppContainer,
   SlxUiBundleCache,
   ZERO_BYTES32,
   getDefaultNodeWsUrl,
@@ -66,7 +67,8 @@ async function bootHostStub() {
   `;
 
   try {
-    const appMeta = await resolveEffectiveAppMeta(slug, storeClient);
+    const pinnedInstalled = SlxPersonalAppContainer.getInstalled(slug);
+    const appMeta = pinnedInstalled || (await resolveEffectiveAppMeta(slug, storeClient));
     if (!appMeta) {
       throw new Error(`App "${slug}" was not found in AppStore HFS or genesis catalog.`);
     }
@@ -79,6 +81,9 @@ async function bootHostStub() {
     });
 
     await mountVerifiedHostAppBundle({ appMeta, verifiedBundle });
+    if (pinnedInstalled) {
+      revalidateMountedAppInBackground(slug, appMeta.uiHash, storeClient);
+    }
   } catch (err) {
     document.body.innerHTML = `
       <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#050a14;color:#fecdd3;font-family:'JetBrains Mono',monospace;">

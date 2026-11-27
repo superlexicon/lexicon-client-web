@@ -174,24 +174,31 @@ export function resolveFastCachedAppMeta(slug) {
     (cachedManifest?.apps || []).find((a) => String(a.slug || '').toLowerCase() === cleanSlug) ||
     null;
   const installed = sdk.SlxPersonalAppContainer.getInstalled(cleanSlug);
+  if (installed) {
+    const pinned = {
+      ...(base || {}),
+      ...installed,
+    };
+    if (
+      base &&
+      pinned.uiHash &&
+      base.uiHash &&
+      pinned.uiHash.toLowerCase() !== base.uiHash.toLowerCase()
+    ) {
+      pinned.bundleUrl = '';
+    }
+    return pinned;
+  }
+
   const localOverrides = sdk
     .loadLocalPublishedApps()
     .find((a) => String(a.slug || '').toLowerCase() === cleanSlug);
 
-  if (!base && !installed && !localOverrides) return null;
-  // For system core apps, prefer freshly synced genesis `base` over older Personal Container pins
-  // unless an explicit local Studio override exists.
-  const merged = base?.isSystemCore
-    ? {
-        ...(installed || {}),
-        ...base,
-        ...(localOverrides || {}),
-      }
-    : {
-        ...(base || {}),
-        ...(installed || {}),
-        ...(localOverrides || {}),
-      };
+  if (!base && !localOverrides) return null;
+  const merged = {
+    ...(base || {}),
+    ...(localOverrides || {}),
+  };
   if (base && merged.uiHash && base.uiHash && merged.uiHash.toLowerCase() !== base.uiHash.toLowerCase()) {
     merged.bundleUrl = '';
   }
@@ -199,40 +206,69 @@ export function resolveFastCachedAppMeta(slug) {
 }
 
 /**
- * Background stale-while-revalidate check after an app boots from local HTML cache.
- * If a newer `uiHash` was published on-chain or in `/app-bundles/manifest.json`, pre-fetches and
- * caches the new verified HTML in the background and surfaces a 1-click reload prompt.
+ * Background update check after an app boots.
+ * Never silently overwrites a user's pinned installed version — instead records `availableUpdate`
+ * and renders an explicit opt-in "🔄 Update to vX.Y.Z" button so the user decides if/when to update.
  */
 export async function revalidateMountedAppInBackground(slug, mountedUiHash, storeClient) {
   try {
     await loadGenesisAppCatalog({ forceNetwork: true });
     const latest = await resolveEffectiveAppMeta(slug, storeClient);
     if (!latest?.uiHash) return;
+
+    if (sdk.SlxPersonalAppContainer.isInstalled(slug)) {
+      sdk.SlxPersonalAppContainer.syncCatalogMetadata([latest]);
+    }
+
     const cleanMounted = String(mountedUiHash || '').toLowerCase();
     const cleanLatest = String(latest.uiHash || '').toLowerCase();
-    if (!cleanLatest || cleanLatest === sdk.ZERO_BYTES32 || cleanLatest === cleanMounted) {
+    const pendingInstUpd = sdk.SlxPersonalAppContainer.getPendingUpdate(slug);
+    const hasDiff =
+      Boolean(pendingInstUpd) ||
+      (cleanLatest && cleanLatest !== sdk.ZERO_BYTES32 && cleanLatest !== cleanMounted);
+    if (!hasDiff) {
       return;
     }
-    if (storeClient) {
-      await storeClient.fetchVerifiedBundleHtml({
-        uiHash: latest.uiHash,
-        fallbackBundleUrl: latest.bundleUrl || '',
-        slug: latest.slug,
-        title: latest.title,
-      });
-    }
-    if (sdk.SlxPersonalAppContainer.isInstalled(slug)) {
-      await sdk.SlxPersonalAppContainer.installApp(latest, { storeClient, cacheHtml: false });
-    }
+
     const pill = document.getElementById('slxBundleVerifiedPill');
     if (pill && !pill.querySelector('[data-slx-reload-update]')) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.setAttribute('data-slx-reload-update', '1');
       btn.style.cssText =
-        'padding:2px 7px;border-radius:999px;border:1px solid rgba(52,211,153,0.75);background:rgba(16,185,129,0.28);color:#ecfdf5;font-family:inherit;font-size:10px;font-weight:800;cursor:pointer;';
-      btn.textContent = `🔄 Update v${latest.version || 'New'} Cached — Reload`;
-      btn.onclick = () => window.location.reload();
+        'padding:2px 8px;border-radius:999px;border:1px solid rgba(251,191,36,0.85);background:rgba(245,158,11,0.26);color:#fef3c7;font-family:inherit;font-size:10px;font-weight:800;cursor:pointer;';
+      const scopeParts = [
+        pendingInstUpd?.hasNewUi ?? cleanLatest !== cleanMounted ? 'UI' : '',
+        pendingInstUpd?.hasNewWasm ? 'WASM' : '',
+        pendingInstUpd?.hasNewHfsInstance ? 'HFS' : '',
+      ].filter(Boolean);
+      const scopeTag = scopeParts.length ? ` (${scopeParts.join('+')})` : '';
+      btn.textContent = `🔄 Update to v${latest.version || 'New'}${scopeTag}`;
+      btn.title = 'Click to verify, cache, and apply this update';
+      btn.onclick = async () => {
+        btn.disabled = true;
+        btn.textContent = '⏳ Verifying Update…';
+        try {
+          if (sdk.SlxPersonalAppContainer.isInstalled(slug)) {
+            await sdk.SlxPersonalAppContainer.updateApp(slug, {
+              storeClient,
+              latestMeta: latest,
+            });
+          } else if (storeClient) {
+            await storeClient.fetchVerifiedBundleHtml({
+              uiHash: latest.uiHash,
+              fallbackBundleUrl: latest.bundleUrl || '',
+              slug: latest.slug,
+              title: latest.title,
+            });
+          }
+          window.location.reload();
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = `⚠ Retry Update`;
+          btn.title = String(err.message || err);
+        }
+      };
       pill.appendChild(btn);
     }
   } catch (_) {}

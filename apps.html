@@ -724,16 +724,21 @@ $ ./scripts/build-app-bundle.sh ./my-app
     <div class="as-tabs">
       <div class="as-tab-group">
         <button type="button" class="as-tab active" data-view="catalog">🏪 Categorized Directory (<span id="lblAppCount">15</span>)</button>
-        <button type="button" class="as-tab" data-view="installed">📦 My App Container (<span id="lblInstalledCount">0</span>)</button>
+        <button type="button" class="as-tab" data-view="installed">
+          📦 My App Container (<span id="lblInstalledCount">0</span>)<span id="lblPendingUpdatesPill" style="display:none;margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(245,158,11,0.28);border:1px solid rgba(251,191,36,0.8);color:#fde68a;font-size:0.66rem;font-weight:800;">🔄 0 Updates</span>
+        </button>
         <button type="button" class="as-tab" data-view="runner">▶️ Live Sandbox Runner</button>
-        <button type="button" class="as-tab" data-view="studio">➕ Submit App Release</button>
+        <button type="button" class="as-tab" data-view="studio">➕ Submit / Update Release</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <button type="button" id="btnToolbarUpdateAll" class="as-btn as-btn-amber" style="display:none;">
+          🔄 Update All (<span id="lblToolbarUpdateCount">0</span>)
+        </button>
         <button type="button" id="btnCacheStatusJump" class="as-btn mono" title="Inspect locally cached App Store HTML bundles &amp; Personal App Container">
           ⚡ <span id="lblCachedBadge">0 HTMLs cached</span>
         </button>
         <button type="button" id="btnToolbarCreateApp" class="as-btn as-btn-emerald">
-          ➕ Submit App Release
+          ➕ Submit / Update Release
         </button>
       </div>
     </div>
@@ -788,6 +793,7 @@ $ ./scripts/build-app-bundle.sh ./my-app
             <span class="as-badge as-badge-sky" title="Opaque-origin iframe sandbox: zero access to parent localStorage or private keys">🛡️ Zero-Trust Sandbox • 0 Backend</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+            <button type="button" id="btnRunnerUpdateApp" class="as-btn as-btn-amber" style="padding:5px 9px;font-size:0.67rem;display:none;">🔄 Update Available</button>
             <button type="button" id="btnRunnerWhitelist" class="as-btn as-btn-emerald" style="padding:5px 9px;font-size:0.67rem;">✓ Whitelist HFS</button>
             <button type="button" id="btnRunnerFork" class="as-btn as-btn-amber" style="padding:5px 9px;font-size:0.67rem;">📦 Inspect / Update Release</button>
             <a id="lnkRunnerStandalone" href="#" class="as-btn" style="padding:5px 9px;font-size:0.67rem;display:none;">↗ Open Full Page</a>
@@ -882,19 +888,25 @@ $ ./scripts/build-app-bundle.sh ./my-app
           </label>
 
           <label class="as-lbl mono">
+            <span>HFS Backend Deployment / Upgrade Mode</span>
+            <select id="selStudioHfsMode" class="as-in">
+              <option value="keep" selected>🔗 Keep Current HFS Contract / Shared Host State (UI Update)</option>
+              <option value="deploy_new">🚀 Deploy Fresh HFS Contract From Uploaded .wasm / codeHash</option>
+              <option value="bind_custom">📌 Bind Pre-Deployed Custom HFS Instance Address (0x…)</option>
+            </select>
+          </label>
+
+          <label class="as-lbl mono">
             <span>HFS WASM <code>codeHash</code> (bytes32, optional)</span>
             <input id="inStudioWasmHash" class="as-in" placeholder="0x… (auto-filled from .wasm or .manifest.json)" />
           </label>
 
           <label class="as-lbl mono">
             <span>Default HFS Instance Address (0x… optional)</span>
-            <input id="inStudioDefaultHfs" class="as-in" placeholder="0x0000… (or check Instantiate below)" />
+            <input id="inStudioDefaultHfs" class="as-in" placeholder="0x0000… (auto-deployed when Deploy Fresh HFS selected)" />
           </label>
 
-          <label style="display:flex;align-items:center;gap:7px;font-size:0.72rem;color:#cbd5e1;cursor:pointer;">
-            <input id="chkStudioDeployInst" type="checkbox" />
-            <span>Instantiate fresh HFS contract from <code>codeHash</code> on publish</span>
-          </label>
+          <input id="chkStudioDeployInst" type="checkbox" style="display:none;" />
 
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
             <button type="button" id="btnStudioPreview" class="as-btn" style="flex:1;justify-content:center;" disabled>👁️ Sandbox Preview</button>

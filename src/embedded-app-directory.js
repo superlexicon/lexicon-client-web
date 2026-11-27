@@ -591,6 +591,36 @@ body.theme-light .slx-subact-btn.installed {
   opacity: 0.55;
   cursor: default;
 }
+.slx-pill-update {
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  color: #ffffff !important;
+  border: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.28);
+  transition: filter 0.13s ease, transform 0.13s ease;
+}
+.slx-pill-update:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: scale(1.02);
+}
+.slx-pill-update:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.slx-store-nav-cnt.alert {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+}
+body.theme-light .slx-store-nav-cnt.alert {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+}
 .slx-pill-info {
   width: 26px;
   height: 26px;
@@ -678,9 +708,10 @@ export function mountEmbeddedAppDirectory(
 
   const state = {
     apps: getCachedCatalogManifestLocal()?.apps || [],
-    selectedCat: 0, // 0 = Discover, -1 = Installed, 1..6 = APP_CATEGORIES
+    selectedCat: 0, // 0 = Discover, -1 = Installed, -2 = Updates, 1..6 = APP_CATEGORIES
     query: '',
     installingSlugs: new Set(),
+    updatingAll: false,
     toastMsg: '',
   };
 
@@ -733,6 +764,7 @@ export function mountEmbeddedAppDirectory(
             <div class="slx-store-sub" data-ed="subheading">On-chain apps served directly from your local node — zero databases, zero EC2, zero web servers.</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span data-ed="topbarUpdWrap"></span>
             <a href="https://github.com/superlexicon" target="_blank" rel="noopener" class="slx-pill-get" style="text-decoration:none;" title="Explore all 8 public SuperLexicon repositories on GitHub">GitHub ↗</a>
             <a href="/apps.html" class="slx-pill-get" style="text-decoration:none;">Open App Center ↗</a>
           </div>
@@ -752,6 +784,7 @@ export function mountEmbeddedAppDirectory(
     archBtn: hostEl.querySelector('[data-ed="archBtn"]'),
     heading: hostEl.querySelector('[data-ed="heading"]'),
     subheading: hostEl.querySelector('[data-ed="subheading"]'),
+    topbarUpdWrap: hostEl.querySelector('[data-ed="topbarUpdWrap"]'),
     dockWrap: hostEl.querySelector('[data-ed="dockWrap"]'),
     body: hostEl.querySelector('[data-ed="body"]'),
   };
@@ -764,20 +797,32 @@ export function mountEmbeddedAppDirectory(
 
   const renderAppRow = (a) => {
     const cat = APP_CATEGORIES[a.category] || APP_CATEGORIES[6];
-    const isInstalled = SlxPersonalAppContainer.isInstalled(a.slug);
-    const isCached = SlxUiBundleCache.isCachedSync(a.uiHash);
-    const isInstalling = state.installingSlugs.has(a.slug);
+    const instRec = SlxPersonalAppContainer.getInstalled(a.slug);
+    const isInstalled = Boolean(instRec);
+    const pendingUpd = instRec?.availableUpdate || null;
+    const activeUiHash = instRec?.uiHash || a.uiHash;
+    const isCached = SlxUiBundleCache.isCachedSync(activeUiHash);
+    const isInstalling = state.installingSlugs.has(a.slug) || (state.updatingAll && Boolean(pendingUpd));
     const isSandbox = a.execMode === APP_EXEC_MODE.SANDBOX_IFRAME && !a.isSystemCore;
     const kbLabel = a.compressedLen ? `${Math.max(1, Math.round(a.compressedLen / 1024))} KB on-chain` : 'On-chain UI';
     const href = getAppHref(a);
     const hasDoc = Boolean(USECASE_DESCRIPTIONS[a.slug]);
+    const updScopes = pendingUpd
+      ? [
+          pendingUpd.hasNewUi ? 'UI' : '',
+          pendingUpd.hasNewWasm ? 'WASM' : '',
+          pendingUpd.hasNewHfsInstance ? 'HFS' : '',
+        ]
+          .filter(Boolean)
+          .join('+') || 'Release'
+      : '';
 
     const cleanTitle = String(a.title || '').includes('—')
       ? String(a.title).split('—')[0].trim()
       : String(a.title || '');
 
     return `
-      <article class="slx-app-row">
+      <article class="slx-app-row" ${pendingUpd ? 'style="border-color:rgba(245,158,11,0.42);"' : ''}>
         <a href="${esc(href)}" class="slx-app-left" title="Launch ${esc(a.title)}">
           <div class="slx-squircle" style="${getSquircleStyle(a.slug)}">${esc(a.icon || '🧩')}</div>
           <div class="slx-app-meta">
@@ -791,6 +836,11 @@ export function mountEmbeddedAppDirectory(
             </div>
             <div class="slx-app-desc">${esc(a.summary || '')}</div>
             <div class="slx-app-submeta">
+              ${
+                pendingUpd
+                  ? `<span style="color:#f59e0b;font-weight:800;" title="Opt-in upgrade available (${esc(updScopes)})">🔄 v${esc(instRec.version || '1.0.0')} → v${esc(pendingUpd.version || 'next')}</span><span>•</span>`
+                  : ''
+              }
               <span>${esc(cat.shortLabel || cat.label)}</span>
               <span>•</span>
               <span>${esc(kbLabel)}</span>
@@ -800,13 +850,22 @@ export function mountEmbeddedAppDirectory(
         </a>
 
         <div class="slx-app-actions">
-          <a href="${esc(href)}" class="slx-pill-open">OPEN</a>
+          ${
+            pendingUpd
+              ? `<button type="button" class="slx-pill-update" data-ed-update="${esc(a.slug)}" ${isInstalling ? 'disabled' : ''} title="Verify &amp; upgrade from v${esc(instRec.version || '1.0.0')} to v${esc(pendingUpd.version || 'next')} (${esc(updScopes)})">${isInstalling ? 'UPDATING…' : 'UPDATE'}</button>`
+              : `<a href="${esc(href)}" class="slx-pill-open">OPEN</a>`
+          }
           <div class="slx-app-subactions">
             ${
-              isInstalling
+              pendingUpd
+                ? `<a href="${esc(href)}" class="slx-subact-btn" title="Open currently pinned v${esc(instRec.version || '1.0.0')}">Open</a><span style="color:var(--st-subtle);">·</span>`
+                : ''
+            }
+            ${
+              isInstalling && !pendingUpd
                 ? `<span style="color:var(--st-subtle);">Saving…</span>`
                 : isInstalled
-                ? `<button type="button" class="slx-subact-btn installed" data-ed-uninstall="${esc(a.slug)}" title="Pinned in Personal Container (click to remove)">✓ Saved</button>`
+                ? `<button type="button" class="slx-subact-btn installed" data-ed-uninstall="${esc(a.slug)}" title="Pinned v${esc(instRec.version || '1.0.0')} in Personal Container (click to remove)">✓ v${esc(instRec.version || '1.0.0')}</button>`
                 : `<button type="button" class="slx-subact-btn" data-ed-install="${esc(a.slug)}" title="Download &amp; pin verified on-chain UI bundle locally">＋ Get</button>`
             }
             ${
@@ -856,12 +915,22 @@ export function mountEmbeddedAppDirectory(
 
   const renderAll = () => {
     const installed = SlxPersonalAppContainer.listInstalled();
+    const pendingUpdates = SlxPersonalAppContainer.listPendingUpdates();
     const cacheStats = SlxUiBundleCache.getCacheStats();
     const gzKb = Math.round(cacheStats.totalCompressedBytes / 1024);
 
     if (refs.cachePill) {
       refs.cachePill.textContent =
         cacheStats.count > 0 ? `⚡ ${cacheStats.count} (${gzKb} KB)` : '⚡ Ready';
+    }
+
+    if (refs.topbarUpdWrap) {
+      refs.topbarUpdWrap.innerHTML =
+        pendingUpdates.length > 0
+          ? `<button type="button" class="slx-pill-update" data-ed-update-all="1" ${state.updatingAll ? 'disabled' : ''} title="Verify &amp; upgrade all ${pendingUpdates.length} outdated installed UIs">${
+              state.updatingAll ? 'Updating…' : `🔄 Update All (${pendingUpdates.length})`
+            }</button>`
+          : '';
     }
 
     // Counts per category
@@ -873,15 +942,16 @@ export function mountEmbeddedAppDirectory(
 
     if (refs.primaryNav) {
       const prim = [
-        { id: 0, icon: '✨', label: 'Discover', cnt: state.apps.length },
-        { id: -1, icon: '📦', label: 'Installed', cnt: installed.length },
+        { id: 0, icon: '✨', label: 'Discover', cnt: state.apps.length, alert: false },
+        { id: -1, icon: '📦', label: 'Installed', cnt: installed.length, alert: false },
+        { id: -2, icon: '🔄', label: 'Updates', cnt: pendingUpdates.length, alert: pendingUpdates.length > 0 },
       ];
       refs.primaryNav.innerHTML = prim
         .map(
           (p) => `
           <button type="button" class="slx-store-nav-btn ${state.selectedCat === p.id ? 'active' : ''}" data-ed-cat="${p.id}">
             <span style="display:inline-flex;align-items:center;gap:8px;"><span>${p.icon}</span><span>${esc(p.label)}</span></span>
-            <span class="slx-store-nav-cnt">${p.cnt}</span>
+            <span class="slx-store-nav-cnt ${p.alert ? 'alert' : ''}">${p.cnt}</span>
           </button>`
         )
         .join('');
@@ -909,6 +979,10 @@ export function mountEmbeddedAppDirectory(
         refs.heading.textContent = 'Installed Apps';
         refs.subheading.textContent =
           'Pinned in your Personal App Container with locally cached keccak256-verified UI bundles for instant offline launch.';
+      } else if (state.selectedCat === -2) {
+        refs.heading.textContent = 'Software Updates';
+        refs.subheading.textContent =
+          'Installed UIs stay cryptographically pinned to your approved UI & HFS hashes until you explicitly click Update.';
       } else {
         const catObj = APP_CATEGORIES[state.selectedCat];
         refs.heading.textContent = catObj ? `${catObj.icon} ${catObj.label}` : 'Apps';
@@ -918,7 +992,7 @@ export function mountEmbeddedAppDirectory(
 
     // Installed Dock Bar (shown when user has pinned apps)
     if (refs.dockWrap) {
-      if (installed.length > 0 && state.selectedCat !== -1) {
+      if (installed.length > 0 && state.selectedCat !== -1 && state.selectedCat !== -2) {
         refs.dockWrap.innerHTML = `
           <div class="slx-store-dock">
             <div class="slx-store-dock-icons">
@@ -929,15 +1003,24 @@ export function mountEmbeddedAppDirectory(
                   return `<a href="${esc(href)}" class="slx-dock-app">
                     <span class="slx-dock-sq" style="${getSquircleStyle(app.slug)}">${esc(app.icon || '🧩')}</span>
                     <span>${esc(app.title.split('—')[0].trim())}</span>
+                    ${app.availableUpdate ? `<span style="color:#f59e0b;font-weight:800;" title="Update v${esc(app.availableUpdate.version || 'next')} available">🔄</span>` : ''}
                   </a>`;
                 })
                 .join('')}
             </div>
-            ${
-              state.toastMsg
-                ? `<span style="font-size:11px;font-weight:600;color:#34d399;">${esc(state.toastMsg)}</span>`
-                : `<button type="button" data-ed-cat="-1" style="background:none;border:none;color:var(--st-nav-active-text);font-size:11.5px;font-weight:700;cursor:pointer;">Manage (${installed.length}) →</button>`
-            }
+            <div style="display:inline-flex;align-items:center;gap:10px;">
+              ${
+                state.toastMsg
+                  ? `<span style="font-size:11px;font-weight:600;color:#34d399;">${esc(state.toastMsg)}</span>`
+                  : ''
+              }
+              ${
+                pendingUpdates.length > 0
+                  ? `<button type="button" data-ed-cat="-2" style="background:rgba(245,158,11,0.16);border:1px solid rgba(245,158,11,0.42);border-radius:999px;padding:3px 9px;color:#f59e0b;font-size:11px;font-weight:800;cursor:pointer;">🔄 ${pendingUpdates.length} Update${pendingUpdates.length === 1 ? '' : 's'}</button>`
+                  : ''
+              }
+              <button type="button" data-ed-cat="-1" style="background:none;border:none;color:var(--st-nav-active-text);font-size:11.5px;font-weight:700;cursor:pointer;">Manage (${installed.length}) →</button>
+            </div>
           </div>
         `;
       } else {
@@ -955,6 +1038,8 @@ export function mountEmbeddedAppDirectory(
     const sourceList =
       state.selectedCat === -1
         ? installed.map((inst) => state.apps.find((a) => a.slug === inst.slug) || inst)
+        : state.selectedCat === -2
+        ? pendingUpdates.map((inst) => state.apps.find((a) => a.slug === inst.slug) || inst)
         : state.apps;
 
     const filtered = sourceList.filter((a) => {
@@ -969,13 +1054,25 @@ export function mountEmbeddedAppDirectory(
       );
     });
 
-    if (state.selectedCat === -1 && !filtered.length) {
+    if (state.selectedCat === -1 && !filtered.length && !q) {
       refs.body.innerHTML = `
         <div style="padding:32px 20px;border-radius:16px;border:1px dashed var(--st-border);text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;">
           <div style="font-size:28px;">📦</div>
           <div style="font-size:15px;font-weight:700;">Your Personal App Container is Empty</div>
           <div style="font-size:12.5px;color:var(--st-muted);max-width:46ch;">Tap <strong>GET</strong> on any app to verify and cache its compressed on-chain UI bundle locally for instant, offline-ready launching.</div>
           <button type="button" class="slx-pill-open" data-ed-cat="0" style="margin-top:4px;">Browse Apps</button>
+        </div>
+      `;
+      return;
+    }
+
+    if (state.selectedCat === -2 && !filtered.length && !q) {
+      refs.body.innerHTML = `
+        <div style="padding:32px 20px;border-radius:16px;border:1px dashed var(--st-border);text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <div style="font-size:28px;">✅</div>
+          <div style="font-size:15px;font-weight:700;">All Installed Apps Are Up to Date</div>
+          <div style="font-size:12.5px;color:var(--st-muted);max-width:48ch;">Your pinned UI archives and HFS subroutine bindings match the latest releases published on Subnet 1.</div>
+          <button type="button" class="slx-pill-get" data-ed-check-updates="1" style="margin-top:4px;">🔎 Check On-Chain Registry</button>
         </div>
       `;
       return;
@@ -1042,6 +1139,8 @@ export function mountEmbeddedAppDirectory(
               version: oc.version || existing.version,
               category: oc.category || existing.category,
               uiHash: oc.uiHash,
+              wasmCodeHash: oc.wasmCodeHash || existing.wasmCodeHash,
+              defaultHfsAddr: oc.defaultHfsAddr || existing.defaultHfsAddr,
               source: 'onchain',
             });
           } else {
@@ -1080,6 +1179,57 @@ export function mountEmbeddedAppDirectory(
       openSlxUseCaseDescription(docBtn.getAttribute('data-ed-doc'), 'codification', {
         currentPageAppId: isSlideMode ? 'deck' : 'apps',
       });
+      return;
+    }
+    const checkBtn = ev.target.closest('[data-ed-check-updates]');
+    if (checkBtn) {
+      await hydrateCatalog();
+      const cnt = SlxPersonalAppContainer.countPendingUpdates();
+      state.toastMsg = cnt > 0 ? `🔄 ${cnt} update${cnt === 1 ? '' : 's'} available` : '✓ All apps up to date';
+      renderAll();
+      return;
+    }
+    const updBtn = ev.target.closest('[data-ed-update]');
+    if (updBtn) {
+      const slug = updBtn.getAttribute('data-ed-update');
+      const appMeta = state.apps.find((a) => a.slug === slug);
+      if (!slug || state.installingSlugs.has(slug)) return;
+      state.installingSlugs.add(slug);
+      renderAll();
+      try {
+        storeClient.rpcUrl = rpcUrlFn();
+        const res = await SlxPersonalAppContainer.updateApp(slug, {
+          latestMeta: appMeta,
+          storeClient,
+        });
+        const rec = res?.app || res;
+        state.toastMsg = `✓ Updated "${(rec?.title || slug).split('—')[0].trim()}" to v${rec?.version || 'latest'}`;
+      } catch (err) {
+        state.toastMsg = `⚠ ${err.message || err}`;
+      } finally {
+        state.installingSlugs.delete(slug);
+        renderAll();
+      }
+      return;
+    }
+    const updAllBtn = ev.target.closest('[data-ed-update-all]');
+    if (updAllBtn) {
+      if (state.updatingAll) return;
+      state.updatingAll = true;
+      renderAll();
+      try {
+        storeClient.rpcUrl = rpcUrlFn();
+        const updatedList = await SlxPersonalAppContainer.updateAllApps({
+          storeClient,
+        });
+        const cnt = Array.isArray(updatedList) ? updatedList.length : 0;
+        state.toastMsg = `✓ Updated ${cnt} app${cnt === 1 ? '' : 's'}`;
+      } catch (err) {
+        state.toastMsg = `⚠ ${err.message || err}`;
+      } finally {
+        state.updatingAll = false;
+        renderAll();
+      }
       return;
     }
     const instBtn = ev.target.closest('[data-ed-install]');

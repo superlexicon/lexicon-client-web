@@ -222,9 +222,28 @@ function renderHeaderStatus() {
   document.getElementById('lblAppCount').textContent = String(state.apps.length);
 
   const installedCount = SlxPersonalAppContainer.countInstalled();
+  const pendingUpdatesCount = SlxPersonalAppContainer.countPendingUpdates();
   const cacheStats = SlxUiBundleCache.getCacheStats();
   const instLbl = document.getElementById('lblInstalledCount');
   if (instLbl) instLbl.textContent = String(installedCount);
+
+  const updPill = document.getElementById('lblPendingUpdatesPill');
+  if (updPill) {
+    if (pendingUpdatesCount > 0) {
+      updPill.style.display = 'inline-block';
+      updPill.textContent = `🔄 ${pendingUpdatesCount} Update${pendingUpdatesCount === 1 ? '' : 's'}`;
+    } else {
+      updPill.style.display = 'none';
+    }
+  }
+  const btnToolbarUpd = document.getElementById('btnToolbarUpdateAll');
+  const lblToolbarUpd = document.getElementById('lblToolbarUpdateCount');
+  if (btnToolbarUpd) {
+    btnToolbarUpd.style.display = pendingUpdatesCount > 0 ? 'inline-flex' : 'none';
+    btnToolbarUpd.disabled = state.busy;
+    if (lblToolbarUpd) lblToolbarUpd.textContent = String(pendingUpdatesCount);
+  }
+
   const cachedLbl = document.getElementById('lblCachedBadge');
   if (cachedLbl) {
     const kb = (cacheStats.totalCompressedBytes / 1024).toFixed(1);
@@ -354,6 +373,15 @@ function renderCategories() {
     .join('');
 }
 
+function formatUpdateScopeTag(upd) {
+  if (!upd) return '';
+  const parts = [];
+  if (upd.hasNewUi) parts.push('UI');
+  if (upd.hasNewWasm) parts.push('WASM');
+  if (upd.hasNewHfsInstance) parts.push('New HFS');
+  return parts.length ? parts.join('+') : 'Update';
+}
+
 function renderSingleAppCardHtml(a) {
   const catMeta = APP_CATEGORIES[a.category] || APP_CATEGORIES[6];
   const gzKb = a.compressedLen ? (a.compressedLen / 1024).toFixed(1) + ' KiB gz' : 'Verified CAS';
@@ -364,8 +392,10 @@ function renderSingleAppCardHtml(a) {
       ? `HFS ${shortHex(a.wasmCodeHash, 8, 6)}`
       : 'window.slx Host State');
   const hasArchDoc = Boolean(USECASE_DESCRIPTIONS[a.slug]);
-  const isInstalled = SlxPersonalAppContainer.isInstalled(a.slug);
-  const isCached = SlxUiBundleCache.isCachedSync(a.uiHash);
+  const installedRec = SlxPersonalAppContainer.getInstalled(a.slug);
+  const isInstalled = Boolean(installedRec);
+  const pendingUpd = installedRec?.availableUpdate || null;
+  const isCached = SlxUiBundleCache.isCachedSync(installedRec?.uiHash || a.uiHash);
   const isInstalling = state.installingSlugs.has(a.slug);
 
   const primaryRunBtn =
@@ -374,13 +404,15 @@ function renderSingleAppCardHtml(a) {
       : `<button type="button" class="as-btn as-btn-emerald" style="flex:1;justify-content:center;" data-sandbox-slug="${a.slug}">▶ Open${isCached ? ' ⚡' : ''}</button>`;
 
   const installBtn = isInstalling
-    ? `<button type="button" class="as-btn" disabled>⏳ Caching…</button>`
+    ? `<button type="button" class="as-btn" disabled>⏳ Updating…</button>`
+    : pendingUpd
+    ? `<button type="button" class="as-btn as-btn-amber" data-update-slug="${a.slug}" title="Installed v${installedRec.version} → Update to v${pendingUpd.version} (${formatUpdateScopeTag(pendingUpd)})">🔄 Update → v${pendingUpd.version}</button>`
     : isInstalled
-    ? `<button type="button" class="as-btn" style="border-color:rgba(52,211,153,0.7);background:rgba(16,185,129,0.16);color:#6ee7b7;" data-uninstall-slug="${a.slug}" title="Installed in My Apps &amp; cached locally (click to uninstall)">✓ Installed</button>`
+    ? `<button type="button" class="as-btn" style="border-color:rgba(52,211,153,0.7);background:rgba(16,185,129,0.16);color:#6ee7b7;" data-uninstall-slug="${a.slug}" title="Installed v${installedRec.version} in My Apps &amp; cached locally (click to uninstall)">✓ Installed</button>`
     : `<button type="button" class="as-btn" data-install-slug="${a.slug}" title="Install into Personal App Container &amp; cache HTML locally for instant future loads">⬇ Install</button>`;
 
   return `
-    <article class="as-card" style="${isInstalled ? 'border-color:rgba(52,211,153,0.52);' : ''}">
+    <article class="as-card" style="${pendingUpd ? 'border-color:rgba(251,191,36,0.72);' : isInstalled ? 'border-color:rgba(52,211,153,0.52);' : ''}">
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
           <div style="display:flex;align-items:center;gap:11px;min-width:0;">
@@ -507,6 +539,7 @@ function renderInstalledView() {
   if (!bar || !grid) return;
 
   const installed = SlxPersonalAppContainer.listInstalled();
+  const pendingUpdates = SlxPersonalAppContainer.listPendingUpdates();
   const cacheStats = SlxUiBundleCache.getCacheStats();
   const gzKb = (cacheStats.totalCompressedBytes / 1024).toFixed(1);
   const rawKb = (cacheStats.totalUncompressedBytes / 1024).toFixed(1);
@@ -514,13 +547,25 @@ function renderInstalledView() {
   bar.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:4px;">
       <div style="font-size:0.96rem;font-weight:800;color:#f8fafc;">
-        📦 Personal App Container (${installed.length} Installed) • ⚡ Local HTML Bundle Cache
+        📦 Personal App Container (${installed.length} Installed${
+    pendingUpdates.length ? ` • <span style="color:#fde68a;">🔄 ${pendingUpdates.length} Update${pendingUpdates.length === 1 ? '' : 's'} Available</span>` : ''
+  }) • ⚡ Local HTML Bundle Cache
       </div>
       <div class="mono" style="font-size:0.72rem;color:#bae6fd;">
-        Cached Locally: <strong style="color:#6ee7b7;">${cacheStats.count} verified HTML bundle(s)</strong> (${gzKb} KiB gzip / ${rawKb} KiB decompressed HTML) • Instant <code>&lt; 5 ms</code> offline-ready load
+        Cached Locally: <strong style="color:#6ee7b7;">${cacheStats.count} verified HTML bundle(s)</strong> (${gzKb} KiB gzip / ${rawKb} KiB decompressed HTML) • Pinned versions never change without your approval
       </div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      ${
+        pendingUpdates.length > 0
+          ? `<button type="button" id="btnInstalledUpdateAll" class="as-btn as-btn-amber" ${state.busy ? 'disabled' : ''}>
+              🔄 Update All (${pendingUpdates.length})
+            </button>`
+          : ''
+      }
+      <button type="button" id="btnCheckUpdatesNow" class="as-btn" ${state.busy ? 'disabled' : ''}>
+        🔎 Check for Updates
+      </button>
       <button type="button" id="btnPreCacheInstalled" class="as-btn as-btn-emerald" ${!installed.length || state.busy ? 'disabled' : ''}>
         ⚡ Verify &amp; Cache All Installed
       </button>
@@ -534,6 +579,28 @@ function renderInstalledView() {
   `;
 
   document.getElementById('btnBackToCatalog')?.addEventListener('click', () => setView('catalog'));
+  document.getElementById('btnCheckUpdatesNow')?.addEventListener('click', async () => {
+    state.busy = true;
+    renderHeaderStatus();
+    renderInstalledView();
+    try {
+      await refreshMergedCatalog();
+      const updCnt = SlxPersonalAppContainer.countPendingUpdates();
+      showToast(
+        updCnt > 0
+          ? `🔄 Found ${updCnt} update(s) available for your installed apps!`
+          : '✓ All installed apps are on their latest verified release.',
+        updCnt > 0 ? 'info' : 'ok'
+      );
+    } finally {
+      state.busy = false;
+      renderHeaderStatus();
+      renderInstalledView();
+    }
+  });
+  document.getElementById('btnInstalledUpdateAll')?.addEventListener('click', () =>
+    runUpdateAllInstalledApps()
+  );
   document.getElementById('btnPreCacheInstalled')?.addEventListener('click', async () => {
     state.busy = true;
     renderInstalledView();
@@ -586,14 +653,25 @@ function renderInstalledView() {
       const catMeta = APP_CATEGORIES[app.category] || APP_CATEGORIES[6];
       const isHostCore = app.execMode === APP_EXEC_MODE.VERIFIED_HOST || app.isSystemCore;
       const isCached = SlxUiBundleCache.isCachedSync(app.uiHash);
+      const upd = app.availableUpdate || null;
+      const isUpdating = state.installingSlugs.has(app.slug);
       const gzKb = app.compressedLen ? (app.compressedLen / 1024).toFixed(1) + ' KiB gz' : 'CAS';
       const openBtn =
         isHostCore && app.route
           ? `<a href="${app.route}" class="as-btn as-btn-emerald" style="flex:1;justify-content:center;">▶ Open Instant ⚡</a>`
           : `<button type="button" class="as-btn as-btn-emerald" style="flex:1;justify-content:center;" data-inst-sandbox="${app.slug}">▶ Open Instant ⚡</button>`;
 
+      const updBannerHtml = upd
+        ? `<div class="mono" style="padding:8px 10px;border-radius:9px;border:1px solid rgba(251,191,36,0.65);background:rgba(245,158,11,0.14);font-size:0.68rem;color:#fef3c7;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span>🔄 <strong>v${String(upd.version).replace(/</g, '&lt;')}</strong> available (${formatUpdateScopeTag(upd)} • uiHash <code>${shortHex(upd.uiHash, 6, 4)}</code>)</span>
+            <button type="button" class="as-btn as-btn-amber" style="padding:4px 10px;font-size:0.67rem;" data-inst-update="${app.slug}" ${isUpdating ? 'disabled' : ''}>
+              ${isUpdating ? '⏳ Updating…' : `Update → v${String(upd.version).replace(/</g, '&lt;')}`}
+            </button>
+          </div>`
+        : '';
+
       return `
-        <article class="as-card" style="border-color:rgba(52,211,153,0.52);">
+        <article class="as-card" style="border-color:${upd ? 'rgba(251,191,36,0.72)' : 'rgba(52,211,153,0.52)'};">
           <div style="display:flex;flex-direction:column;gap:10px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
               <div style="display:flex;align-items:center;gap:10px;min-width:0;">
@@ -601,17 +679,18 @@ function renderInstalledView() {
                 <div style="min-width:0;">
                   <div style="font-size:0.94rem;font-weight:800;color:#f8fafc;">#${idx + 1} • ${String(app.title).replace(/</g, '&lt;')}</div>
                   <div class="mono" style="font-size:0.66rem;color:#94a3b8;margin-top:2px;">
-                    ${catMeta.icon} ${catMeta.label} • v${app.version || '1.0.0'}
+                    ${catMeta.icon} ${catMeta.label} • Installed v${app.version || '1.0.0'}
                   </div>
                 </div>
               </div>
-              <span class="as-badge ${isCached ? 'as-badge-emerald' : 'as-badge-amber'} mono">
-                ${isCached ? '⚡ HTML Cached' : '☁ Uncached'}
+              <span class="as-badge ${upd ? 'as-badge-amber' : isCached ? 'as-badge-emerald' : 'as-badge-sky'} mono">
+                ${upd ? `🔄 Update v${String(upd.version).replace(/</g, '&lt;')}` : isCached ? '⚡ HTML Cached' : '☁ Uncached'}
               </span>
             </div>
             <div style="font-size:0.75rem;color:#cbd5e1;line-height:1.46;">
               ${String(app.summary || '').replace(/</g, '&lt;')}
             </div>
+            ${updBannerHtml}
             <div class="as-stack-row mono">
               <span>📦 <strong style="color:#6ee7b7;">${gzKb}</strong></span>
               <span>•</span>
@@ -622,7 +701,7 @@ function renderInstalledView() {
             ${openBtn}
             <button type="button" class="as-btn" data-inst-move="${app.slug}" data-delta="-1" ${idx === 0 ? 'disabled' : ''} title="Move earlier in My Apps">↑</button>
             <button type="button" class="as-btn" data-inst-move="${app.slug}" data-delta="1" ${idx === installed.length - 1 ? 'disabled' : ''} title="Move later in My Apps">↓</button>
-            <button type="button" class="as-btn" data-inst-recache="${app.slug}" title="Re-verify &amp; refresh local HTML cache">🔄</button>
+            <button type="button" class="as-btn" data-inst-recache="${app.slug}" title="Re-verify &amp; refresh pinned HTML cache">↻</button>
             <button type="button" class="as-btn as-btn-rose" data-inst-remove="${app.slug}" title="Uninstall from My Apps">🗑 Uninstall</button>
           </div>
         </article>
@@ -659,9 +738,14 @@ function promptHostTxConfirmation({ appMeta, target, fnSig, summary, dataHex }) 
 
 async function launchInSandboxRunner(slugOrMeta, { rawHtmlOverride = null } = {}) {
   try {
+    const pinnedInstalled =
+      typeof slugOrMeta === 'string' && !rawHtmlOverride
+        ? SlxPersonalAppContainer.getInstalled(slugOrMeta)
+        : null;
     const appMeta =
       typeof slugOrMeta === 'string'
-        ? (await resolveEffectiveAppMeta(slugOrMeta, storeClient)) ||
+        ? pinnedInstalled ||
+          (await resolveEffectiveAppMeta(slugOrMeta, storeClient)) ||
           state.apps.find((x) => x.slug === slugOrMeta)
         : slugOrMeta;
     if (!appMeta) throw new Error('App metadata not found.');
@@ -690,6 +774,21 @@ async function launchInSandboxRunner(slugOrMeta, { rawHtmlOverride = null } = {}
       ? '👁️ Live Studio Preview'
       : `✓ keccak256 ${shortHex(verifiedHash, 8, 6)}`;
 
+    const btnRunnerUpd = document.getElementById('btnRunnerUpdateApp');
+    const runnerPendingUpd =
+      !rawHtmlOverride && appMeta.slug ? SlxPersonalAppContainer.getPendingUpdate(appMeta.slug) : null;
+    if (btnRunnerUpd) {
+      if (runnerPendingUpd) {
+        btnRunnerUpd.style.display = 'inline-flex';
+        btnRunnerUpd.textContent = `🔄 Update → v${runnerPendingUpd.version}`;
+        btnRunnerUpd.title = `Update installed app to v${runnerPendingUpd.version} (${formatUpdateScopeTag(
+          runnerPendingUpd
+        )})`;
+      } else {
+        btnRunnerUpd.style.display = 'none';
+      }
+    }
+
     const lnkFull = document.getElementById('lnkRunnerStandalone');
     if (appMeta.isSystemCore && appMeta.route) {
       lnkFull.href = appMeta.route;
@@ -711,6 +810,29 @@ async function launchInSandboxRunner(slugOrMeta, { rawHtmlOverride = null } = {}
     setView('runner');
   } catch (err) {
     showToast(`Runner error: ${err.message || err}`, 'err');
+  }
+}
+
+function syncStudioHfsModeUi() {
+  const modeSel = document.getElementById('selStudioHfsMode');
+  const chkDep = document.getElementById('chkStudioDeployInst');
+  const inHfs = document.getElementById('inStudioDefaultHfs');
+  if (!modeSel) return;
+  const mode = modeSel.value;
+  if (chkDep) {
+    chkDep.checked = mode === 'deploy_new';
+  }
+  if (inHfs) {
+    if (mode === 'deploy_new') {
+      inHfs.disabled = true;
+      inHfs.placeholder = 'Auto-deployed on publish from WASM codeHash';
+    } else {
+      inHfs.disabled = false;
+      inHfs.placeholder =
+        mode === 'bind_custom'
+          ? '0x… (enter deployed HFS contract address)'
+          : '0x0000… (existing HFS contract or zero for shared state)';
+    }
   }
 }
 
@@ -739,6 +861,9 @@ async function loadAppIntoStudio(slug) {
     document.getElementById('inStudioSummary').value = '';
     document.getElementById('inStudioWasmHash').value = '';
     document.getElementById('inStudioDefaultHfs').value = '';
+    const modeSel = document.getElementById('selStudioHfsMode');
+    if (modeSel) modeSel.value = 'keep';
+    syncStudioHfsModeUi();
     state.uploadedUiBundle = null;
     state.uploadedWasmBytes = null;
     state.uploadedWasmName = '';
@@ -792,6 +917,9 @@ async function loadAppIntoStudio(slug) {
     appMeta.wasmCodeHash && appMeta.wasmCodeHash !== ZERO_BYTES32 ? appMeta.wasmCodeHash : '';
   document.getElementById('inStudioDefaultHfs').value =
     appMeta.defaultHfsAddr && appMeta.defaultHfsAddr !== ZERO_ADDR ? appMeta.defaultHfsAddr : '';
+  const modeSel = document.getElementById('selStudioHfsMode');
+  if (modeSel) modeSel.value = 'keep';
+  syncStudioHfsModeUi();
 
   await updateStudioMeter();
   setView('studio');
@@ -924,7 +1052,78 @@ document.getElementById('inSearchApps').addEventListener('input', (ev) => {
   renderAppsGrid();
 });
 
+async function runSingleAppUpdate(slug) {
+  if (!slug || state.installingSlugs.has(slug)) return;
+  state.installingSlugs.add(slug);
+  renderHeaderStatus();
+  renderAppsGrid();
+  renderInstalledView();
+  try {
+    const latestMeta = state.apps.find((a) => a.slug === slug) || null;
+    const res = await SlxPersonalAppContainer.updateApp(slug, {
+      storeClient,
+      latestMeta,
+      onStatus: (m) => showToast(m, 'info'),
+    });
+    showToast(
+      `✓ Updated "${res.app.title}" (${res.previousVersion || 'prev'} → v${
+        res.app.version
+      }) & verified new HTML bundle locally!`,
+      'ok'
+    );
+    if (state.activeView === 'runner' && state.runningApp?.slug === slug) {
+      await launchInSandboxRunner(slug);
+    }
+  } catch (err) {
+    showToast(`Update error: ${err.message || err}`, 'err');
+  } finally {
+    state.installingSlugs.delete(slug);
+    renderHeaderStatus();
+    renderAppsGrid();
+    renderInstalledView();
+  }
+}
+
+async function runUpdateAllInstalledApps() {
+  const pending = SlxPersonalAppContainer.listPendingUpdates();
+  if (!pending.length || state.busy) return;
+  state.busy = true;
+  renderHeaderStatus();
+  renderInstalledView();
+  try {
+    const updated = await SlxPersonalAppContainer.updateAllApps({
+      storeClient,
+      onStatus: (m) => showToast(m, 'info'),
+    });
+    showToast(
+      `🎉 Updated ${updated.length} installed app(s) to their latest verified releases!`,
+      'ok'
+    );
+  } catch (err) {
+    showToast(`Batch update error: ${err.message || err}`, 'err');
+  } finally {
+    state.busy = false;
+    renderHeaderStatus();
+    renderAppsGrid();
+    renderInstalledView();
+  }
+}
+
+document.getElementById('btnToolbarUpdateAll')?.addEventListener('click', () =>
+  runUpdateAllInstalledApps()
+);
+document.getElementById('btnRunnerUpdateApp')?.addEventListener('click', async () => {
+  if (state.runningApp?.slug) {
+    await runSingleAppUpdate(state.runningApp.slug);
+  }
+});
+
 document.getElementById('appsGrid').addEventListener('click', async (ev) => {
+  const updBtn = ev.target.closest('[data-update-slug]');
+  if (updBtn) {
+    await runSingleAppUpdate(updBtn.dataset.updateSlug);
+    return;
+  }
   const instBtn = ev.target.closest('[data-install-slug]');
   if (instBtn) {
     const slug = instBtn.dataset.installSlug;
@@ -974,6 +1173,11 @@ document.getElementById('appsGrid').addEventListener('click', async (ev) => {
 });
 
 document.getElementById('installedAppsGrid')?.addEventListener('click', async (ev) => {
+  const updBtn = ev.target.closest('[data-inst-update]');
+  if (updBtn) {
+    await runSingleAppUpdate(updBtn.getAttribute('data-inst-update'));
+    return;
+  }
   const sbBtn = ev.target.closest('[data-inst-sandbox]');
   if (sbBtn) {
     await launchInSandboxRunner(sbBtn.getAttribute('data-inst-sandbox'));
@@ -1175,9 +1379,21 @@ async function handleUploadedWasmFile(file) {
     state.uploadedWasmBytes = bytes;
     state.uploadedWasmName = file.name;
     const hash = keccak256Hex(bytes);
+    const prevHash = (document.getElementById('inStudioWasmHash').value || '').trim().toLowerCase();
     document.getElementById('inStudioWasmHash').value = hash;
+
+    const modeSel = document.getElementById('selStudioHfsMode');
+    if (modeSel && (!prevHash || prevHash !== hash.toLowerCase())) {
+      modeSel.value = 'deploy_new';
+      syncStudioHfsModeUi();
+    }
     await updateStudioMeter();
-    showToast(`✓ Verified WASM "${file.name}" (${(bytes.length / 1024).toFixed(1)} KiB • codeHash ${shortHex(hash)})`, 'ok');
+    showToast(
+      `✓ Verified WASM "${file.name}" (${(bytes.length / 1024).toFixed(1)} KiB • codeHash ${shortHex(
+        hash
+      )}) — set to deploy fresh HFS instance on publish!`,
+      'ok'
+    );
   } catch (err) {
     showToast(`WASM error: ${err.message || err}`, 'err');
   }
@@ -1195,7 +1411,14 @@ async function handleUploadedManifestFile(file) {
     if (parsed.category) document.getElementById('selStudioCategory').value = String(parsed.category);
     if (parsed.summary) document.getElementById('inStudioSummary').value = String(parsed.summary);
     if (parsed.wasmCodeHash && parsed.wasmCodeHash !== ZERO_BYTES32) {
-      document.getElementById('inStudioWasmHash').value = String(parsed.wasmCodeHash);
+      const prevHash = (document.getElementById('inStudioWasmHash').value || '').trim().toLowerCase();
+      const nextHash = String(parsed.wasmCodeHash);
+      document.getElementById('inStudioWasmHash').value = nextHash;
+      const modeSel = document.getElementById('selStudioHfsMode');
+      if (modeSel && prevHash && prevHash !== nextHash.toLowerCase()) {
+        modeSel.value = 'deploy_new';
+        syncStudioHfsModeUi();
+      }
     }
     await updateStudioMeter();
     showToast(`✓ Auto-filled release metadata from "${file.name}"!`, 'ok');
@@ -1220,6 +1443,9 @@ async function handleDroppedArtifactFiles(fileList) {
 
 document.getElementById('selStudioTemplate').addEventListener('change', (ev) => {
   loadAppIntoStudio(ev.currentTarget.value);
+});
+document.getElementById('selStudioHfsMode')?.addEventListener('change', () => {
+  syncStudioHfsModeUi();
 });
 document.getElementById('inStudioGzFile').addEventListener('change', async (ev) => {
   await handleUploadedUiFile(ev.currentTarget.files?.[0]);
@@ -1302,12 +1528,22 @@ document.getElementById('btnStudioPublish').addEventListener('click', async () =
   const version = document.getElementById('inStudioVersion').value.trim() || '1.0.0';
   const category = Number(document.getElementById('selStudioCategory').value || 6);
   const summary = document.getElementById('inStudioSummary').value.trim();
+  const hfsMode = document.getElementById('selStudioHfsMode')?.value || 'keep';
   const wasmCodeHash = document.getElementById('inStudioWasmHash').value.trim() || ZERO_BYTES32;
-  const defaultHfsAddr = document.getElementById('inStudioDefaultHfs').value.trim() || ZERO_ADDR;
-  const deployInstance = document.getElementById('chkStudioDeployInst').checked;
+  const rawDefaultHfs = document.getElementById('inStudioDefaultHfs').value.trim() || ZERO_ADDR;
+  const deployInstance = hfsMode === 'deploy_new' || document.getElementById('chkStudioDeployInst').checked;
+  const defaultHfsAddr = deployInstance ? ZERO_ADDR : rawDefaultHfs;
 
   if (!slug || !title || !state.uploadedUiBundle?.bytes?.length) {
     showToast('App Slug, App Title, and a built .html.gz UI archive are required.', 'err');
+    return;
+  }
+  if (deployInstance && wasmCodeHash === ZERO_BYTES32 && !state.uploadedWasmBytes?.length) {
+    showToast('Upload a compiled .wasm HFS file (or enter a valid wasmCodeHash) to deploy a fresh HFS instance.', 'err');
+    return;
+  }
+  if (hfsMode === 'bind_custom' && !/^0x[0-9a-f]{40}$/i.test(rawDefaultHfs)) {
+    showToast('Enter a valid 20-byte 0x… HFS contract address for Bind Custom HFS mode.', 'err');
     return;
   }
 
@@ -1316,6 +1552,7 @@ document.getElementById('btnStudioPublish').addEventListener('click', async () =
   await updateStudioMeter();
   try {
     const existing = state.apps.find((a) => a.slug === slug);
+    const wasAlreadyInstalled = SlxPersonalAppContainer.isInstalled(slug);
     const published = await storeClient.publishApp({
       wallet,
       slug,
@@ -1333,15 +1570,21 @@ document.getElementById('btnStudioPublish').addEventListener('click', async () =
       deployInstance,
       onStatus: (m) => showToast(m, 'info'),
     });
-    await SlxPersonalAppContainer.installApp(published, { storeClient, cacheHtml: false });
+    if (!wasAlreadyInstalled) {
+      await SlxPersonalAppContainer.installApp(published, { storeClient, cacheHtml: false });
+    }
     await refreshMergedCatalog();
     showToast(
-      `🎉 Published "${published.title}" v${published.version} (uiHash ${shortHex(
-        published.uiHash
-      )}) & pinned in your Personal App Container! Live in the App Directory immediately—no EC2, no DB, no web-client redeploy.`,
+      wasAlreadyInstalled
+        ? `🎉 Published "${published.title}" v${published.version} (uiHash ${shortHex(
+            published.uiHash
+          )})! Installed users now see an opt-in "🔄 Update → v${published.version}" button.`
+        : `🎉 Published "${published.title}" v${published.version} (uiHash ${shortHex(
+            published.uiHash
+          )}) & pinned in your Personal App Container!`,
       'ok'
     );
-    setView('catalog');
+    setView(wasAlreadyInstalled ? 'installed' : 'catalog');
   } catch (err) {
     showToast(`Publish error: ${err.message || err}`, 'err');
   } finally {
