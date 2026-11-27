@@ -17,6 +17,18 @@
   </button>
 
   <main class="ec-shell">
+    <!-- Plain HTTP / Insecure Origin Camera Notice -->
+    <section id="insecureOriginBanner" class="ec-warn-banner" style="display:none;">
+      <div>
+        <strong>🔒 HTTPS Required for Real Camera &amp; Microphone:</strong>
+        Browsers block hardware webcam/mic access on plain HTTP LAN URLs (<span id="insecureOriginText" class="mono"></span>).
+        Open this page over <strong>https://…</strong> or <strong>http://localhost:…</strong> for live webcam video — or test signaling right now with Simulated Camera!
+      </div>
+      <button id="btnEnableSimFromBanner" type="button" class="ec-btn ec-btn-emerald ec-btn-xs">
+        🧪 Enable Simulated Camera
+      </button>
+    </section>
+
     <!-- Incoming Call Ringing Alert Banner -->
     <section id="incomingCallBanner" class="ec-ring-banner" style="display:none;">
       <div class="ec-ring-left">
@@ -90,6 +102,10 @@
               <input id="chkForceSynthetic" type="checkbox" />
               <span>🧪 Use Simulated Radar Camera &amp; Tone (great for VMs / 2-tab tests)</span>
             </label>
+            <details class="ec-turn-details">
+              <summary class="ec-lbl" style="cursor:pointer;margin-top:4px;">🌐 Optional Custom TURN / NAT Relay</summary>
+              <input id="inpCustomIceServers" class="ec-input mono" style="margin-top:5px;" type="text" placeholder="turn:user:pass@turn.example.com:3478" />
+            </details>
           </div>
         </div>
 
@@ -151,6 +167,9 @@
               <span id="hudDtlsBadge" class="ec-hud-pill ec-hud-shield" style="display:none;">
                 🛡️ DTLS-SRTP Identity Verified
               </span>
+              <button id="btnUnmuteRemote" type="button" class="ec-btn ec-btn-emerald ec-btn-xs ec-hud-interactive" style="display:none;">
+                🔊 Tap to Unmute Peer Audio
+              </button>
             </div>
 
             <!-- Bottom-Left Live WebRTC Network Telemetry -->

@@ -23,17 +23,21 @@ import {
   RTC_ROOM_SIGNAL_TYPE,
   WebRtcSignalClient,
   SlxWebRtcPeerSession,
+  buildRtcIceServers,
   deriveRtcSignalingKeys,
   decompressSecp256k1Compressed33,
   sealRtcSignalEnvelope,
   openRtcSignalEnvelope,
   acquireCallMediaStream,
+  attachStreamToVideoElement,
   stopCallMediaStream,
   createCallRingtoneController,
   createLocalLoopbackPair,
 } from '@superlexicon/sdk/webrtc';
 import { mountSlxUnifiedHeader } from '@superlexicon/sdk/ui';
 import { mountHfsRegistryDropdown } from '@superlexicon/sdk/hfs-deployers';
+
+const CUSTOM_ICE_STORAGE_KEY = 'slx_rtc_custom_ice_v1';
 
 const wallet = new SlxWalletManager();
 const rpcUrl = getDefaultNodeWsUrl();
@@ -48,6 +52,8 @@ let recentCalls = [];
 let roomsList = [];
 let stopWatcher = null;
 let syncInFlight = false;
+let syncQueued = false;
+let callSetupBusy = false;
 
 // Active 1:1 Call / Loopback State
 let activeStageTab = 'direct'; // 'direct' | 'rooms'
@@ -70,7 +76,7 @@ const dismissedCallIds = new Set();
 // Active Multi-Peer Mesh Room State
 let joinedRoomId = 0;
 let activeRoomState = null;
-const meshPeers = new Map(); // peerIdentity -> { session, lastHandledSeq, offerSent }
+const meshPeers = new Map(); // peerIdentity -> { session, lastHandledSeq, offerSent, answerApplied }
 
 function esc(s) {
   return String(s ?? '')
@@ -85,6 +91,12 @@ function setStatus(msg, isErr = false) {
   if (!el) return;
   el.textContent = msg || '';
   el.style.color = isErr ? '#fb7185' : '#93c5fd';
+}
+
+function getActiveIceServers() {
+  const inp = document.getElementById('inpCustomIceServers');
+  const spec = inp ? inp.value.trim() : '';
+  return buildRtcIceServers(spec);
 }
 
 function getMyIdentityOrEoa() {
@@ -153,6 +165,20 @@ function updateInspector({
   }
 }
 
+function checkSecureOriginBanner() {
+  const banner = document.getElementById('insecureOriginBanner');
+  if (!banner) return;
+  const insecure =
+    typeof window !== 'undefined' &&
+    (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia);
+  if (insecure) {
+    document.getElementById('insecureOriginText').textContent = window.location.origin;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
 async function populateMediaDevices() {
   if (!navigator.mediaDevices?.enumerateDevices) return;
   try {
@@ -180,17 +206,17 @@ async function populateMediaDevices() {
           .join('');
       aSel.value = prev;
     }
-    if (cams.length === 0 && mics.length === 0) {
-      const chk = document.getElementById('chkForceSynthetic');
-      if (chk) chk.checked = true;
-    }
   } catch {
     // ignore permission-gated device labels
   }
 }
 
-async function ensureLocalStream(mediaKind = RTC_MEDIA_KIND.VIDEO) {
-  if (localStream && !previewOnly) return localStream;
+async function ensureLocalStream(mediaKind = RTC_MEDIA_KIND.VIDEO, { allowSyntheticFallback = false } = {}) {
+  const wantVideo = mediaKind !== RTC_MEDIA_KIND.VOICE;
+  if (localStream && !previewOnly) {
+    const hasVid = localStream.getVideoTracks().length > 0;
+    if (!wantVideo || hasVid) return localStream;
+  }
   if (localStream) {
     stopCallMediaStream(localStream);
     localStream = null;
@@ -206,17 +232,57 @@ async function ensureLocalStream(mediaKind = RTC_MEDIA_KIND.VIDEO) {
     audioDeviceId,
     videoDeviceId,
     forceSynthetic,
+    allowSyntheticFallback,
     syntheticLabel: label,
   });
   localStream = res.stream;
   previewOnly = false;
 
   const lv = document.getElementById('localVideo');
-  if (lv) lv.srcObject = localStream;
+  await attachStreamToVideoElement(lv, localStream, { muted: true });
   const tag = document.getElementById('localPipTag');
-  if (tag) tag.textContent = res.isSynthetic ? 'You (Sim Feed)' : 'You (Live Cam)';
+  if (tag) {
+    tag.textContent = res.isSynthetic
+      ? 'You (Sim Feed)'
+      : localStream.getVideoTracks().length > 0
+        ? 'You (Live Cam)'
+        : 'You (Mic Only)';
+  }
+  if (res.fallbackReason && !res.isSynthetic) {
+    setStatus(`ℹ️ ${res.fallbackReason}`);
+  }
   await populateMediaDevices();
   return localStream;
+}
+
+function bindRemoteVideoStream(remStream) {
+  const rv = document.getElementById('remoteVideo');
+  const unmuteBtn = document.getElementById('btnUnmuteRemote');
+  if (!rv || !remStream) return;
+
+  const hasLiveVideo = remStream.getVideoTracks().length > 0;
+  if (hasLiveVideo) {
+    document.getElementById('stageCenterOverlay').classList.add('hidden');
+  }
+  attachStreamToVideoElement(rv, remStream, {
+    muted: false,
+    onAutoplayMuted: () => {
+      if (unmuteBtn) unmuteBtn.style.display = 'inline-flex';
+    },
+  });
+}
+
+function handlePeerConnectionState({ connectionState, iceConnectionState }) {
+  const stateLabel = connectionState || iceConnectionState || 'connecting';
+  document.getElementById('hudCallState').textContent =
+    stateLabel === 'connected' ? `🟢 Connected (P2P)` : `🟡 ${stateLabel}`;
+
+  if (iceConnectionState === 'failed' || connectionState === 'failed') {
+    setStatus(
+      '⚠️ Direct P2P UDP path blocked by symmetric NAT/firewall. Open "🌐 Optional Custom TURN / NAT Relay" on the left or connect on the same Wi-Fi/VPN.',
+      true
+    );
+  }
 }
 
 function startStatsLoop() {
@@ -239,7 +305,7 @@ function startStatsLoop() {
     const st = await activeSess.pollStats();
     const kbUp = (st.bytesSent / 1024).toFixed(1);
     const kbDown = (st.bytesReceived / 1024).toFixed(1);
-    const rttTxt = st.rttMs !== null ? `${st.rttMs} ms RTT` : 'LAN Direct';
+    const rttTxt = st.rttMs !== null ? `${st.rttMs} ms RTT` : st.iceConnectionState || 'ICE probing';
     document.getElementById('hudRtcStats').textContent =
       `⚡ ${rttTxt} • ${st.localCandidateType}/${st.protocol} • ↑ ${kbUp} KB ↓ ${kbDown} KB`;
 
@@ -286,10 +352,19 @@ function cleanupDirectCallUi(headline = 'Serverless WebRTC Ready', subline = '')
   camMuted = false;
 
   const rv = document.getElementById('remoteVideo');
-  if (rv) rv.srcObject = null;
+  if (rv) {
+    rv.srcObject = null;
+    rv._slxTrackSig = '';
+  }
+  const unmuteBtn = document.getElementById('btnUnmuteRemote');
+  if (unmuteBtn) unmuteBtn.style.display = 'none';
+
   if (!previewOnly) {
     const lv = document.getElementById('localVideo');
-    if (lv) lv.srcObject = null;
+    if (lv) {
+      lv.srcObject = null;
+      lv._slxTrackSig = '';
+    }
     document.getElementById('localPipTag').textContent = 'You (Preview Off)';
   }
 
@@ -310,7 +385,7 @@ function cleanupDirectCallUi(headline = 'Serverless WebRTC Ready', subline = '')
 }
 
 // ============================================================================
-// 1. Publish Presence & Directory Rendering
+// 1. Publish Presence & Non-Destructive Directory Rendering
 // ============================================================================
 
 function renderMyKeyPreview() {
@@ -338,7 +413,9 @@ function renderMyKeyPreview() {
 }
 
 async function publishPresenceTx() {
+  const btn = document.getElementById('btnPublishPresence');
   try {
+    if (btn) btn.disabled = true;
     setStatus('Confirming Identity & publishing secp256k1 WebRTC signaling key…');
     const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall WebRTC' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
@@ -357,6 +434,8 @@ async function publishPresenceTx() {
     await syncState();
   } catch (err) {
     setStatus(err?.message || String(err), true);
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -365,78 +444,78 @@ async function renderDirectoryAndRecents() {
   const dirEl = document.getElementById('peerDirectoryList');
   if (dirEl) {
     const others = directoryProfiles.filter((p) => p.identity !== myId);
-    if (directoryProfiles.length === 0) {
-      dirEl.innerHTML = `<div class="ec-empty">No peers published yet — click “Publish E2EE Presence” above!</div>`;
-    } else {
-      const listToShow = others.length > 0 ? others : directoryProfiles;
-      dirEl.innerHTML = listToShow
-        .map((p) => {
-          const isMe = p.identity === myId;
-          const name = p.displayLabel || shortAddr(p.identity);
-          return `
-            <div class="ec-peer-row">
-              <div class="ec-peer-info">
-                <div class="ec-peer-name">
-                  <span class="ec-dot ec-dot-${p.availability}"></span>
-                  <span>${esc(name)}${isMe ? ' (You)' : ''}</span>
-                </div>
-                <div class="ec-peer-sub mono">
-                  ${esc(shortAddr(p.identity))} • ${p.hasE2eeKey ? '🔒 E2EE' : 'Plain'}
-                </div>
-              </div>
-              <div class="ec-peer-btns">
-                ${
-                  isMe
-                    ? `<span class="ec-pill-mini online">Published</span>`
-                    : `<button type="button" class="ec-btn ec-btn-cyan ec-btn-xs" data-dial-voice="${esc(p.identity)}" title="Voice Call">🎙️</button>
-                       <button type="button" class="ec-btn ec-btn-emerald ec-btn-xs" data-dial-video="${esc(p.identity)}" title="HD Video Call">📹</button>`
-                }
-              </div>
-            </div>
-          `;
-        })
-        .join('');
+    const listToShow = others.length > 0 ? others : directoryProfiles;
+    const dirSig =
+      myId +
+      '::' +
+      listToShow.map((p) => `${p.identity}:${p.availability}:${p.displayLabel}:${p.hasE2eeKey}`).join('|');
 
-      dirEl.querySelectorAll('[data-dial-voice]').forEach((btn) => {
-        btn.addEventListener('click', () => placeCallTx(btn.getAttribute('data-dial-voice'), RTC_MEDIA_KIND.VOICE));
-      });
-      dirEl.querySelectorAll('[data-dial-video]').forEach((btn) => {
-        btn.addEventListener('click', () => placeCallTx(btn.getAttribute('data-dial-video'), RTC_MEDIA_KIND.VIDEO));
-      });
+    if (dirEl.dataset.renderSig !== dirSig) {
+      dirEl.dataset.renderSig = dirSig;
+      if (directoryProfiles.length === 0) {
+        dirEl.innerHTML = `<div class="ec-empty">No peers published yet — click “Publish E2EE Presence” above!</div>`;
+      } else {
+        dirEl.innerHTML = listToShow
+          .map((p) => {
+            const isMe = p.identity === myId;
+            const name = p.displayLabel || shortAddr(p.identity);
+            return `
+              <div class="ec-peer-row">
+                <div class="ec-peer-info">
+                  <div class="ec-peer-name">
+                    <span class="ec-dot ec-dot-${p.availability}"></span>
+                    <span>${esc(name)}${isMe ? ' (You)' : ''}</span>
+                  </div>
+                  <div class="ec-peer-sub mono">
+                    ${esc(shortAddr(p.identity))} • ${p.hasE2eeKey ? '🔒 E2EE' : 'Plain'}
+                  </div>
+                </div>
+                <div class="ec-peer-btns">
+                  ${
+                    isMe
+                      ? `<span class="ec-pill-mini online">Published</span>`
+                      : `<button type="button" class="ec-btn ec-btn-cyan ec-btn-xs" data-dial-voice="${esc(p.identity)}" title="Voice Call">🎙️</button>
+                         <button type="button" class="ec-btn ec-btn-emerald ec-btn-xs" data-dial-video="${esc(p.identity)}" title="HD Video Call">📹</button>`
+                  }
+                </div>
+              </div>
+            `;
+          })
+          .join('');
+      }
     }
   }
 
   const recEl = document.getElementById('recentCallsList');
   if (recEl) {
-    if (!recentCalls.length) {
-      recEl.innerHTML = `<div class="ec-empty">No recent calls for this Identity.</div>`;
-    } else {
-      const rows = await Promise.all(
-        recentCalls.slice(0, 8).map(async (c) => {
-          const outbound = c.caller === myId;
-          const peerAddr = outbound ? c.callee : c.caller;
-          const peerName = await resolveDisplayName(peerAddr);
-          return `
-            <div class="ec-peer-row">
-              <div class="ec-peer-info">
-                <div class="ec-peer-name">
-                  <span>${outbound ? '↗' : '↙'} #${c.callId} ${esc(peerName)}</span>
+    const slice = recentCalls.slice(0, 8);
+    const recSig =
+      myId + '::' + slice.map((c) => `${c.callId}:${c.status}:${c.mediaKind}:${c.updatedBlock}`).join('|');
+    if (recEl.dataset.renderSig !== recSig) {
+      recEl.dataset.renderSig = recSig;
+      if (!slice.length) {
+        recEl.innerHTML = `<div class="ec-empty">No recent calls for this Identity.</div>`;
+      } else {
+        const rows = await Promise.all(
+          slice.map(async (c) => {
+            const outbound = c.caller === myId;
+            const peerAddr = outbound ? c.callee : c.caller;
+            const peerName = await resolveDisplayName(peerAddr);
+            return `
+              <div class="ec-peer-row">
+                <div class="ec-peer-info">
+                  <div class="ec-peer-name">
+                    <span>${outbound ? '↗' : '↙'} #${c.callId} ${esc(peerName)}</span>
+                  </div>
+                  <div class="ec-peer-sub mono">${esc(c.mediaLabel)} • ${esc(c.statusLabel)}</div>
                 </div>
-                <div class="ec-peer-sub mono">${esc(c.mediaLabel)} • ${esc(c.statusLabel)}</div>
+                <button type="button" class="ec-btn ec-btn-xs" data-redial="${esc(peerAddr)}" data-kind="${c.mediaKind}">Redial</button>
               </div>
-              <button type="button" class="ec-btn ec-btn-xs" data-redial="${esc(peerAddr)}" data-kind="${c.mediaKind}">Redial</button>
-            </div>
-          `;
-        })
-      );
-      recEl.innerHTML = rows.join('');
-      recEl.querySelectorAll('[data-redial]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const target = btn.getAttribute('data-redial');
-          const kind = Number(btn.getAttribute('data-kind')) || RTC_MEDIA_KIND.VIDEO;
-          placeCallTx(target, kind);
-        });
-      });
+            `;
+          })
+        );
+        recEl.innerHTML = rows.join('');
+      }
     }
   }
 }
@@ -464,50 +543,48 @@ async function sendTrickleBatchOnChain(callId, myId, candidates, recipientPub64)
 }
 
 async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
+  if (callSetupBusy) return;
   const callee = String(rawPeerAddr || '').trim().toLowerCase();
   if (!/^0x[0-9a-f]{40}$/.test(callee)) {
     setStatus('Enter a valid 20-byte 0x… peer Identity address to dial.', true);
     return;
   }
 
+  callSetupBusy = true;
   try {
-    cleanupDirectCallUi('Preparing Encrypted Call…', 'Acquiring camera/microphone & gathering ICE candidates…');
+    setStageTab('direct');
+    cleanupDirectCallUi('Preparing Encrypted Call…', 'Requesting camera/microphone & gathering LAN + STUN ICE…');
+    setStatus('1/3 Verifying Identity & requesting Camera/Microphone…');
+
     const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall WebRTC' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
     if (myId === callee) {
-      setStatus('Cannot dial your own Identity — use 🧪 Loopback Test or open an Incognito tab!', true);
+      setStatus('Cannot dial your own Identity — click 🧪 Loopback Test or open a second browser/device!', true);
       cleanupDirectCallUi();
       return;
     }
 
-    const stream = await ensureLocalStream(mediaKind);
+    const stream = await ensureLocalStream(mediaKind, { allowSyntheticFallback: false });
     const myKeys = deriveRtcSignalingKeys(wallet.keypair.privateKey, myId);
     const peerProfile = await rtcClient.getPeerProfile(callee);
     const peerPub64 = peerProfile?.pub64 || null;
 
     peerSession = new SlxWebRtcPeerSession({
+      iceServers: getActiveIceServers(),
       localStream: stream,
       isInitiator: true,
-      onRemoteStream: (remStream) => {
-        const rv = document.getElementById('remoteVideo');
-        if (rv) rv.srcObject = remStream;
-        if (mediaKind !== RTC_MEDIA_KIND.VOICE) {
-          document.getElementById('stageCenterOverlay').classList.add('hidden');
-        }
-      },
+      onRemoteStream: (remStream) => bindRemoteVideoStream(remStream),
       onTrickleCandidates: (batch) => {
         if (activeCallId) sendTrickleBatchOnChain(activeCallId, myId, batch, peerPub64);
       },
-      onConnectionState: ({ connectionState }) => {
-        document.getElementById('hudCallState').textContent = `🟢 ${connectionState}`;
-      },
+      onConnectionState: handlePeerConnectionState,
       onDataMessage: (msg) => {
         appendChatBubble({ sender: msg.sender || shortAddr(callee), text: msg.text, mine: false, ts: msg.ts });
       },
     });
 
-    setStatus('Gathering local host/STUN ICE & sealing SDP Offer…');
-    const offerBundle = await peerSession.createBundledOffer({ iceWaitMs: 900 });
+    setStatus('2/3 Gathering host + STUN ICE candidates & sealing E2EE SDP Offer…');
+    const offerBundle = await peerSession.createBundledOffer({ iceWaitMs: 2400 });
     const sealedOffer = await sealRtcSignalEnvelope(
       {
         v: 1,
@@ -521,7 +598,7 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
       { recipientPub64: peerPub64 }
     );
 
-    setStatus(`Ringing ${shortAddr(callee)} on Subnet 1 (${sealedOffer.wireBytes} B Offer)…`);
+    setStatus(`3/3 Ringing ${shortAddr(callee)} on Subnet 1 (${sealedOffer.wireBytes} B Offer, ${offerBundle.candidates.length} ICE)…`);
     const { callId } = await rtcClient.placeCall({
       wallet,
       callerIdentity: myId,
@@ -534,38 +611,45 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
     activeCallId = callId;
     answerApplied = false;
     appliedCalleeIceBatches = 0;
+    // Now unlock trickle dispatch so any late candidates buffered during block confirmation flush cleanly!
+    peerSession.enableTrickleDispatch();
 
     const peerName = await resolveDisplayName(callee);
     document.getElementById('hudCallState').textContent = `🔔 Ringing #${callId}`;
     document.getElementById('stageHeadline').textContent = `Calling ${peerName}…`;
     document.getElementById('stageSubline').textContent =
-      `Waiting for ${shortAddr(callee)} to accept on-chain • DTLS Fingerprint pinned.`;
+      `Waiting for ${peerName} (${shortAddr(callee)}) to click "✅ Accept" • DTLS-SRTP Pinned.`;
     document.getElementById('btnHangup').disabled = false;
 
     updateInspector({
-      envelopeLabel: `${sealedOffer.rawJsonBytes} B → ${sealedOffer.wireBytes} B`,
+      envelopeLabel: `${sealedOffer.rawJsonBytes} B → ${sealedOffer.wireBytes} B (${offerBundle.candidates.length} ICE)`,
       cipherLabel: sealedOffer.encrypted ? 'secp256k1 ECDH + Gzip' : 'Gzip + DTLS Pinned',
       callerFp: offerBundle.dtlsFp,
       calleeFp: ZERO_BYTES32,
       mitmStatus: 'Awaiting Callee DTLS-256…',
     });
 
-    setStatus(`🔔 Call #${callId} ringing ${peerName} — waiting for Answer…`);
+    setStatus(`🔔 Call #${callId} ringing ${peerName} — waiting for Answer on Subnet 1…`);
     startStatsLoop();
+    await syncState();
   } catch (err) {
     cleanupDirectCallUi();
     setStatus(err?.message || String(err), true);
+  } finally {
+    callSetupBusy = false;
   }
 }
 
 async function acceptIncomingCallTx(acceptMediaKind) {
-  if (!ringingCallMeta) return;
+  if (!ringingCallMeta || callSetupBusy) return;
+  callSetupBusy = true;
   const callId = ringingCallMeta.callId;
   ringtone.stop();
   document.getElementById('incomingCallBanner').style.display = 'none';
 
   try {
-    setStatus(`Opening Call #${callId} Offer & verifying Caller DTLS-SRTP fingerprint…`);
+    setStageTab('direct');
+    setStatus(`1/3 Opening Call #${callId} Offer & verifying Caller DTLS-SRTP fingerprint…`);
     const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall WebRTC' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
     const myKeys = deriveRtcSignalingKeys(wallet.keypair.privateKey, myId);
@@ -581,30 +665,26 @@ async function acceptIncomingCallTx(acceptMediaKind) {
       signalPrivHex: myKeys.signalPrivHex,
     });
     if (!openedOffer?.payload?.sdp) {
-      throw new Error('Could not decrypt Offer envelope — ensure your E2EE profile matches this Identity.');
+      throw new Error(
+        'Could not decrypt Offer envelope — ensure you are signed into the Callee Identity that published this E2EE key.'
+      );
     }
 
     const callerPub64 = openedOffer.payload.senderPub33
       ? decompressSecp256k1Compressed33(openedOffer.payload.senderPub33)
       : (await rtcClient.getPeerProfile(session.caller))?.pub64 || null;
 
-    const stream = await ensureLocalStream(acceptMediaKind);
+    setStatus(`2/3 Acquiring Camera/Mic & gathering ICE candidates for Call #${callId}…`);
+    const stream = await ensureLocalStream(acceptMediaKind, { allowSyntheticFallback: false });
     peerSession = new SlxWebRtcPeerSession({
+      iceServers: getActiveIceServers(),
       localStream: stream,
       isInitiator: false,
-      onRemoteStream: (remStream) => {
-        const rv = document.getElementById('remoteVideo');
-        if (rv) rv.srcObject = remStream;
-        if (acceptMediaKind !== RTC_MEDIA_KIND.VOICE) {
-          document.getElementById('stageCenterOverlay').classList.add('hidden');
-        }
-      },
+      onRemoteStream: (remStream) => bindRemoteVideoStream(remStream),
       onTrickleCandidates: (batch) => {
         if (activeCallId) sendTrickleBatchOnChain(activeCallId, myId, batch, callerPub64);
       },
-      onConnectionState: ({ connectionState }) => {
-        document.getElementById('hudCallState').textContent = `🟢 ${connectionState}`;
-      },
+      onConnectionState: handlePeerConnectionState,
       onDataMessage: (msg) => {
         appendChatBubble({
           sender: msg.sender || shortAddr(session.caller),
@@ -618,7 +698,7 @@ async function acceptIncomingCallTx(acceptMediaKind) {
     const answerBundle = await peerSession.acceptOfferAndCreateBundledAnswer(
       openedOffer.payload,
       session.callerDtlsFp,
-      { iceWaitMs: 900 }
+      { iceWaitMs: 2400 }
     );
 
     // Apply any already-trickled caller ICE batches
@@ -644,7 +724,7 @@ async function acceptIncomingCallTx(acceptMediaKind) {
       { recipientPub64: callerPub64 }
     );
 
-    setStatus(`Submitting encrypted SDP Answer (${sealedAnswer.wireBytes} B) for Call #${callId}…`);
+    setStatus(`3/3 Submitting encrypted SDP Answer (${sealedAnswer.wireBytes} B, ${answerBundle.candidates.length} ICE)…`);
     await rtcClient.answerCall({
       wallet,
       callId,
@@ -657,16 +737,17 @@ async function acceptIncomingCallTx(acceptMediaKind) {
     activeCallMeta = session;
     answerApplied = true;
     ringingCallMeta = null;
+    peerSession.enableTrickleDispatch();
 
     document.getElementById('hudCallState').textContent = `🟢 Call #${callId} Active`;
     document.getElementById('hudDtlsBadge').style.display = 'inline-flex';
     document.getElementById('btnHangup').disabled = false;
     document.getElementById('stageHeadline').textContent =
       `Connected with ${await resolveDisplayName(session.caller)}`;
-    document.getElementById('stageSubline').textContent = 'Direct DTLS-SRTP Voice Stream Active';
+    document.getElementById('stageSubline').textContent = 'Negotiating Direct P2P DTLS-SRTP Media…';
 
     updateInspector({
-      envelopeLabel: `${sealedAnswer.rawJsonBytes} B → ${sealedAnswer.wireBytes} B`,
+      envelopeLabel: `${sealedAnswer.rawJsonBytes} B → ${sealedAnswer.wireBytes} B (${answerBundle.candidates.length} ICE)`,
       cipherLabel: sealedAnswer.encrypted ? 'secp256k1 ECDH + Gzip' : 'Gzip + DTLS Pinned',
       callerFp: session.callerDtlsFp,
       calleeFp: answerBundle.dtlsFp,
@@ -674,11 +755,13 @@ async function acceptIncomingCallTx(acceptMediaKind) {
       mitmOk: true,
     });
 
-    setStatus(`🟢 Connected P2P with ${shortAddr(session.caller)} — DTLS-SRTP verified!`);
+    setStatus(`🟢 Answered Call #${callId} — establishing P2P DTLS-SRTP stream!`);
     startStatsLoop();
   } catch (err) {
     cleanupDirectCallUi();
     setStatus(err?.message || String(err), true);
+  } finally {
+    callSetupBusy = false;
   }
 }
 
@@ -777,7 +860,7 @@ async function reconcileActiveDirectCall() {
 }
 
 async function detectIncomingRingingCalls() {
-  if (activeCallId || loopbackHandle) return;
+  if (activeCallId || loopbackHandle || callSetupBusy) return;
   const myId = getMyIdentityOrEoa();
   if (!myId) return;
 
@@ -813,21 +896,20 @@ async function detectIncomingRingingCalls() {
 // ============================================================================
 
 async function runLoopbackSelfTest() {
+  if (callSetupBusy) return;
+  callSetupBusy = true;
   try {
     setStageTab('direct');
     cleanupDirectCallUi('Starting Loopback Verification…');
-    const stream = await ensureLocalStream(RTC_MEDIA_KIND.VIDEO);
+    // Loopback self-test allows synthetic fallback if running without hardware cam/HTTPS
+    const stream = await ensureLocalStream(RTC_MEDIA_KIND.VIDEO, { allowSyntheticFallback: true });
     const myId = getMyIdentityOrEoa();
 
     loopbackHandle = await createLocalLoopbackPair({
       localStream: stream,
       callerWalletPrivHex: wallet.keypair.privateKey,
       callerIdentity: myId || '0x00000000000000000000000000000000000a11ce',
-      onRemoteStream: (remStream) => {
-        const rv = document.getElementById('remoteVideo');
-        if (rv) rv.srcObject = remStream;
-        document.getElementById('stageCenterOverlay').classList.add('hidden');
-      },
+      onRemoteStream: (remStream) => bindRemoteVideoStream(remStream),
       onDataMessage: (msg) => {
         appendChatBubble({ sender: msg.sender || 'Loopback Peer', text: msg.text, mine: false, ts: msg.ts });
       },
@@ -852,6 +934,8 @@ async function runLoopbackSelfTest() {
   } catch (err) {
     cleanupDirectCallUi();
     setStatus(err?.message || String(err), true);
+  } finally {
+    callSetupBusy = false;
   }
 }
 
@@ -862,6 +946,10 @@ async function runLoopbackSelfTest() {
 function renderRoomsList() {
   const box = document.getElementById('roomsList');
   if (!box) return;
+  const sig = `${joinedRoomId}::` + roomsList.map((r) => `${r.roomId}:${r.peerCount}:${r.status}`).join('|');
+  if (box.dataset.renderSig === sig) return;
+  box.dataset.renderSig = sig;
+
   if (!roomsList.length) {
     box.innerHTML = `<div class="ec-empty">No conference rooms created yet.</div>`;
     return;
@@ -882,10 +970,6 @@ function renderRoomsList() {
       `;
     })
     .join('');
-
-  box.querySelectorAll('[data-join-room]').forEach((btn) => {
-    btn.addEventListener('click', () => joinMeshRoomTx(Number(btn.getAttribute('data-join-room'))));
-  });
 }
 
 function cleanupAllMeshPeers() {
@@ -915,7 +999,7 @@ function ensureMeshTile(peerId, labelText, streamObj, isSelf = false) {
     grid.appendChild(tile);
   }
   const vid = tile.querySelector('video');
-  if (vid && vid.srcObject !== streamObj) vid.srcObject = streamObj;
+  attachStreamToVideoElement(vid, streamObj, { muted: isSelf });
   tile.querySelector('.ec-mesh-label').textContent = labelText;
 }
 
@@ -930,9 +1014,8 @@ async function createRoomTx() {
     const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall WebRTC' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
     const mediaKind = Number(document.getElementById('selRoomMedia')?.value || RTC_MEDIA_KIND.VIDEO);
-    const stream = await ensureLocalStream(mediaKind);
+    const stream = await ensureLocalStream(mediaKind, { allowSyntheticFallback: false });
 
-    // Probe local DTLS fingerprint once for room membership entry
     const probe = new SlxWebRtcPeerSession({ iceServers: [], localStream: stream, isInitiator: true });
     const probeOffer = await probe.createBundledOffer({ iceWaitMs: 120 });
     probe.close();
@@ -966,7 +1049,7 @@ async function joinMeshRoomTx(roomId) {
     const rm = await rtcClient.getRoomState(roomId);
     if (!rm || !rm.isOpen) throw new Error('Room is closed or does not exist.');
 
-    const stream = await ensureLocalStream(rm.mediaKind);
+    const stream = await ensureLocalStream(rm.mediaKind, { allowSyntheticFallback: false });
     const probe = new SlxWebRtcPeerSession({ iceServers: [], localStream: stream, isInitiator: true });
     const probeOffer = await probe.createBundledOffer({ iceWaitMs: 120 });
     probe.close();
@@ -1015,7 +1098,7 @@ async function reconcileActiveMeshRoom() {
   document.getElementById('activeRoomHeader').textContent =
     `🏛️ Room #${rm.roomId}: ${rm.title} (${rm.peerCount}/6 peers)`;
 
-  const stream = await ensureLocalStream(rm.mediaKind);
+  const stream = await ensureLocalStream(rm.mediaKind, { allowSyntheticFallback: false });
   ensureMeshTile(myId, `You (${shortAddr(myId)})`, stream, true);
 
   for (const peer of rm.peers) {
@@ -1027,6 +1110,7 @@ async function reconcileActiveMeshRoom() {
     if (!entry) {
       const peerLabel = await resolveDisplayName(peerId);
       const sess = new SlxWebRtcPeerSession({
+        iceServers: getActiveIceServers(),
         localStream: stream,
         isInitiator: amInitiator,
         onRemoteStream: (remStream) => {
@@ -1042,7 +1126,7 @@ async function reconcileActiveMeshRoom() {
 
     if (amInitiator && !entry.offerSent) {
       entry.offerSent = true;
-      const offer = await entry.session.createBundledOffer({ iceWaitMs: 750 });
+      const offer = await entry.session.createBundledOffer({ iceWaitMs: 2000 });
       const env = await sealRtcSignalEnvelope({
         v: 1,
         type: 'offer',
@@ -1068,7 +1152,7 @@ async function reconcileActiveMeshRoom() {
       const pay = opened?.payload;
       if (pay?.type === 'offer' && !amInitiator) {
         const expectedFp = pay.dtlsFp || peer.dtlsFp;
-        const ans = await entry.session.acceptOfferAndCreateBundledAnswer(pay, expectedFp, { iceWaitMs: 750 });
+        const ans = await entry.session.acceptOfferAndCreateBundledAnswer(pay, expectedFp, { iceWaitMs: 2000 });
         const sealedAns = await sealRtcSignalEnvelope({
           v: 1,
           type: 'answer',
@@ -1095,11 +1179,14 @@ async function reconcileActiveMeshRoom() {
 }
 
 // ============================================================================
-// 5. Synchronization & Boot Wiring
+// 5. Re-Queued Single-Flight Synchronization & Delegated Boot Wiring
 // ============================================================================
 
 async function syncState() {
-  if (syncInFlight) return;
+  if (syncInFlight) {
+    syncQueued = true;
+    return;
+  }
   syncInFlight = true;
   try {
     hubOverview = await rtcClient.getOverview();
@@ -1125,10 +1212,14 @@ async function syncState() {
     await detectIncomingRingingCalls();
     await reconcileActiveDirectCall();
     await reconcileActiveMeshRoom();
-  } catch {
-    // node reconnecting
+  } catch (err) {
+    console.warn('[EtherCall syncState]', err);
   } finally {
     syncInFlight = false;
+    if (syncQueued) {
+      syncQueued = false;
+      syncState();
+    }
   }
 }
 
@@ -1146,7 +1237,7 @@ async function selectHub(nextAddr) {
     contractAddresses: () => [hubAddr].filter(Boolean),
     onNewBlock: () => syncState(),
     onContractLog: () => syncState(),
-    pollIntervalMs: 3000,
+    pollIntervalMs: 3500,
   });
 }
 
@@ -1171,6 +1262,62 @@ async function boot() {
     getContractLabel: () => 'Subnet 1 EtherCall Signaling Hub',
     onWalletSwitch: () => syncState(),
     extraElements: [document.getElementById('btnHeaderLoopback')],
+  });
+
+  checkSecureOriginBanner();
+
+  const savedIce = localStorage.getItem(CUSTOM_ICE_STORAGE_KEY) || '';
+  const iceInp = document.getElementById('inpCustomIceServers');
+  if (iceInp) {
+    iceInp.value = savedIce;
+    iceInp.addEventListener('change', () => {
+      localStorage.setItem(CUSTOM_ICE_STORAGE_KEY, iceInp.value.trim());
+    });
+  }
+
+  document.getElementById('btnEnableSimFromBanner')?.addEventListener('click', () => {
+    const chk = document.getElementById('chkForceSynthetic');
+    if (chk) chk.checked = true;
+    document.getElementById('insecureOriginBanner').style.display = 'none';
+    setStatus('🧪 Enabled Simulated Radar Camera & Tone — ready to place calls!');
+  });
+
+  document.getElementById('btnUnmuteRemote')?.addEventListener('click', () => {
+    const rv = document.getElementById('remoteVideo');
+    if (rv) {
+      rv.muted = false;
+      rv.play().catch(() => {});
+    }
+    document.getElementById('btnUnmuteRemote').style.display = 'none';
+  });
+
+  // Delegated click listeners (immune to background sync updates!)
+  document.getElementById('peerDirectoryList').addEventListener('click', (ev) => {
+    const voiceBtn = ev.target.closest('[data-dial-voice]');
+    if (voiceBtn) {
+      placeCallTx(voiceBtn.getAttribute('data-dial-voice'), RTC_MEDIA_KIND.VOICE);
+      return;
+    }
+    const videoBtn = ev.target.closest('[data-dial-video]');
+    if (videoBtn) {
+      placeCallTx(videoBtn.getAttribute('data-dial-video'), RTC_MEDIA_KIND.VIDEO);
+    }
+  });
+
+  document.getElementById('recentCallsList').addEventListener('click', (ev) => {
+    const redialBtn = ev.target.closest('[data-redial]');
+    if (redialBtn) {
+      const target = redialBtn.getAttribute('data-redial');
+      const kind = Number(redialBtn.getAttribute('data-kind')) || RTC_MEDIA_KIND.VIDEO;
+      placeCallTx(target, kind);
+    }
+  });
+
+  document.getElementById('roomsList').addEventListener('click', (ev) => {
+    const joinBtn = ev.target.closest('[data-join-room]');
+    if (joinBtn) {
+      joinMeshRoomTx(Number(joinBtn.getAttribute('data-join-room')));
+    }
   });
 
   document.getElementById('tabBtnDirect').addEventListener('click', () => setStageTab('direct'));
@@ -1200,16 +1347,20 @@ async function boot() {
   document.getElementById('btnHangup').addEventListener('click', hangupActiveCallTx);
 
   document.getElementById('btnPreviewCam').addEventListener('click', async () => {
-    if (localStream && previewOnly) {
-      stopCallMediaStream(localStream);
-      localStream = null;
-      previewOnly = false;
-      document.getElementById('localVideo').srcObject = null;
-      document.getElementById('localPipTag').textContent = 'You (Preview Off)';
-      return;
+    try {
+      if (localStream && previewOnly) {
+        stopCallMediaStream(localStream);
+        localStream = null;
+        previewOnly = false;
+        document.getElementById('localVideo').srcObject = null;
+        document.getElementById('localPipTag').textContent = 'You (Preview Off)';
+        return;
+      }
+      await ensureLocalStream(RTC_MEDIA_KIND.VIDEO, { allowSyntheticFallback: false });
+      previewOnly = !activeCallId && !loopbackHandle;
+    } catch (err) {
+      setStatus(err?.message || String(err), true);
     }
-    await ensureLocalStream(RTC_MEDIA_KIND.VIDEO);
-    previewOnly = !activeCallId && !loopbackHandle;
   });
 
   document.getElementById('btnToggleMic').addEventListener('click', () => {
@@ -1239,13 +1390,13 @@ async function boot() {
       if (activeSess) {
         await activeSess.replaceVideoTrack(screenTrack);
       }
-      document.getElementById('localVideo').srcObject = res.stream;
+      await attachStreamToVideoElement(document.getElementById('localVideo'), res.stream, { muted: true });
       document.getElementById('localPipTag').textContent = 'You (Screen)';
       setStatus('🖥️ Sharing screen over P2P DTLS-SRTP track!');
       screenTrack.onended = async () => {
         if (localStream && localStream.getVideoTracks()[0] && activeSess) {
           await activeSess.replaceVideoTrack(localStream.getVideoTracks()[0]);
-          document.getElementById('localVideo').srcObject = localStream;
+          await attachStreamToVideoElement(document.getElementById('localVideo'), localStream, { muted: true });
           document.getElementById('localPipTag').textContent = 'You (Cam)';
         }
       };

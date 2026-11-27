@@ -58,6 +58,23 @@ body {
   background: linear-gradient(90deg, rgba(6, 78, 59, 0.82), rgba(12, 74, 110, 0.84));
   animation: ecPulseGlow 1.6s infinite ease-in-out;
 }
+.ec-warn-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 15px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(251, 191, 36, 0.72);
+  background: rgba(120, 53, 15, 0.48);
+  color: #fef3c7;
+  font-size: 0.75rem;
+  line-height: 1.42;
+}
+.ec-hud-interactive {
+  pointer-events: auto;
+}
 .ec-ring-left {
   display: flex;
   align-items: center;
