@@ -477,18 +477,52 @@
       gap: 11px;
     }
     .as-lbl { display: flex; flex-direction: column; gap: 4px; font-size: 0.71rem; font-weight: 700; color: #cbd5e1; }
-    .as-editor {
-      width: 100%;
-      min-height: 455px;
+    .as-dropzone {
+      border-radius: 14px;
+      border: 1.5px dashed rgba(56, 189, 248, 0.52);
+      background: linear-gradient(145deg, rgba(10, 22, 42, 0.85), rgba(4, 10, 22, 0.94));
+      padding: 20px 18px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.16s ease, background 0.16s ease, transform 0.14s ease;
+    }
+    .as-dropzone.dragover {
+      border-color: #34d399;
+      background: rgba(16, 185, 129, 0.12);
+      transform: translateY(-1px);
+    }
+    .as-artifact-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .as-artifact-pill {
+      padding: 6px 11px;
+      border-radius: 9px;
+      border: 1px solid rgba(52, 211, 153, 0.48);
+      background: rgba(16, 185, 129, 0.14);
+      color: #d1fae5;
+      font-size: 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .as-source-pre {
+      margin: 8px 0 0;
+      max-height: 290px;
+      overflow: auto;
       border-radius: 10px;
-      border: 1px solid rgba(71, 85, 105, 0.9);
+      border: 1px solid rgba(71, 85, 105, 0.85);
       background: #02060f;
-      color: #e2e8f0;
-      padding: 12px 14px;
-      font-size: 0.74rem;
-      line-height: 1.52;
-      resize: vertical;
-      outline: none;
+      color: #cbd5e1;
+      padding: 11px 13px;
+      font-size: 0.69rem;
+      line-height: 1.48;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     .as-toast {
       display: none;
@@ -662,16 +696,16 @@ await window.slx.sendTransaction({
         </div>
 
         <div class="as-step-card">
-          <div class="mono" style="font-size:0.7rem;color:#fde68a;font-weight:800;">STEP 3 • 1-BLOCK ON-CHAIN PUBLISH</div>
-          <strong style="font-size:0.84rem;">Compress, Seal <code>keccak256</code> &amp; Go Live</strong>
+          <div class="mono" style="font-size:0.7rem;color:#fde68a;font-weight:800;">STEP 3 • BUILD .HTML.GZ &amp; UPLOAD</div>
+          <strong style="font-size:0.84rem;">Bundle via <code>cargo-hps</code> &amp; Seal On-Chain</strong>
           <div style="font-size:0.73rem;color:#cbd5e1;line-height:1.45;">
-            Click <strong>➕ Create / Publish a New App</strong>, paste or upload your `.html` (and optional `.wasm`), preview in the zero-trust sandbox, and click <strong>Publish</strong>:
+            Package a deterministic <code>.html.gz</code> archive locally in <code>haltproof-subroutines</code>, then drag-and-drop your <code>dist/</code> release into <strong>➕ Submit Release</strong>:
           </div>
-          <pre class="as-code-snippet mono">1. Browser gzips HTML (e.g. 18 KiB -&gt; 4 KiB)
-2. Uploads .wasm -&gt; BYTECODE_STORE (0x0100)
-3. Seals UI chunks -&gt; app_store.wasm (keccak256)
-4. Registers slug under your Identity HFS
-✓ Live across every browser &amp; radio node!</pre>
+          <pre class="as-code-snippet mono">$ cargo hps new my-app --with-ui
+$ ./scripts/build-app-bundle.sh ./my-app
+# -&gt; dist/my-app.html.gz (mtime=0, RF-audited)
+# -&gt; dist/my_app.wasm + my-app.manifest.json
+✓ Upload &amp; seal keccak256 in 1 block!</pre>
         </div>
       </div>
     </section>
@@ -684,14 +718,14 @@ await window.slx.sendTransaction({
         <button type="button" class="as-tab active" data-view="catalog">🏪 Categorized Directory (<span id="lblAppCount">15</span>)</button>
         <button type="button" class="as-tab" data-view="installed">📦 My App Container (<span id="lblInstalledCount">0</span>)</button>
         <button type="button" class="as-tab" data-view="runner">▶️ Live Sandbox Runner</button>
-        <button type="button" class="as-tab" data-view="studio">➕ Create / Publish App</button>
+        <button type="button" class="as-tab" data-view="studio">➕ Submit App Release</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <button type="button" id="btnCacheStatusJump" class="as-btn mono" title="Inspect locally cached App Store HTML bundles &amp; Personal App Container">
           ⚡ <span id="lblCachedBadge">0 HTMLs cached</span>
         </button>
         <button type="button" id="btnToolbarCreateApp" class="as-btn as-btn-emerald">
-          ➕ Create / Publish New App
+          ➕ Submit App Release
         </button>
       </div>
     </div>
@@ -747,7 +781,7 @@ await window.slx.sendTransaction({
           </div>
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
             <button type="button" id="btnRunnerWhitelist" class="as-btn as-btn-emerald" style="padding:5px 9px;font-size:0.67rem;">✓ Whitelist HFS</button>
-            <button type="button" id="btnRunnerFork" class="as-btn as-btn-amber" style="padding:5px 9px;font-size:0.67rem;">✏ Fork / Edit UI</button>
+            <button type="button" id="btnRunnerFork" class="as-btn as-btn-amber" style="padding:5px 9px;font-size:0.67rem;">📦 Inspect / Update Release</button>
             <a id="lnkRunnerStandalone" href="#" class="as-btn" style="padding:5px 9px;font-size:0.67rem;display:none;">↗ Open Full Page</a>
           </div>
         </div>
@@ -761,20 +795,20 @@ await window.slx.sendTransaction({
       </div>
     </section>
 
-    <!-- VIEW 3: CREATE / PUBLISH A NEW APP (ZERO-SERVER STUDIO) -->
+    <!-- VIEW 3: SUBMIT / PUBLISH APP RELEASE (.HTML.GZ + .WASM UPLOADER) -->
     <section id="viewStudio" style="display:none;">
       <div class="as-studio-banner">
         <div>
-          <div class="mono" style="font-size:0.68rem;font-weight:800;color:#6ee7b7;">① NO EC2 OR POSTGRES NEEDED</div>
-          <div style="font-size:0.76rem;color:#e2e8f0;margin-top:3px;">Attach an optional <code>.wasm</code> Halt-Free Subroutine (your backend + database) or build a pure <code>window.slx</code> app.</div>
+          <div class="mono" style="font-size:0.68rem;font-weight:800;color:#6ee7b7;">① BUILD LOCALLY WITH CARGO-HPS</div>
+          <div style="font-size:0.76rem;color:#e2e8f0;margin-top:3px;">Run <code>cargo hps bundle</code> (or <code>scripts/build-app-bundle.sh</code>) to compile <code>.wasm</code> and inline your UI into a reproducible <code>.html.gz</code>.</div>
         </div>
         <div>
-          <div class="mono" style="font-size:0.68rem;font-weight:800;color:#7dd3fc;">② SINGLE-FILE HTML FRONTEND</div>
-          <div style="font-size:0.76rem;color:#e2e8f0;margin-top:3px;">Write standard HTML/CSS/JS—compressed automatically via <code>gzip</code> and sealed by <code>keccak256</code>.</div>
+          <div class="mono" style="font-size:0.68rem;font-weight:800;color:#7dd3fc;">② UPLOAD .HTML.GZ + OPTIONAL .WASM</div>
+          <div style="font-size:0.76rem;color:#e2e8f0;margin-top:3px;">Exact CLI <code>gzip</code> bytes (<code>mtime=0</code>) and <code>keccak256</code> <code>uiHash</code> are preserved verbatim without browser re-compression.</div>
         </div>
         <div>
-          <div class="mono" style="font-size:0.68rem;font-weight:800;color:#fde68a;">③ LIVE IN 1 BLOCK ($0/MO FOREVER)</div>
-          <div style="font-size:0.76rem;color:#e2e8f0;margin-top:3px;">Preview inside the isolated sandbox, then publish to the Directory with zero web-client redeploys.</div>
+          <div class="mono" style="font-size:0.68rem;font-weight:800;color:#fde68a;">③ SANDBOX VERIFY &amp; SEAL ON-CHAIN</div>
+          <div style="font-size:0.76rem;color:#e2e8f0;margin-top:3px;">Test inside the zero-trust <code>window.slx</code> sandbox, then publish to <code>app_store.wasm</code> in 1 block at <code>$0.00</code> gas.</div>
         </div>
       </div>
 
@@ -782,7 +816,7 @@ await window.slx.sendTransaction({
       <div id="studioDevGateBanner" style="margin-bottom:14px;padding:12px 16px;border-radius:12px;border:1px solid rgba(251,191,36,0.45);background:linear-gradient(135deg,rgba(69,26,3,0.36),rgba(15,23,42,0.92));display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;font-size:0.76rem;line-height:1.5;">
         <div style="color:#e2e8f0;max-width:74ch;">
           <span class="mono" style="font-weight:800;color:#fcd34d;">🏛️ WEB RPC PUBLISHER AUTHORIZATION:</span>
-          Unlike connecting directly to a radio subnet via an <code>LR2021</code> RF device, public website publishing and non-<code>Identity</code> HFS deployments require your <code>Identity</code> HFS to be an active member of the <strong><code>Superlexicon · Developers</code></strong> social subgroup governed by the cast-in-stone <strong>Superlexicon Pte. Ltd.</strong> (Singapore) <code>CorporateCharter</code>. Everyone can still test apps locally via <strong>👁️ Sandbox Preview</strong>!
+          Unlike connecting directly to a radio subnet via an <code>LR2021</code> RF device, public website publishing and non-<code>Identity</code> HFS deployments require your <code>Identity</code> HFS to be an active member of the <strong><code>Superlexicon · Developers</code></strong> social subgroup governed by the cast-in-stone <strong>Superlexicon Pte. Ltd.</strong> (Singapore) <code>CorporateCharter</code>. Everyone can test uploaded <code>.html.gz</code> archives locally via <strong>👁️ Sandbox Preview</strong>!
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <a href="/charter.html" class="as-btn" style="text-decoration:none;font-size:0.7rem;">🏛️ Superlexicon Charter &amp; Dev Group →</a>
@@ -793,17 +827,17 @@ await window.slx.sendTransaction({
       <div class="as-studio-grid">
         <!-- Left Metadata & HFS Binding -->
         <div class="as-panel">
-          <strong class="mono" style="font-size:0.84rem;color:#7dd3fc;">1. App Directory Listing &amp; HFS Subroutine</strong>
+          <strong class="mono" style="font-size:0.84rem;color:#7dd3fc;">1. App Store Listing &amp; HFS Binding</strong>
 
           <label class="as-lbl mono">
-            <span>Start From Template or Fork Existing Directory App</span>
+            <span>Submission Target (New App or Update Existing Release)</span>
             <select id="selStudioTemplate" class="as-in"></select>
           </label>
 
           <div style="display:grid;grid-template-columns:1.3fr 0.7fr;gap:8px;">
             <label class="as-lbl mono">
               <span>App Slug (Unique ID) *</span>
-              <input id="inStudioSlug" class="as-in" value="my-zero-server-app" maxlength="40" />
+              <input id="inStudioSlug" class="as-in" placeholder="e.g. my-hfs-app" maxlength="40" />
             </label>
             <label class="as-lbl mono">
               <span>Version *</span>
@@ -818,12 +852,12 @@ await window.slx.sendTransaction({
             </label>
             <label class="as-lbl mono">
               <span>App Title *</span>
-              <input id="inStudioTitle" class="as-in" value="My Zero-Server HFS App" maxlength="64" />
+              <input id="inStudioTitle" class="as-in" placeholder="e.g. My Zero-Server HFS App" maxlength="64" />
             </label>
           </div>
 
           <label class="as-lbl mono">
-            <span>Directory Category * (Required for Categorized App Directory)</span>
+            <span>Directory Category *</span>
             <select id="selStudioCategory" class="as-in">
               <option value="1">📈 Markets &amp; DeFi</option>
               <option value="2">🏛️ Corporate, Governance &amp; IFRS</option>
@@ -836,17 +870,12 @@ await window.slx.sendTransaction({
 
           <label class="as-lbl mono">
             <span>Plain-English Description (max 240 chars)</span>
-            <input id="inStudioSummary" class="as-in" value="Runs 100% on-chain via Halt-Free Subroutines &amp; gzipped HTML—zero backend, zero database, zero EC2." maxlength="240" />
+            <input id="inStudioSummary" class="as-in" placeholder="Concise summary of what your zero-server HFS app does…" maxlength="240" />
           </label>
 
           <label class="as-lbl mono">
-            <span>Optional: Upload Compiled HFS <code>.wasm</code> (Replaces Backend + DB)</span>
-            <input id="inStudioWasmFile" type="file" accept=".wasm,application/wasm" class="as-in" />
-          </label>
-
-          <label class="as-lbl mono">
-            <span>HFS WASM <code>codeHash</code> (bytes32)</span>
-            <input id="inStudioWasmHash" class="as-in" placeholder="0x… (auto-filled when .wasm uploaded)" />
+            <span>HFS WASM <code>codeHash</code> (bytes32, optional)</span>
+            <input id="inStudioWasmHash" class="as-in" placeholder="0x… (auto-filled from .wasm or .manifest.json)" />
           </label>
 
           <label class="as-lbl mono">
@@ -859,32 +888,68 @@ await window.slx.sendTransaction({
             <span>Instantiate fresh HFS contract from <code>codeHash</code> on publish</span>
           </label>
 
-          <div id="studioBundleMeter" class="mono" style="padding:10px 12px;border-radius:10px;background:#030711;border:1px solid rgba(52,211,153,0.4);font-size:0.69rem;line-height:1.55;color:#bae6fd;"></div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="button" id="btnStudioPreview" class="as-btn" style="flex:1;justify-content:center;">👁️ Sandbox Preview</button>
-            <button type="button" id="btnStudioPublish" class="as-btn as-btn-emerald" style="flex:1.35;justify-content:center;">🚀 Publish to App Store</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+            <button type="button" id="btnStudioPreview" class="as-btn" style="flex:1;justify-content:center;" disabled>👁️ Sandbox Preview</button>
+            <button type="button" id="btnStudioPublish" class="as-btn as-btn-emerald" style="flex:1.35;justify-content:center;" disabled>🚀 Publish Release</button>
           </div>
         </div>
 
-        <!-- Right Single-File HTML/CSS/JS Editor + Snippet Helpers -->
+        <!-- Right Release Artifact Uploader (.html.gz + .wasm + .manifest.json) -->
         <div class="as-panel">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-            <strong class="mono" style="font-size:0.84rem;color:#6ee7b7;">2. Single-File HTML + CSS + JS Frontend Bundle</strong>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button type="button" class="as-btn" data-snippet="identity" style="padding:4px 8px;font-size:0.66rem;">+ Identity Login</button>
-              <button type="button" class="as-btn" data-snippet="read" style="padding:4px 8px;font-size:0.66rem;">+ HFS Read (No DB)</button>
-              <button type="button" class="as-btn" data-snippet="write" style="padding:4px 8px;font-size:0.66rem;">+ $0-Gas Write (No EC2)</button>
-              <label class="as-btn mono" style="padding:4px 9px;font-size:0.66rem;cursor:pointer;">
-                📂 Import .html
-                <input id="inStudioHtmlFile" type="file" accept=".html,text/html" style="display:none;" />
+            <strong class="mono" style="font-size:0.84rem;color:#6ee7b7;">2. Upload Built Release Archive (<code>.html.gz</code> + Optional <code>.wasm</code>)</strong>
+            <button type="button" id="btnCopyCliCmd" class="as-btn mono" style="padding:4px 9px;font-size:0.66rem;">📋 Copy Build Command</button>
+          </div>
+
+          <div style="padding:11px 13px;border-radius:10px;background:#030711;border:1px solid rgba(51,65,85,0.85);display:flex;flex-direction:column;gap:5px;">
+            <div class="mono" style="font-size:0.68rem;color:#7dd3fc;font-weight:800;">BUILD IN <code>haltproof-subroutines</code> REPOSITORY:</div>
+            <pre id="preStudioCliRecipe" class="as-code-snippet mono" style="margin:0;">cargo hps new my-app --with-ui
+./scripts/build-app-bundle.sh ./my-app
+# Outputs in ./my-app/dist/:
+#   my-app.html.gz        (deterministic mtime=0 gzip UI archive)
+#   my_app.wasm           (stripped #![no_std] HFS subroutine)
+#   my-app.manifest.json  (auto-fills listing metadata &amp; hashes)</pre>
+          </div>
+
+          <!-- Unified Drag & Drop Release Dropzone -->
+          <div id="studioDropzone" class="as-dropzone">
+            <div style="font-size:1.75rem;line-height:1;">📦</div>
+            <div style="font-size:0.88rem;font-weight:800;color:#f8fafc;">
+              Drag &amp; Drop <code>&lt;slug&gt;.html.gz</code>, <code>&lt;name&gt;.wasm</code> &amp; <code>&lt;slug&gt;.manifest.json</code> Here
+            </div>
+            <div style="font-size:0.73rem;color:#94a3b8;max-width:56ch;line-height:1.45;">
+              Drop all files from your <code>dist/</code> folder at once to auto-fill metadata and verify <code>keccak256</code> digests—or choose individual artifacts below:
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:2px;">
+              <label class="as-btn as-btn-emerald mono" style="cursor:pointer;">
+                📦 Select <code>.html.gz</code> UI Archive *
+                <input id="inStudioGzFile" type="file" accept=".gz,application/gzip,application/x-gzip,.html,text/html" style="display:none;" />
+              </label>
+              <label class="as-btn mono" style="cursor:pointer;">
+                🦀 Select <code>.wasm</code> HFS
+                <input id="inStudioWasmFile" type="file" accept=".wasm,application/wasm" style="display:none;" />
+              </label>
+              <label class="as-btn as-btn-violet mono" style="cursor:pointer;">
+                📋 Load <code>.manifest.json</code>
+                <input id="inStudioManifestFile" type="file" accept=".json,application/json" style="display:none;" />
               </label>
             </div>
           </div>
-          <div style="font-size:0.73rem;color:#94a3b8;">
-            No S3, Vercel, or API keys needed—<code>window.slx</code> connects your HTML directly to the user’s <code>Identity</code> HFS and Subnet 1 validators.
-          </div>
-          <textarea id="txtStudioHtml" class="as-editor mono" spellcheck="false"></textarea>
+
+          <!-- Attached Artifact Pills -->
+          <div id="studioArtifactPills" class="as-artifact-row mono"></div>
+
+          <!-- Cryptographic & RF-Offline Verification Readout -->
+          <div id="studioBundleMeter" class="mono" style="padding:12px 14px;border-radius:10px;background:#030711;border:1px solid rgba(52,211,153,0.4);font-size:0.7rem;line-height:1.6;color:#bae6fd;"></div>
+
+          <!-- Read-Only Unpacked Source Audit Drawer (Zero Code Editor) -->
+          <details id="studioSourceAuditDetails" style="border-radius:10px;border:1px solid rgba(51,65,85,0.8);background:rgba(3,8,18,0.85);padding:9px 12px;display:none;">
+            <summary class="mono" style="cursor:pointer;font-size:0.7rem;color:#94a3b8;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <span>🔍 Inspect Unpacked HTML Source Inside <code>.html.gz</code> (Read-Only Security Audit)</span>
+              <button type="button" id="btnExportLoadedGz" class="as-btn mono" style="padding:3px 8px;font-size:0.64rem;">⬇ Download .html.gz</button>
+            </summary>
+            <pre id="preStudioUnpackedHtml" class="as-source-pre mono"></pre>
+          </details>
         </div>
       </div>
     </section>

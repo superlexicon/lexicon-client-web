@@ -23,6 +23,7 @@ import {
   SlxPersonalAppContainer,
   cacheCatalogManifestLocal,
   compressAppUiBundle,
+  inspectUploadedUiArchive,
   loadLocalPublishedApps,
   buildSandboxedIframeSrcdoc,
   attachSandboxedAppBridge,
@@ -81,12 +82,6 @@ const WASM_LABELS_BY_SLUG = {
   lottery: 'lottery.wasm + vrf_beacon.wasm',
 };
 
-const STUDIO_SNIPPETS = {
-  identity: `\n// Instant cryptographic login (replaces Auth0 / JWT / User DB):\nconst ctx = await window.slx.getContext();\nconsole.log('Logged in as:', ctx.user.nickname, ctx.user.identityAddr);\n`,
-  read: `\n// Read directly from on-chain HFS WorldState (replaces Postgres SELECT + REST GET):\nconst rawHex = await window.slx.callContract('totalCount()', []);\n`,
-  write: `\n// $0.00-gas signed state write via Identity HFS (replaces EC2 API POST + SQL INSERT):\nconst receipt = await window.slx.sendTransaction({\n  fnSig: 'submitEntry(string)',\n  args: [['string', 'Stored directly in HFS WorldState!']],\n  summary: 'Record entry in Halt-Free Subroutine'\n});\n`,
-};
-
 const state = {
   activeView: 'catalog',
   selectedCategory: 0,
@@ -97,63 +92,11 @@ const state = {
   installingSlugs: new Set(),
   runningApp: null,
   activeBridge: null,
+  uploadedUiBundle: null,
   uploadedWasmBytes: null,
+  uploadedWasmName: '',
+  uploadedManifestName: '',
 };
-
-const BLANK_STARTER_HTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Zero-Server HFS App</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 24px; background: #050b16; color: #f8fafc; font-family: system-ui, sans-serif; }
-    .card { max-width: 660px; margin: 0 auto; padding: 22px; border-radius: 16px; background: #0a1428; border: 1px solid rgba(52,211,153,0.45); }
-    .tag { display: inline-block; padding: 3px 10px; border-radius: 999px; background: rgba(16,185,129,0.18); border: 1px solid rgba(52,211,153,0.5); color: #6ee7b7; font-family: monospace; font-size: 11px; font-weight: 800; }
-    input { width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid #334155; background: #030712; color: #f8fafc; font-family: monospace; margin-top: 10px; }
-    button { margin-top: 10px; padding: 9px 15px; border-radius: 9px; border: 1px solid #34d399; background: rgba(16,185,129,0.24); color: #d1fae5; font-family: monospace; font-weight: 800; cursor: pointer; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <span class="tag">0 EC2 Servers • 0 SQL Databases • $0.00 Gas</span>
-    <h2 style="margin:12px 0 4px;">⚡ My Zero-Server HFS App</h2>
-    <p id="who" style="color:#94a3b8;font-family:monospace;font-size:12.5px;margin:0;">Connecting to window.slx…</p>
-    <input id="noteIn" placeholder="Write a note to commit via your Identity HFS…" />
-    <button onclick="saveNote()">✍️ Sign &amp; Commit ($0.00 Gas)</button>
-    <div id="notesOut" style="margin-top:14px;font-family:monospace;font-size:12px;color:#bae6fd;"></div>
-  </div>
-  <script>
-    let items = [];
-    async function boot() {
-      const ctx = await window.slx.getContext();
-      document.getElementById('who').textContent =
-        'Identity: ' + ctx.user.nickname + ' · ' + ctx.user.tag4 + ' | Subnet Block #' + ctx.blockNumber;
-      items = (await window.slx.getAppStorage('notes')) || [];
-      render();
-    }
-    function render() {
-      document.getElementById('notesOut').innerHTML = items.map(x =>
-        '<div style="padding:7px 0;border-bottom:1px solid #1e293b;">✓ ' + x.replace(/</g, '&lt;') + '</div>'
-      ).join('');
-    }
-    async function saveNote() {
-      const val = document.getElementById('noteIn').value.trim();
-      if (!val) return;
-      const res = await window.slx.sendTransaction({
-        fnSig: 'recordNote(string)',
-        args: [['string', val]],
-        summary: 'Commit note: "' + val.slice(0, 40) + '"'
-      });
-      items.unshift(val + ' (' + String(res.txHash).slice(0, 12) + '…)');
-      await window.slx.setAppStorage('notes', items);
-      document.getElementById('noteIn').value = '';
-      render();
-    }
-    boot();
-  <\/script>
-</body>
-</html>`;
 
 function showToast(msg, tone = 'info') {
   const el = document.getElementById('asToast');
@@ -479,7 +422,7 @@ function renderSingleAppCardHtml(a) {
             ? `<button type="button" class="as-btn" data-sandbox-slug="${a.slug}" title="Run inside isolated iframe">🛡️ Sandbox</button>`
             : ''
         }
-        <button type="button" class="as-btn as-btn-amber" data-fork-slug="${a.slug}" title="Inspect HTML/CSS/JS source or publish an updated version">✏ Fork</button>
+        <button type="button" class="as-btn as-btn-amber" data-fork-slug="${a.slug}" title="Inspect verified .html.gz release or push an updated version">📦 Release</button>
       </div>
     </article>
   `;
@@ -775,10 +718,10 @@ function populateStudioTemplates() {
   const sel = document.getElementById('selStudioTemplate');
   const prev = sel.value;
   const opts = [
-    `<option value="__blank__">✨ New Blank Zero-Server App (window.slx Starter)</option>`,
+    `<option value="__blank__">✨ Submit New App Release (.html.gz + Optional .wasm)</option>`,
     ...state.apps.map(
       (a) =>
-        `<option value="${a.slug}">${a.icon || '🧩'} Fork / Edit Directory App: ${a.title} (${a.slug})</option>`
+        `<option value="${a.slug}">${a.icon || '🧩'} Inspect / Update Existing App: ${a.title} (${a.slug})</option>`
     ),
   ];
   sel.innerHTML = opts.join('');
@@ -788,16 +731,18 @@ function populateStudioTemplates() {
 async function loadAppIntoStudio(slug) {
   if (slug === '__blank__') {
     document.getElementById('selStudioTemplate').value = '__blank__';
-    document.getElementById('inStudioSlug').value = 'my-zero-server-app';
-    document.getElementById('inStudioTitle').value = 'My Zero-Server HFS App';
+    document.getElementById('inStudioSlug').value = '';
+    document.getElementById('inStudioTitle').value = '';
     document.getElementById('inStudioIcon').value = '⚡';
     document.getElementById('inStudioVersion').value = '1.0.0';
     document.getElementById('selStudioCategory').value = '6';
-    document.getElementById('inStudioSummary').value =
-      'Runs 100% on-chain via Halt-Free Subroutines & gzipped HTML—zero backend, zero database, zero EC2.';
+    document.getElementById('inStudioSummary').value = '';
     document.getElementById('inStudioWasmHash').value = '';
     document.getElementById('inStudioDefaultHfs').value = '';
-    document.getElementById('txtStudioHtml').value = BLANK_STARTER_HTML;
+    state.uploadedUiBundle = null;
+    state.uploadedWasmBytes = null;
+    state.uploadedWasmName = '';
+    state.uploadedManifestName = '';
     await updateStudioMeter();
     setView('studio');
     return;
@@ -807,10 +752,32 @@ async function loadAppIntoStudio(slug) {
     (await resolveEffectiveAppMeta(slug, storeClient)) || state.apps.find((a) => a.slug === slug);
   if (!appMeta) return;
 
-  const verified = await storeClient.fetchVerifiedBundleHtml({
-    uiHash: appMeta.uiHash,
-    fallbackBundleUrl: appMeta.bundleUrl || '',
-  });
+  let inspected = null;
+  if (appMeta.bundleUrl) {
+    try {
+      const r = await fetch(appMeta.bundleUrl, { cache: 'no-store' });
+      if (r.ok) {
+        const rawBytes = new Uint8Array(await r.arrayBuffer());
+        inspected = await inspectUploadedUiArchive(rawBytes);
+      }
+    } catch (_) {}
+  }
+  if (!inspected) {
+    const verified = await storeClient.fetchVerifiedBundleHtml({
+      uiHash: appMeta.uiHash,
+      fallbackBundleUrl: appMeta.bundleUrl || '',
+    });
+    const packed = await compressAppUiBundle(verified.html);
+    inspected = await inspectUploadedUiArchive(packed.bytes);
+  }
+
+  state.uploadedUiBundle = {
+    ...inspected,
+    fileName: `${appMeta.slug}.html.gz`,
+  };
+  state.uploadedWasmBytes = null;
+  state.uploadedWasmName = '';
+  state.uploadedManifestName = '';
 
   document.getElementById('selStudioTemplate').value = appMeta.slug;
   document.getElementById('inStudioSlug').value = appMeta.slug;
@@ -825,25 +792,82 @@ async function loadAppIntoStudio(slug) {
     appMeta.wasmCodeHash && appMeta.wasmCodeHash !== ZERO_BYTES32 ? appMeta.wasmCodeHash : '';
   document.getElementById('inStudioDefaultHfs').value =
     appMeta.defaultHfsAddr && appMeta.defaultHfsAddr !== ZERO_ADDR ? appMeta.defaultHfsAddr : '';
-  document.getElementById('txtStudioHtml').value = verified.html;
 
   await updateStudioMeter();
   setView('studio');
   showToast(
-    `Loaded "${appMeta.title}" (${(verified.uncompressedLen / 1024).toFixed(1)} KiB HTML) into Studio — edit & click Publish to ship v${verParts.join('.')} with zero servers & zero client redeploys!`,
+    `Loaded verified release "${appMeta.slug}.html.gz" (${(inspected.compressedLen / 1024).toFixed(1)} KiB gz) — drop a new .html.gz from cargo-hps to ship v${verParts.join('.')}!`,
     'info'
   );
 }
 
 async function updateStudioMeter() {
-  const html = document.getElementById('txtStudioHtml').value || '';
-  const packed = await compressAppUiBundle(html);
-  const airtimeMs = Math.max(8, Math.round((packed.compressedLen * 8) / 2_600));
-  document.getElementById('studioBundleMeter').innerHTML =
-    `Raw HTML+CSS+JS: <strong style="color:#f8fafc;">${(packed.uncompressedLen / 1024).toFixed(1)} KiB</strong><br/>` +
-    `Gzip On-Chain Bundle: <strong style="color:#6ee7b7;">${(packed.compressedLen / 1024).toFixed(1)} KiB</strong> (${packed.chunkCount} chunk${packed.chunkCount === 1 ? '' : 's'} @ 32 KiB)<br/>` +
-    `LR2021 Radio-2 Air Sync: <strong style="color:#7dd3fc;">~${airtimeMs} ms</strong> • Cloud Bill: <strong style="color:#6ee7b7;">$0.00/mo</strong><br/>` +
-    `uiHash: <code>${shortHex(packed.uiHash, 12, 8)}</code>`;
+  const pillsEl = document.getElementById('studioArtifactPills');
+  const meterEl = document.getElementById('studioBundleMeter');
+  const auditEl = document.getElementById('studioSourceAuditDetails');
+  const preEl = document.getElementById('preStudioUnpackedHtml');
+  const btnPrev = document.getElementById('btnStudioPreview');
+  const btnPub = document.getElementById('btnStudioPublish');
+
+  const pills = [];
+  if (state.uploadedUiBundle) {
+    pills.push(
+      `<span class="as-artifact-pill">📦 <strong>${String(state.uploadedUiBundle.fileName || 'bundle.html.gz').replace(/</g, '&lt;')}</strong> (${(
+        state.uploadedUiBundle.compressedLen / 1024
+      ).toFixed(1)} KiB)</span>`
+    );
+  }
+  if (state.uploadedWasmBytes && state.uploadedWasmBytes.length > 0) {
+    pills.push(
+      `<span class="as-artifact-pill" style="border-color:rgba(56,189,248,0.55);background:rgba(14,165,233,0.16);color:#e0f2fe;">🦀 <strong>${String(
+        state.uploadedWasmName || 'subroutine.wasm'
+      ).replace(/</g, '&lt;')}</strong> (${(state.uploadedWasmBytes.length / 1024).toFixed(1)} KiB)</span>`
+    );
+  }
+  if (state.uploadedManifestName) {
+    pills.push(
+      `<span class="as-artifact-pill" style="border-color:rgba(167,139,250,0.55);background:rgba(139,92,246,0.16);color:#ede9fe;">📋 <strong>${String(
+        state.uploadedManifestName
+      ).replace(/</g, '&lt;')}</strong></span>`
+    );
+  }
+  if (pillsEl) pillsEl.innerHTML = pills.join('');
+
+  if (!state.uploadedUiBundle) {
+    if (btnPrev) btnPrev.disabled = true;
+    if (btnPub) btnPub.disabled = true;
+    if (auditEl) auditEl.style.display = 'none';
+    if (preEl) preEl.textContent = '';
+    if (meterEl) {
+      meterEl.innerHTML =
+        `<span style="color:#94a3b8;">No <code>.html.gz</code> UI archive attached yet. Build your app with <code>cargo hps bundle</code> (or <code>scripts/build-app-bundle.sh</code>) in <code>haltproof-subroutines</code> and upload <code>dist/&lt;slug&gt;.html.gz</code> above.</span>`;
+    }
+    return;
+  }
+
+  const b = state.uploadedUiBundle;
+  if (btnPrev) btnPrev.disabled = false;
+  if (btnPub) btnPub.disabled = state.busy;
+  if (auditEl) auditEl.style.display = 'block';
+  if (preEl) preEl.textContent = b.html;
+
+  const airtimeMs = Math.max(8, Math.round((b.compressedLen * 8) / 2_600));
+  const fmtBadge = b.isPrebuiltGzip
+    ? b.deterministicMtimeZero
+      ? '<strong style="color:#6ee7b7;">✓ Deterministic Gzip (.html.gz • mtime=0 • Byte-Exact)</strong>'
+      : '<strong style="color:#6ee7b7;">✓ Gzip Archive (.html.gz • Byte-Exact Preserved)</strong>'
+    : '<strong style="color:#fcd34d;">⚠ Plain .html Imported (Tip: use cargo hps bundle for reproducible .html.gz)</strong>';
+
+  const rfBadge = b.rfOfflineReady
+    ? '<strong style="color:#6ee7b7;">✓ 100% RF-Offline Ready (0 External Runtime URLs)</strong>'
+    : `<strong style="color:#fbbf24;">⚠ References ${b.externalUrls.length} External URL(s) — May Fail Offline Over RF</strong>`;
+
+  meterEl.innerHTML =
+    `Archive Format: ${fmtBadge}<br/>` +
+    `Bundle Size: <strong style="color:#6ee7b7;">${(b.compressedLen / 1024).toFixed(1)} KiB gz</strong> (${b.chunkCount} chunk${b.chunkCount === 1 ? '' : 's'} @ 32 KiB) • Unpacked HTML: <strong style="color:#f8fafc;">${(b.uncompressedLen / 1024).toFixed(1)} KiB</strong><br/>` +
+    `RF-Offline Check: ${rfBadge}<br/>` +
+    `LR2021 Radio-2 Air Sync: <strong style="color:#7dd3fc;">~${airtimeMs} ms</strong> • Gas &amp; Server Cost: <strong style="color:#6ee7b7;">$0.00</strong><br/>` +
+    `uiHash (keccak256): <code>${b.uiHash}</code>`;
 }
 
 // Wire Events
@@ -994,24 +1018,6 @@ document.getElementById('installedAppsGrid')?.addEventListener('click', async (e
   }
 });
 
-document.querySelectorAll('[data-snippet]').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const key = btn.getAttribute('data-snippet');
-    const snippet = STUDIO_SNIPPETS[key];
-    if (!snippet) return;
-    const ed = document.getElementById('txtStudioHtml');
-    const cur = ed.value;
-    const closeIdx = cur.lastIndexOf('</script>');
-    if (closeIdx >= 0) {
-      ed.value = cur.slice(0, closeIdx) + snippet + cur.slice(closeIdx);
-    } else {
-      ed.value = cur + `\n<script>${snippet}<\/script>\n`;
-    }
-    updateStudioMeter();
-    showToast(`Inserted "${key}" window.slx snippet into HTML bundle.`, 'ok');
-  });
-});
-
 document.getElementById('btnResolveHfsAddr').addEventListener('click', async () => {
   const addr = document.getElementById('inResolveHfsAddr').value.trim().toLowerCase();
   if (!/^0x[0-9a-f]{40}$/.test(addr)) {
@@ -1121,39 +1127,170 @@ document.getElementById('btnSyncAllCatalogOnChain').addEventListener('click', as
   }
 });
 
+async function handleUploadedUiFile(file) {
+  if (!file) return;
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const inspected = await inspectUploadedUiArchive(bytes);
+    state.uploadedUiBundle = {
+      ...inspected,
+      fileName: file.name,
+    };
+    const slugIn = document.getElementById('inStudioSlug');
+    if (slugIn && !slugIn.value.trim()) {
+      const base = file.name
+        .replace(/\.bundle\.html$/i, '')
+        .replace(/\.html\.gz$/i, '')
+        .replace(/\.gz$/i, '')
+        .replace(/\.html$/i, '');
+      slugIn.value = base.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+    }
+    const titleIn = document.getElementById('inStudioTitle');
+    if (titleIn && !titleIn.value.trim() && slugIn?.value) {
+      titleIn.value = slugIn.value
+        .split(/[-_]+/)
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+    }
+    await updateStudioMeter();
+    showToast(
+      `✓ Verified "${file.name}" (${(inspected.compressedLen / 1024).toFixed(1)} KiB gz → ${(
+        inspected.uncompressedLen / 1024
+      ).toFixed(1)} KiB HTML • uiHash ${shortHex(inspected.uiHash)})`,
+      'ok'
+    );
+  } catch (err) {
+    showToast(`UI archive error: ${err.message || err}`, 'err');
+  }
+}
+
+async function handleUploadedWasmFile(file) {
+  if (!file) return;
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (bytes.length < 4 || bytes[0] !== 0x00 || bytes[1] !== 0x61 || bytes[2] !== 0x73 || bytes[3] !== 0x6d) {
+      throw new Error(`"${file.name}" does not have valid WebAssembly (\\0asm) magic bytes.`);
+    }
+    state.uploadedWasmBytes = bytes;
+    state.uploadedWasmName = file.name;
+    const hash = keccak256Hex(bytes);
+    document.getElementById('inStudioWasmHash').value = hash;
+    await updateStudioMeter();
+    showToast(`✓ Verified WASM "${file.name}" (${(bytes.length / 1024).toFixed(1)} KiB • codeHash ${shortHex(hash)})`, 'ok');
+  } catch (err) {
+    showToast(`WASM error: ${err.message || err}`, 'err');
+  }
+}
+
+async function handleUploadedManifestFile(file) {
+  if (!file) return;
+  try {
+    const parsed = JSON.parse(await file.text());
+    state.uploadedManifestName = file.name;
+    if (parsed.slug) document.getElementById('inStudioSlug').value = String(parsed.slug);
+    if (parsed.title) document.getElementById('inStudioTitle').value = String(parsed.title);
+    if (parsed.version) document.getElementById('inStudioVersion').value = String(parsed.version);
+    if (parsed.icon) document.getElementById('inStudioIcon').value = String(parsed.icon);
+    if (parsed.category) document.getElementById('selStudioCategory').value = String(parsed.category);
+    if (parsed.summary) document.getElementById('inStudioSummary').value = String(parsed.summary);
+    if (parsed.wasmCodeHash && parsed.wasmCodeHash !== ZERO_BYTES32) {
+      document.getElementById('inStudioWasmHash').value = String(parsed.wasmCodeHash);
+    }
+    await updateStudioMeter();
+    showToast(`✓ Auto-filled release metadata from "${file.name}"!`, 'ok');
+  } catch (err) {
+    showToast(`Manifest JSON error: ${err.message || err}`, 'err');
+  }
+}
+
+async function handleDroppedArtifactFiles(fileList) {
+  const files = Array.from(fileList || []);
+  for (const f of files) {
+    const lower = f.name.toLowerCase();
+    if (lower.endsWith('.manifest.json') || (lower.endsWith('.json') && !lower.endsWith('.meta.json'))) {
+      await handleUploadedManifestFile(f);
+    } else if (lower.endsWith('.wasm')) {
+      await handleUploadedWasmFile(f);
+    } else if (lower.endsWith('.gz') || lower.endsWith('.html')) {
+      await handleUploadedUiFile(f);
+    }
+  }
+}
+
 document.getElementById('selStudioTemplate').addEventListener('change', (ev) => {
   loadAppIntoStudio(ev.currentTarget.value);
 });
-document.getElementById('txtStudioHtml').addEventListener('input', () => {
-  updateStudioMeter();
-});
-document.getElementById('inStudioHtmlFile').addEventListener('change', async (ev) => {
-  const file = ev.currentTarget.files?.[0];
-  if (!file) return;
-  document.getElementById('txtStudioHtml').value = await file.text();
-  await updateStudioMeter();
+document.getElementById('inStudioGzFile').addEventListener('change', async (ev) => {
+  await handleUploadedUiFile(ev.currentTarget.files?.[0]);
+  ev.currentTarget.value = '';
 });
 document.getElementById('inStudioWasmFile').addEventListener('change', async (ev) => {
-  const file = ev.currentTarget.files?.[0];
-  if (!file) {
-    state.uploadedWasmBytes = null;
-    return;
+  await handleUploadedWasmFile(ev.currentTarget.files?.[0]);
+  ev.currentTarget.value = '';
+});
+document.getElementById('inStudioManifestFile').addEventListener('change', async (ev) => {
+  await handleUploadedManifestFile(ev.currentTarget.files?.[0]);
+  ev.currentTarget.value = '';
+});
+
+const dropzoneEl = document.getElementById('studioDropzone');
+if (dropzoneEl) {
+  ['dragenter', 'dragover'].forEach((evName) => {
+    dropzoneEl.addEventListener(evName, (ev) => {
+      ev.preventDefault();
+      dropzoneEl.classList.add('dragover');
+    });
+  });
+  ['dragleave', 'drop'].forEach((evName) => {
+    dropzoneEl.addEventListener(evName, (ev) => {
+      ev.preventDefault();
+      dropzoneEl.classList.remove('dragover');
+    });
+  });
+  dropzoneEl.addEventListener('drop', async (ev) => {
+    await handleDroppedArtifactFiles(ev.dataTransfer?.files);
+  });
+}
+
+document.getElementById('btnCopyCliCmd')?.addEventListener('click', async () => {
+  const cmd = `cargo hps new my-app --with-ui\n./scripts/build-app-bundle.sh ./my-app`;
+  try {
+    await navigator.clipboard.writeText(cmd);
+    showToast('✓ Copied cargo-hps build commands to clipboard!', 'ok');
+  } catch (_) {
+    showToast(cmd, 'info');
   }
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  state.uploadedWasmBytes = bytes;
-  document.getElementById('inStudioWasmHash').value = keccak256Hex(bytes);
-  showToast(`Computed WASM codeHash: ${shortHex(keccak256Hex(bytes))} (${(bytes.length / 1024).toFixed(1)} KiB)`, 'ok');
+});
+
+document.getElementById('btnExportLoadedGz')?.addEventListener('click', (ev) => {
+  ev.preventDefault();
+  ev.stopPropagation();
+  if (!state.uploadedUiBundle?.bytes) return;
+  const slug = document.getElementById('inStudioSlug').value.trim() || 'app';
+  const blob = new Blob([state.uploadedUiBundle.bytes], { type: 'application/gzip' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${slug}.html.gz`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 
 document.getElementById('btnStudioPreview').addEventListener('click', async () => {
-  const html = document.getElementById('txtStudioHtml').value;
+  if (!state.uploadedUiBundle?.html) {
+    showToast('Upload a built .html.gz archive first to preview in the zero-trust sandbox.', 'err');
+    return;
+  }
   const slug = document.getElementById('inStudioSlug').value.trim() || 'preview-app';
-  const title = document.getElementById('inStudioTitle').value.trim() || 'Studio Preview';
+  const title = document.getElementById('inStudioTitle').value.trim() || 'Release Preview';
   const icon = document.getElementById('inStudioIcon').value.trim() || '⚡';
   const version = document.getElementById('inStudioVersion').value.trim() || '1.0.0';
   await launchInSandboxRunner(
     { slug, title, icon, version, execMode: APP_EXEC_MODE.SANDBOX_IFRAME },
-    { rawHtmlOverride: html }
+    { rawHtmlOverride: state.uploadedUiBundle.html }
   );
 });
 
@@ -1168,15 +1305,15 @@ document.getElementById('btnStudioPublish').addEventListener('click', async () =
   const wasmCodeHash = document.getElementById('inStudioWasmHash').value.trim() || ZERO_BYTES32;
   const defaultHfsAddr = document.getElementById('inStudioDefaultHfs').value.trim() || ZERO_ADDR;
   const deployInstance = document.getElementById('chkStudioDeployInst').checked;
-  const htmlSource = document.getElementById('txtStudioHtml').value;
 
-  if (!slug || !title || !htmlSource.trim()) {
-    showToast('Slug, Title, and HTML Bundle Source are required.', 'err');
+  if (!slug || !title || !state.uploadedUiBundle?.bytes?.length) {
+    showToast('App Slug, App Title, and a built .html.gz UI archive are required.', 'err');
     return;
   }
 
   state.busy = true;
   renderHeaderStatus();
+  await updateStudioMeter();
   try {
     const existing = state.apps.find((a) => a.slug === slug);
     const published = await storeClient.publishApp({
@@ -1188,7 +1325,8 @@ document.getElementById('btnStudioPublish').addEventListener('click', async () =
       version,
       category,
       execMode: existing?.isSystemCore ? APP_EXEC_MODE.VERIFIED_HOST : APP_EXEC_MODE.SANDBOX_IFRAME,
-      htmlSource,
+      gzBytes: state.uploadedUiBundle.bytes,
+      htmlSource: state.uploadedUiBundle.html,
       wasmBytes: state.uploadedWasmBytes,
       wasmCodeHash,
       defaultHfsAddr,
@@ -1209,11 +1347,11 @@ document.getElementById('btnStudioPublish').addEventListener('click', async () =
   } finally {
     state.busy = false;
     renderHeaderStatus();
+    await updateStudioMeter();
   }
 });
 
 // Boot
-document.getElementById('txtStudioHtml').value = BLANK_STARTER_HTML;
 const params = new URLSearchParams(window.location.search);
 if (params.get('cat')) {
   const resolvedCat = resolveAppCategory(params.get('cat'));
@@ -1223,6 +1361,9 @@ if (params.get('cat')) {
 }
 
 await updateStudioMeter();
+if (params.get('create') === '1') {
+  setView('studio');
+}
 await refreshMergedCatalog();
 
 if (params.get('create') === '1') {
