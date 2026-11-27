@@ -51,6 +51,7 @@ let directoryProfiles = [];
 let recentCalls = [];
 let roomsList = [];
 let stopWatcher = null;
+let reactivePollTimer = null;
 let syncInFlight = false;
 let syncQueued = false;
 let callSetupBusy = false;
@@ -436,6 +437,7 @@ function cleanupDirectCallUi(headline = 'Serverless WebRTC Ready', subline = '')
     rv.onresize = null;
     rv.onloadeddata = null;
     rv._slxAutoplayMuted = false;
+    rv._slxTrackSetKey = '';
     rv.srcObject = null;
     rv._slxTrackSig = '';
   }
@@ -636,6 +638,26 @@ async function sendTrickleBatchOnChain(callId, myId, candidates, recipientPub64)
   }
 }
 
+/**
+ * Synchronously blesses `<video id="remoteVideo">` during the user's click gesture (`📹` / `✅ Accept`)
+ * so Safari / iOS WebKit permits unmuted remote audio + video playback once async signaling finishes.
+ */
+function preBlessRemoteVideoGesture() {
+  const rv = document.getElementById('remoteVideo');
+  if (!rv) return;
+  rv._slxAutoplayMuted = false;
+  rv.playsInline = true;
+  rv.setAttribute('playsinline', '');
+  rv.setAttribute('webkit-playsinline', '');
+  rv.muted = false;
+  try {
+    const p = rv.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  } catch {
+    // ignore empty media play probe
+  }
+}
+
 async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
   if (callSetupBusy) return;
   const callee = String(rawPeerAddr || '').trim().toLowerCase();
@@ -644,6 +666,7 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
     return;
   }
 
+  preBlessRemoteVideoGesture();
   callSetupBusy = true;
   try {
     setStageTab('direct');
@@ -744,6 +767,7 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
 
 async function acceptIncomingCallTx(acceptMediaKind) {
   if (!ringingCallMeta || callSetupBusy) return;
+  preBlessRemoteVideoGesture();
   callSetupBusy = true;
   const callId = ringingCallMeta.callId;
   ringtone.stop();
@@ -932,9 +956,13 @@ async function reconcileActiveDirectCall() {
     const openedAns = await openRtcSignalEnvelope(sess.answerEnvelope, {
       signalPrivHex: myKeys.signalPrivHex,
     });
-    if (openedAns?.payload?.sdp) {
+    if (!openedAns?.payload?.sdp) {
+      setStatus('⚠️ Could not decrypt Callee Answer envelope.', true);
+      return;
+    }
+    answerApplied = true;
+    try {
       await peerSession.applyBundledAnswer(openedAns.payload, sess.calleeDtlsFp);
-      answerApplied = true;
       const calleeName = await resolveDisplayName(sess.callee);
       activePeerDisplayName = calleeName;
       callConnectedAt = Date.now();
@@ -947,6 +975,10 @@ async function reconcileActiveDirectCall() {
         mitmOk: true,
       });
       setStatus(`🟢 ${calleeName} answered Call #${sess.callId} — completing P2P DTLS-SRTP handshake!`);
+    } catch (ansErr) {
+      answerApplied = false;
+      setStatus(ansErr?.message || String(ansErr), true);
+      throw ansErr;
     }
   }
 
@@ -1364,17 +1396,33 @@ async function selectHub(nextAddr) {
   hubAddr = nextAddr.toLowerCase();
   rtcClient.setHubAddress(hubAddr);
   if (stopWatcher) {
-    stopWatcher();
+    if (typeof stopWatcher === 'function') stopWatcher();
+    else stopWatcher.unsubscribe?.();
     stopWatcher = null;
   }
+  if (reactivePollTimer) {
+    clearInterval(reactivePollTimer);
+    reactivePollTimer = null;
+  }
   await syncState();
+
+  // Real-time pub/sub (`newHeads` + `logs` on `webrtc_signal.wasm`) + 1.8s single-flight fallback
+  // heartbeat so Safari / mobile browsers react to incoming rings & answers with zero manual refresh!
   stopWatcher = slxWatchChainApp({
-    rpcUrlFn: () => rpcUrl,
-    contractAddresses: () => [hubAddr].filter(Boolean),
-    onNewBlock: () => syncState(),
-    onContractLog: () => syncState(),
-    pollIntervalMs: 3500,
+    rpcUrl: () => rpcUrl,
+    filter: () => (hubAddr ? { address: hubAddr } : null),
+    onHead: () => syncState(),
+    onLog: () => syncState(),
+    onRefresh: () => syncState(),
+    offlineFallbackMs: 3500,
+    sortBackfill: false,
   });
+
+  reactivePollTimer = setInterval(() => {
+    if (typeof document === 'undefined' || !document.hidden) {
+      syncState();
+    }
+  }, 1800);
 }
 
 function setStageTab(tab) {
@@ -1401,6 +1449,9 @@ async function boot() {
   });
 
   checkSecureOriginBanner();
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) syncState();
+  });
 
   const savedIce = localStorage.getItem(CUSTOM_ICE_STORAGE_KEY) || '';
   const iceInp = document.getElementById('inpCustomIceServers');

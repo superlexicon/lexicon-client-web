@@ -202,7 +202,7 @@ CORE_APPS = [
         "title": "EtherCall — WebRTC Voice & Video",
         "icon": "📹",
         "category": 4,
-        "version": "1.4.0",
+        "version": "1.5.0",
         "summary": "Serverless P2P voice, HD video, screen share, and 6-peer mesh conference rooms signaled via Halt-Free Subroutine with Identity-pinned DTLS-SRTP.",
         "wasmKey": "webrtc_signal",
         "wasmFile": "webrtc_signal.wasm",
