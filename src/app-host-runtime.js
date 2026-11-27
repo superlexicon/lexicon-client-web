@@ -8,6 +8,7 @@
 
 import * as sdk from '@superlexicon/sdk';
 import * as sdkUi from '@superlexicon/sdk/ui';
+import * as sdkWebrtc from '@superlexicon/sdk/webrtc';
 import * as instSuite from '@superlexicon/sdk/inst-suite';
 import * as hfsRegistry from '@superlexicon/sdk/hfs-deployers';
 import * as ifrsValuation from '@superlexicon/sdk/ifrs-valuation';
@@ -20,6 +21,7 @@ export const HOST_MODULE_MAP = Object.freeze({
   // Canonical @superlexicon/sdk submodule imports (used by all on-chain HFS UI bundles)
   '@superlexicon/sdk': sdk,
   '@superlexicon/sdk/ui': sdkUi,
+  '@superlexicon/sdk/webrtc': sdkWebrtc,
   '@superlexicon/sdk/inst-suite': instSuite,
   '@superlexicon/sdk/hfs-deployers': hfsRegistry,
   '@superlexicon/sdk/ifrs-valuation': ifrsValuation,

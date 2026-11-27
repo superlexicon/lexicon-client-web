@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EtherCall — Serverless WebRTC Voice, Video &amp; Mesh Rooms — SuperLexicon</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+  <link rel="stylesheet" href="/src/slx-inst.css" />
+</head>
+<body>
+  <div id="slxUnifiedHeaderMount"></div>
+
+  <!-- Header Quick Action Button (mounted into Unified Header) -->
+  <button id="btnHeaderLoopback" class="ec-hdr-loopback-btn" type="button" title="Run instant in-browser Caller ⇄ HFS ECDH Envelope ⇄ Callee WebRTC P2P verification">
+    🧪 Loopback Test
+  </button>
+
+  <main class="ec-shell">
+    <!-- Incoming Call Ringing Alert Banner -->
+    <section id="incomingCallBanner" class="ec-ring-banner" style="display:none;">
+      <div class="ec-ring-left">
+        <span class="ec-ring-pulse">🔔</span>
+        <div>
+          <div class="ec-ring-title" id="incomingCallerTitle">Incoming HD Video Call…</div>
+          <div class="ec-ring-sub mono" id="incomingCallerMeta">Caller Identity: 0x… • DTLS-SRTP Pinned</div>
+        </div>
+      </div>
+      <div class="ec-ring-actions">
+        <button id="btnAcceptVideo" type="button" class="ec-btn ec-btn-emerald">✅ Accept Video</button>
+        <button id="btnAcceptVoice" type="button" class="ec-btn ec-btn-cyan">🎙️ Voice Only</button>
+        <button id="btnDeclineCall" type="button" class="ec-btn ec-btn-rose">✕ Decline</button>
+      </div>
+    </section>
+
+    <!-- Top Status & Zero-Server Architecture Strip -->
+    <section class="ec-top-strip">
+      <div class="ec-top-left">
+        <span class="ec-badge ec-badge-emerald">📹 HPS #28 • webrtc_signal.wasm</span>
+        <span class="ec-badge ec-badge-cyan">🔐 Identity-Pinned DTLS-SRTP</span>
+        <span class="ec-badge ec-badge-violet">📦 secp256k1 ECDH + Gzip (~750 B)</span>
+        <span class="ec-status-text mono" id="txStatusMsg">Ready — 0 Socket.io / 0 Twilio / 0 EC2 signaling servers</span>
+      </div>
+      <div class="ec-top-metrics mono">
+        <span>Peers: <strong id="statProfiles">0</strong></span>
+        <span>•</span>
+        <span>Calls: <strong id="statCalls">0</strong></span>
+        <span>•</span>
+        <span>Rooms: <strong id="statRooms">0</strong></span>
+      </div>
+    </section>
+
+    <!-- Main 3-Column Grid -->
+    <div class="ec-grid">
+      <!-- LEFT COLUMN: My Presence, Device Setup, Direct Dial & Peer Directory -->
+      <aside class="ec-col ec-col-left">
+        <div class="ec-card">
+          <div class="ec-card-hdr">
+            <span class="ec-card-title">🪪 My Call Presence &amp; E2EE Key</span>
+            <span id="myPresenceBadge" class="ec-pill-mini">Unregistered</span>
+          </div>
+          <div class="ec-form-row">
+            <label class="ec-lbl">Display Handle &amp; Availability</label>
+            <div class="ec-inline-inputs">
+              <input id="inpDisplayLabel" class="ec-input" type="text" maxlength="48" placeholder="e.g. Mano @ SG" />
+              <select id="selAvailability" class="ec-select ec-select-sm">
+                <option value="1">🟢 Online</option>
+                <option value="2">🟡 Busy</option>
+                <option value="3">🔴 DND</option>
+                <option value="0">⚪ Offline</option>
+              </select>
+            </div>
+          </div>
+          <div class="ec-kv-mini mono" id="mySignalKeyPreview">secp256k1 E2EE Key: deriving…</div>
+          <button id="btnPublishPresence" type="button" class="ec-btn ec-btn-emerald ec-w-full">
+            📡 Publish E2EE Presence ($0 Gas)
+          </button>
+
+          <div class="ec-divider"></div>
+
+          <div class="ec-form-row">
+            <label class="ec-lbl">Camera &amp; Microphone Source</label>
+            <select id="selVideoDevice" class="ec-select">
+              <option value="">📷 Default Camera</option>
+            </select>
+            <select id="selAudioDevice" class="ec-select">
+              <option value="">🎙️ Default Microphone</option>
+            </select>
+            <label class="ec-check-row">
+              <input id="chkForceSynthetic" type="checkbox" />
+              <span>🧪 Use Simulated Radar Camera &amp; Tone (great for VMs / 2-tab tests)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="ec-card">
+          <div class="ec-card-hdr">
+            <span class="ec-card-title">☎️ Direct Identity Dialer</span>
+          </div>
+          <input id="inpDialIdentity" class="ec-input mono" type="text" placeholder="Paste peer Identity 0x… address" />
+          <div class="ec-btn-pair">
+            <button id="btnDialVoice" type="button" class="ec-btn ec-btn-cyan">🎙️ Voice Call</button>
+            <button id="btnDialVideo" type="button" class="ec-btn ec-btn-emerald">📹 Video Call</button>
+          </div>
+        </div>
+
+        <div class="ec-card ec-flex-grow">
+          <div class="ec-card-hdr">
+            <span class="ec-card-title">📡 Online Peer Directory</span>
+            <button id="btnRefreshDir" type="button" class="ec-icon-btn" title="Refresh directory">↻</button>
+          </div>
+          <div id="peerDirectoryList" class="ec-list">
+            <div class="ec-empty">No peers published yet — click “Publish E2EE Presence” above!</div>
+          </div>
+
+          <div class="ec-divider"></div>
+          <div class="ec-card-hdr">
+            <span class="ec-card-title">🕒 My Recent Calls</span>
+          </div>
+          <div id="recentCallsList" class="ec-list ec-list-compact">
+            <div class="ec-empty">No recent calls for this Identity.</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER STAGE: 1:1 Direct Call Viewport & 6-Peer Mesh Conference Rooms -->
+      <section class="ec-col ec-col-center">
+        <div class="ec-stage-tabs">
+          <button id="tabBtnDirect" type="button" class="ec-stage-tab active">📹 1:1 Direct P2P Stage</button>
+          <button id="tabBtnRooms" type="button" class="ec-stage-tab">👥 6-Peer Mesh Conference Rooms</button>
+        </div>
+
+        <!-- VIEW 1: 1:1 Direct Call Stage -->
+        <div id="stageDirectPane" class="ec-stage-card">
+          <div class="ec-viewport" id="videoViewport">
+            <video id="remoteVideo" class="ec-remote-video" autoplay playsinline></video>
+
+            <!-- Idle / Ringing / Voice-Only Center Overlay -->
+            <div id="stageCenterOverlay" class="ec-stage-overlay">
+              <div class="ec-avatar-ring" id="stageAvatarIcon">📹</div>
+              <div class="ec-stage-headline" id="stageHeadline">Serverless WebRTC Ready</div>
+              <div class="ec-stage-sub" id="stageSubline">
+                Dial any Subnet 1 Identity on the left — or click <strong>🧪 Loopback Test</strong> below for instant solo P2P verification.
+              </div>
+            </div>
+
+            <!-- Top HUD Badges -->
+            <div class="ec-hud-top">
+              <span id="hudCallState" class="ec-hud-pill">⚪ Idle</span>
+              <span id="hudCallTimer" class="ec-hud-pill mono" style="display:none;">00:00</span>
+              <span id="hudDtlsBadge" class="ec-hud-pill ec-hud-shield" style="display:none;">
+                🛡️ DTLS-SRTP Identity Verified
+              </span>
+            </div>
+
+            <!-- Bottom-Left Live WebRTC Network Telemetry -->
+            <div class="ec-hud-bottom-left mono" id="hudRtcStats">
+              P2P Media: Standby • 0 Cloud Relays
+            </div>
+
+            <!-- Bottom-Right Local Picture-in-Picture Video -->
+            <div class="ec-pip-wrap">
+              <video id="localVideo" class="ec-local-video" autoplay muted playsinline></video>
+              <span class="ec-pip-tag mono" id="localPipTag">You (Preview Off)</span>
+            </div>
+          </div>
+
+          <!-- Call Control Dock -->
+          <div class="ec-controls-dock">
+            <button id="btnPreviewCam" type="button" class="ec-ctrl-btn">📷 Preview Cam</button>
+            <button id="btnToggleMic" type="button" class="ec-ctrl-btn">🎙️ Mic On</button>
+            <button id="btnToggleCam" type="button" class="ec-ctrl-btn">📹 Cam On</button>
+            <button id="btnShareScreen" type="button" class="ec-ctrl-btn">🖥️ Share Screen</button>
+            <button id="btnLoopbackStage" type="button" class="ec-ctrl-btn ec-ctrl-accent">🧪 Loopback Test</button>
+            <button id="btnHangup" type="button" class="ec-ctrl-btn ec-ctrl-hangup" disabled>📴 End Call</button>
+          </div>
+        </div>
+
+        <!-- VIEW 2: Multi-Peer Mesh Conference Rooms (Up to 6 Peers) -->
+        <div id="stageRoomsPane" class="ec-stage-card" style="display:none;">
+          <div class="ec-room-create-bar">
+            <input id="inpRoomTitle" class="ec-input" type="text" maxlength="64" placeholder="New Conference Room Title (e.g. Validator Engineering Standup)" />
+            <select id="selRoomMedia" class="ec-select ec-select-sm">
+              <option value="2">📹 Video Mesh</option>
+              <option value="1">🎙️ Voice Mesh</option>
+            </select>
+            <button id="btnCreateRoom" type="button" class="ec-btn ec-btn-emerald">+ Create Room ($0 Gas)</button>
+          </div>
+
+          <div class="ec-rooms-split">
+            <div class="ec-rooms-sidebar">
+              <div class="ec-card-hdr">
+                <span class="ec-card-title">🏛️ On-Chain Rooms</span>
+                <button id="btnRefreshRooms" type="button" class="ec-icon-btn">↻</button>
+              </div>
+              <div id="roomsList" class="ec-list">
+                <div class="ec-empty">No conference rooms created yet.</div>
+              </div>
+            </div>
+
+            <div class="ec-room-active-stage">
+              <div class="ec-card-hdr">
+                <span class="ec-card-title" id="activeRoomHeader">Select or create a room to join up to 6 peers</span>
+                <button id="btnLeaveRoom" type="button" class="ec-btn ec-btn-rose ec-btn-xs" style="display:none;">📴 Leave Room</button>
+              </div>
+              <div id="meshVideoGrid" class="ec-mesh-grid">
+                <div class="ec-empty">When you join a room, pairwise P2P WebRTC streams with up to 6 participants appear here automatically.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: 0ms P2P DataChannel Chat & HFS Signaling Inspector -->
+      <aside class="ec-col ec-col-right">
+        <div class="ec-card ec-chat-card">
+          <div class="ec-card-hdr">
+            <span class="ec-card-title">💬 0ms P2P DataChannel Chat</span>
+            <span id="dcStateBadge" class="ec-pill-mini">Standby</span>
+          </div>
+          <div id="chatMessages" class="ec-chat-log">
+            <div class="ec-empty">Messages here travel directly browser-to-browser over SCTP/DTLS with 0 ms server delay and 0 blockchain txs!</div>
+          </div>
+          <form id="chatForm" class="ec-chat-form">
+            <input id="inpChatMsg" class="ec-input" type="text" maxlength="280" placeholder="Send instant P2P message…" />
+            <button type="submit" class="ec-btn ec-btn-cyan">Send</button>
+          </form>
+        </div>
+
+        <div class="ec-card">
+          <div class="ec-card-hdr">
+            <span class="ec-card-title">🔬 HFS Signaling &amp; DTLS Inspector</span>
+          </div>
+          <div class="ec-inspector-rows mono">
+            <div class="ec-ins-row">
+              <span>Signaling HFS</span>
+              <strong id="insHubAddr">0x…</strong>
+            </div>
+            <div class="ec-ins-row">
+              <span>WASM CodeHash</span>
+              <strong title="0x98d13aeb1bc31f7b4a2e297b4026ef79238e0debad619cd81fea1be31e0574c5">0x98d13aeb…74c5</strong>
+            </div>
+            <div class="ec-ins-row">
+              <span>SDP Envelope</span>
+              <strong id="insEnvelopeSize">—</strong>
+            </div>
+            <div class="ec-ins-row">
+              <span>Envelope Cipher</span>
+              <strong id="insCipherMode">secp256k1 ECDH + Gzip</strong>
+            </div>
+            <div class="ec-ins-row">
+              <span>Caller DTLS-256</span>
+              <strong id="insCallerFp">—</strong>
+            </div>
+            <div class="ec-ins-row">
+              <span>Callee DTLS-256</span>
+              <strong id="insCalleeFp">—</strong>
+            </div>
+            <div class="ec-ins-row">
+              <span>MITM Check</span>
+              <strong id="insMitmStatus" style="color:#6ee7b7;">Pinned to Identity HFS</strong>
+            </div>
+            <div class="ec-ins-row">
+              <span>Cloud Servers</span>
+              <strong style="color:#38bdf8;">0 Socket.io • 0 Twilio • 0 EC2</strong>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

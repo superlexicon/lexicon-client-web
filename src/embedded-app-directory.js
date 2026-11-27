@@ -35,6 +35,7 @@ const WASM_LABELS_BY_SLUG = {
   rewards: 'reward_voucher.wasm',
   ballot: 'secret_ballot.wasm',
   social: 'social_charter.wasm + messaging.wasm',
+  telephony: 'webrtc_signal.wasm + identity.wasm',
   battleship: 'battleship.wasm',
   'cipher-noir': 'cipher_noir.wasm',
   hegemony: 'hegemony.wasm',

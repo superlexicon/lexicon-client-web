@@ -1,0 +1,22 @@
+{
+  "artifact": "dist/webrtc_signal.wasm",
+  "code_hash": "0x98d13aeb1bc31f7b4a2e297b4026ef79238e0debad619cd81fea1be31e0574c5",
+  "exports": [
+    "memory",
+    "main"
+  ],
+  "hps": "webrtc-signal",
+  "imports": [
+    "env::host_state_set",
+    "env::get_calldata",
+    "env::host_call_contract",
+    "env::host_emit_event",
+    "env::get_msg_sender",
+    "env::get_block_number",
+    "env::host_state_get"
+  ],
+  "initial_memory_pages": 32,
+  "max_memory_pages": 64,
+  "optimized_wasm_bytes": 29657,
+  "raw_wasm_bytes": 29693
+}

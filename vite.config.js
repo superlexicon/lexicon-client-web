@@ -43,6 +43,7 @@ export default defineConfig({
         accounting: resolve(__dirname, 'accounting.html'),
         rewards: resolve(__dirname, 'rewards.html'),
         crowdfunding: resolve(__dirname, 'crowdfunding.html'),
+        telephony: resolve(__dirname, 'telephony.html'),
       },
     },
   },

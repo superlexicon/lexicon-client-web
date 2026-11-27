@@ -173,6 +173,27 @@
     },
     {
       "appId": 9,
+      "slug": "telephony",
+      "slugId": "0xb28783b755b05c5519f187f3f28cb06164f0f3d5ff90f7e3586afe71e78db855",
+      "title": "EtherCall \u2014 WebRTC Voice & Video",
+      "summary": "Serverless P2P voice, HD video, screen share, and 6-peer mesh conference rooms signaled via Halt-Free Subroutine with Identity-pinned DTLS-SRTP.",
+      "icon": "\ud83d\udcf9",
+      "category": 4,
+      "version": "1.0.0",
+      "execMode": 1,
+      "uiHash": "0x84d49db6b70145348b679d5c91d292c4146787de1dceb0cb30e4dbabb0f2632c",
+      "uncompressedLen": 76368,
+      "compressedLen": 17799,
+      "chunkCount": 1,
+      "bundleUrl": "/app-bundles/telephony.html.gz",
+      "route": "/telephony.html",
+      "wasmCodeHash": "0x98d13aeb1bc31f7b4a2e297b4026ef79238e0debad619cd81fea1be31e0574c5",
+      "defaultHfsAddr": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+      "publisherLabel": "SuperLexicon Core \u00b7 HFS",
+      "isSystemCore": true
+    },
+    {
+      "appId": 10,
       "slug": "battleship",
       "slugId": "0xb7cddad47609aee763e3866c5d2da4f428ac77b6e0b164974e33b85fc199a58b",
       "title": "Phantom Fleet Naval Arena",
@@ -193,7 +214,7 @@
       "isSystemCore": true
     },
     {
-      "appId": 10,
+      "appId": 11,
       "slug": "cipher-noir",
       "slugId": "0x98226c57974ac7ad74442525ab01f6fb09e3110e2d3fa1aff6dd0379ff5f45c8",
       "title": "Cipher Noir ZK Deduction",
@@ -214,7 +235,7 @@
       "isSystemCore": true
     },
     {
-      "appId": 11,
+      "appId": 12,
       "slug": "hegemony",
       "slugId": "0x9a5307e00a41562a17ff327d1b5d76c3ca915249e39723dc3a5ad6027e0480a0",
       "title": "Fractured Hegemony",
@@ -235,7 +256,7 @@
       "isSystemCore": true
     },
     {
-      "appId": 12,
+      "appId": 13,
       "slug": "lottery",
       "slugId": "0x9ba8f5e26c79b94eec0b96a2610abe847397cb6f2792f2f6cdb526da0e6c305f",
       "title": "Quantum 4D Threshold-VRF Jackpot",
@@ -256,7 +277,7 @@
       "isSystemCore": true
     },
     {
-      "appId": 13,
+      "appId": 14,
       "slug": "rf-micro-poll",
       "slugId": "0xfa8eeed1a96e5d1ffdc381328b4e9f0fb2db02208200ea5f529afad1c7507e88",
       "title": "RF Mesh Pulse Poll",
@@ -277,7 +298,7 @@
       "isSystemCore": false
     },
     {
-      "appId": 14,
+      "appId": 15,
       "slug": "mesh-repeater-wall",
       "slugId": "0x54c6cac78e2192d72345ce431721089bdc888fa03efa3df855035ac5323215f6",
       "title": "Mesh Repeater Beacon Wall",
@@ -298,7 +319,7 @@
       "isSystemCore": false
     },
     {
-      "appId": 15,
+      "appId": 16,
       "slug": "hfs-bounty-splits",
       "slugId": "0xc090a02e57ee16c295823c28b4135199600cdc46dd086b1b05b422389215926e",
       "title": "HFS R&D Bounty Splits",

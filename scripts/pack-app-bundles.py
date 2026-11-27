@@ -198,6 +198,19 @@ CORE_APPS = [
         "hasCss": True,
     },
     {
+        "slug": "telephony",
+        "title": "EtherCall — WebRTC Voice & Video",
+        "icon": "📹",
+        "category": 4,
+        "version": "1.0.0",
+        "summary": "Serverless P2P voice, HD video, screen share, and 6-peer mesh conference rooms signaled via Halt-Free Subroutine with Identity-pinned DTLS-SRTP.",
+        "wasmKey": "webrtc_signal",
+        "wasmFile": "webrtc_signal.wasm",
+        "instKey": "",
+        "defaultHfsPath": ("webrtcSignal", "contractAddr"),
+        "hasCss": True,
+    },
+    {
         "slug": "battleship",
         "title": "Phantom Fleet Naval Arena",
         "icon": "⚓",
@@ -656,6 +669,9 @@ def main() -> None:
             wasm_hash = "0x" + "00" * 32
 
         default_hfs = inst.get(spec["instKey"], "") if spec["instKey"] else ""
+        if not default_hfs and spec.get("defaultHfsPath"):
+            k1, k2 = spec["defaultHfsPath"]
+            default_hfs = deploy_json.get(k1, {}).get(k2, "")
         if not default_hfs:
             default_hfs = "0x" + "00" * 20
 

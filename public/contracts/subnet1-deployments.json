@@ -25,7 +25,13 @@
     "lottery": "0x47ad30cec9bea929e83508ac042394ce0bce98caa120afe871bd79e3850bd354",
     "secret_ballot": "0x1817db8449f5166890989a1c56c5552fd21a9af39dfa4c963073a7dfc85adf8f",
     "subnet_registry": "0x5365ed423586cdd689b264c188f9230b2ba4e1562d8d1a76f802e04ff6547e0f",
-    "app_store": "0xee9d0de546e867f3a564e67cca86ea8988b965246b240eb93c9c2fc83ee90646"
+    "app_store": "0xee9d0de546e867f3a564e67cca86ea8988b965246b240eb93c9c2fc83ee90646",
+    "webrtc_signal": "0x98d13aeb1bc31f7b4a2e297b4026ef79238e0debad619cd81fea1be31e0574c5"
+  },
+  "webrtcSignal": {
+    "contractAddr": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+    "abiVersion": 1,
+    "label": "Subnet 1 EtherCall Global Signaling Hub"
   },
   "battleship": {
     "contractAddr": "0xabb7f6c0ea97ed6f946a51b5d0a944f98226cab1",
