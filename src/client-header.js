@@ -8,6 +8,7 @@
 
 import { SlxWalletManager, SlxHfsCache, getDefaultNodeWsUrl } from '@superlexicon/sdk';
 import { mountSlxUnifiedHeader } from '@superlexicon/sdk/ui';
+import { mountEmbeddedAppDirectory } from './embedded-app-directory.js';
 
 export const slidesWallet = new SlxWalletManager();
 if (typeof window !== 'undefined') {
@@ -36,10 +37,17 @@ export const unifiedHdr = mountSlxUnifiedHeader({
   },
 });
 
+const embeddedDirEl =
+  typeof document !== 'undefined' ? document.getElementById('slxEmbeddedAppDirectoryMount') : null;
+const embeddedDir = embeddedDirEl
+  ? mountEmbeddedAppDirectory(embeddedDirEl, { rpcUrlFn: () => rpcUrl })
+  : null;
+
 SlxHfsCache.hydrateWithManifest()
   .then(async ({ cache }) => {
     if (cache?.rpcUrl) rpcUrl = cache.rpcUrl;
     await slidesWallet.resolveVerifiedIdentity(rpcUrl).catch(() => null);
     unifiedHdr?.refresh?.();
+    embeddedDir?.refresh?.();
   })
   .catch(() => {});

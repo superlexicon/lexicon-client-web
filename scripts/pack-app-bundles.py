@@ -444,7 +444,7 @@ COMMUNITY_SANDBOX_APPS = [
         "slug": "hfs-bounty-splits",
         "title": "HFS R&D Bounty Splits",
         "icon": "🧮",
-        "category": 1,
+        "category": 6,
         "version": "1.0.0",
         "summary": "Zero-trust sandboxed iframe app: coordinate contributor R&D bounty splits & dispatch milestone payouts.",
         "html": """<!DOCTYPE html>
@@ -737,7 +737,7 @@ def main() -> None:
 
     manifest_obj = {
         "schema": "SuperLexicon-HFS-AppStore-Catalog-v1",
-        "appStoreCodeHash": "0x9ed33ecadd23d9f35c7f77d0cead887fb40fa3a6fc31eff26783151dd496b948",
+        "appStoreCodeHash": "0xee9d0de546e867f3a564e67cca86ea8988b965246b240eb93c9c2fc83ee90646",
         "chunkSizeBytes": 32768,
         "apps": manifest_apps,
     }

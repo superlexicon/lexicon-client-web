@@ -355,6 +355,67 @@
       color: #94a3b8;
     }
 
+    .as-dock {
+      border-radius: 15px;
+      border: 1px solid rgba(52, 211, 153, 0.44);
+      background: linear-gradient(135deg, rgba(6, 33, 30, 0.68), rgba(7, 15, 30, 0.94));
+      padding: 13px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .as-dock-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .as-dock-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 11px;
+      border-radius: 10px;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: rgba(5, 12, 25, 0.9);
+      color: #f8fafc;
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 700;
+      transition: border-color 0.14s ease, transform 0.12s ease;
+    }
+    .as-dock-chip:hover {
+      border-color: #6ee7b7;
+      transform: translateY(-1px);
+    }
+    .as-cat-section {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+    .as-cat-sec-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 13px;
+      border-radius: 11px;
+      background: rgba(8, 17, 34, 0.88);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-left: 4px solid #38bdf8;
+    }
+    .as-cache-bar {
+      border-radius: 14px;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: linear-gradient(135deg, rgba(8, 22, 44, 0.95), rgba(6, 28, 28, 0.88));
+      padding: 15px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
     /* Sandboxed Runner */
     .as-runner-shell {
       border-radius: 16px;
@@ -619,21 +680,30 @@ await window.slx.sendTransaction({
     <!-- Mode Switcher Bar -->
     <div class="as-tabs">
       <div class="as-tab-group">
-        <button type="button" class="as-tab active" data-view="catalog">🏪 App Directory (<span id="lblAppCount">15</span>)</button>
+        <button type="button" class="as-tab active" data-view="catalog">🏪 Categorized Directory (<span id="lblAppCount">15</span>)</button>
+        <button type="button" class="as-tab" data-view="installed">📦 My App Container (<span id="lblInstalledCount">0</span>)</button>
         <button type="button" class="as-tab" data-view="runner">▶️ Live Sandbox Runner</button>
         <button type="button" class="as-tab" data-view="studio">➕ Create / Publish App</button>
       </div>
-      <button type="button" id="btnToolbarCreateApp" class="as-btn as-btn-emerald">
-        ➕ Create / Publish New App
-      </button>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <button type="button" id="btnCacheStatusJump" class="as-btn mono" title="Inspect locally cached App Store HTML bundles &amp; Personal App Container">
+          ⚡ <span id="lblCachedBadge">0 HTMLs cached</span>
+        </button>
+        <button type="button" id="btnToolbarCreateApp" class="as-btn as-btn-emerald">
+          ➕ Create / Publish New App
+        </button>
+      </div>
     </div>
 
-    <!-- VIEW 1: APP DIRECTORY -->
+    <!-- VIEW 1: CATEGORIZED APP DIRECTORY -->
     <section id="viewCatalog" style="display:flex;flex-direction:column;gap:14px;">
+      <!-- Personal App Container Quick-Launch Dock -->
+      <div id="personalContainerDock" class="as-dock"></div>
+
       <div class="as-toolbar">
         <div id="catBar" class="as-cat-bar"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <input id="inSearchApps" class="as-in" placeholder="🔍 Filter directory by name, use-case, .wasm…" style="min-width:245px;" />
+          <input id="inSearchApps" class="as-in" placeholder="🔍 Filter directory by name, category, .wasm…" style="min-width:255px;" />
           <div style="display:flex;gap:5px;">
             <input id="inResolveHfsAddr" class="as-in" placeholder="0x… Launch by HFS Address" style="width:205px;" />
             <button type="button" id="btnResolveHfsAddr" class="as-btn">▶ Run</button>
@@ -641,7 +711,7 @@ await window.slx.sendTransaction({
         </div>
       </div>
 
-      <div id="appsGrid" class="as-grid"></div>
+      <div id="appsGrid" style="display:flex;flex-direction:column;gap:20px;"></div>
 
       <!-- Subtle Collapsible Subnet 1 On-Chain Store Contract Admin Strip -->
       <details style="margin-top:8px;border-radius:12px;border:1px solid rgba(51,65,85,0.7);background:rgba(6,12,24,0.8);padding:11px 15px;">
@@ -649,13 +719,19 @@ await window.slx.sendTransaction({
           ⚙️ On-Chain <code>app_store.wasm</code> Subnet 1 Sync &amp; Contract Inspector (<span id="lblStoreAddr" style="color:#6ee7b7;">Probing…</span>)
         </summary>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:0.74rem;color:#cbd5e1;">
-          <span>Deploy a fresh <code>app_store.wasm</code> (<code>23.7 KiB</code>) registry on a new subnet or batch-seal all 15 directory bundles on-chain:</span>
+          <span>Deploy a fresh <code>app_store.wasm</code> (<code>27.1 KiB</code>) registry on a new subnet or batch-seal all directory bundles on-chain:</span>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button type="button" id="btnDeployStoreHfs" class="as-btn as-btn-amber">⛓️ Deploy AppStore HFS</button>
-            <button type="button" id="btnSyncAllCatalogOnChain" class="as-btn">📤 Sync All 15 Bundles On-Chain</button>
+            <button type="button" id="btnSyncAllCatalogOnChain" class="as-btn">📤 Sync All Bundles On-Chain</button>
           </div>
         </div>
       </details>
+    </section>
+
+    <!-- VIEW 1B: PERSONAL APP CONTAINER & LOCAL HTML CACHE MANAGER -->
+    <section id="viewInstalled" style="display:none;flex-direction:column;gap:14px;">
+      <div id="installedCacheBar" class="as-cache-bar"></div>
+      <div id="installedAppsGrid" class="as-grid"></div>
     </section>
 
     <!-- VIEW 2: ZERO-TRUST SANDBOXED IFRAME RUNNER -->
@@ -746,14 +822,14 @@ await window.slx.sendTransaction({
           </div>
 
           <label class="as-lbl mono">
-            <span>Directory Category</span>
+            <span>Directory Category * (Required for Categorized App Directory)</span>
             <select id="selStudioCategory" class="as-in">
-              <option value="6">⚡ RF &amp; Utility Tools</option>
-              <option value="1">📈 DeFi &amp; Markets</option>
-              <option value="2">🏛️ Governance &amp; IFRS</option>
-              <option value="3">🚀 Commerce &amp; Crowdfunding</option>
-              <option value="4">📡 Social &amp; Messaging</option>
+              <option value="1">📈 Markets &amp; DeFi</option>
+              <option value="2">🏛️ Corporate, Governance &amp; IFRS</option>
+              <option value="3">🚀 Commerce, Hardware &amp; Rewards</option>
+              <option value="4">📡 Social, Comms &amp; Guilds</option>
               <option value="5">🎮 Multiplayer Games &amp; VRF</option>
+              <option value="6" selected>⚡ RF, Civic &amp; Dev Utilities</option>
             </select>
           </label>
 

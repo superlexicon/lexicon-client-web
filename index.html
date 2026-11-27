@@ -105,10 +105,16 @@
             ➕ Create / Publish New App →
           </a>
           <a
-            href="/apps.html"
+            href="/apps.html?view=installed"
             style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.6); background: rgba(14, 165, 233, 0.2); color: #e0f2fe; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700;"
           >
-            🧩 App Store Directory →
+            📦 My App Container →
+          </a>
+          <a
+            href="/apps.html"
+            style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.45); background: rgba(14, 165, 233, 0.12); color: #bae6fd; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700;"
+          >
+            🧩 Full App Directory →
           </a>
           <a
             href="/explorer.html"
@@ -119,60 +125,8 @@
         </div>
       </section>
 
-      <section class="slx-hub-grid">
-        <a class="slx-hub-card" href="/apps.html" style="border-color: rgba(52, 211, 153, 0.65); background: linear-gradient(135deg, rgba(6, 42, 35, 0.68), rgba(9, 16, 32, 0.94));">
-          <div style="font-size: 0.92rem; font-weight: 800; color: #6ee7b7;">🧩 App Store &amp; Directory (0 EC2 / 0 DB)</div>
-          <div style="font-size: 0.72rem; color: #cbd5e1;">Browse all 15+ verified HFS apps or publish a new app in 1 block without servers or redeploys</div>
-        </a>
-        <a class="slx-hub-card" href="/crowdfunding.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">🚀 Hardware Pre-Order Crowdfunding</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Airwallex credit-auth pre-orders, Identity HFS addresses &amp; stretch IFRS growth budgets</div>
-        </a>
-        <a class="slx-hub-card" href="/rewards.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">🎁 SLXR 90-Day Vouchers</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Blinded pre-order reward vouchers &amp; 90-day active RF validator redemption gate</div>
-        </a>
-        <a class="slx-hub-card" href="/accounting.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">📒 IFRS &amp; Confidential Accounting</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Double-entry IAS/IFRS statements, ElGamal homomorphic balances &amp; Bulletproofs</div>
-        </a>
-        <a class="slx-hub-card" href="/charter.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">🏛️ CorporateCharter</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Statutory governance, board quorums &amp; 3-window ROFR/Tag-Along share auctions</div>
-        </a>
-        <a class="slx-hub-card" href="/dex.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">📈 DEX Central Limit Book</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Multi-market on-chain CLOB orderbooks, batch matching &amp; corporate futures</div>
-        </a>
-        <a class="slx-hub-card" href="/commerce.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">🛒 E-Commerce Storefront</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">ProductLedger inventory &amp; atomic double-entry retail settlement</div>
-        </a>
-        <a class="slx-hub-card" href="/ballot.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">🗳️ CipherVote Secret Ballot</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Threshold homomorphic encrypted tallying &amp; zero-knowledge ballot validity</div>
-        </a>
-        <a class="slx-hub-card" href="/social.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">📡 CommonsRF Social</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Mutual-handshake encrypted messaging, multi-topic ECIES channels &amp; guilds</div>
-        </a>
-        <a class="slx-hub-card" href="/battleship.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">⚓ Phantom Fleet</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Real-time 100-player naval combat on deterministic WASM subroutines</div>
-        </a>
-        <a class="slx-hub-card" href="/cipher-noir.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">🔐 Cipher Noir</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Arbiter-free mental poker &amp; zero-knowledge cryptographic deduction</div>
-        </a>
-        <a class="slx-hub-card" href="/hegemony.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">⬢ Fractured Hegemony</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Simultaneous committed grand strategy &amp; verifiable diplomacy</div>
-        </a>
-        <a class="slx-hub-card" href="/lottery.html">
-          <div style="font-size: 0.92rem; font-weight: 800;">🎰 Quantum 4D Jackpot</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Validator-quorum threshold VRF provably fair draw rounds</div>
-        </a>
-      </section>
+      <!-- Live Categorized App Directory & Personal App Container (Replaces Static Hardcoded Use-Case Grid) -->
+      <section id="slxEmbeddedAppDirectoryMount" data-mode="hub"></section>
 
       <div id="slx-explorer-section"></div>
     </main>

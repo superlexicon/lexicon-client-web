@@ -6,8 +6,19 @@
  * decompressing via `DecompressionStream('gzip')`, and mounting the verified UI bundle dynamically.
  */
 
-import { AppStoreClient, getDefaultNodeWsUrl, shortHex } from '@superlexicon/sdk';
-import { resolveEffectiveAppMeta, mountVerifiedHostAppBundle } from './app-host-runtime.js';
+import {
+  AppStoreClient,
+  SlxUiBundleCache,
+  ZERO_BYTES32,
+  getDefaultNodeWsUrl,
+  shortHex,
+} from '@superlexicon/sdk';
+import {
+  resolveFastCachedAppMeta,
+  resolveEffectiveAppMeta,
+  revalidateMountedAppInBackground,
+  mountVerifiedHostAppBundle,
+} from './app-host-runtime.js';
 
 async function bootHostStub() {
   const slug =
@@ -16,18 +27,36 @@ async function bootHostStub() {
     '';
   if (!slug) return;
 
-  // Render crisp skeleton loader while verifying & unpacking gzip UI bundle
+  const storeClient = new AppStoreClient({ rpcUrl: getDefaultNodeWsUrl() });
+
+  // Fast Path (< 5 ms): If app metadata + pre-verified HTML are already in local cache,
+  // mount immediately with zero network roundtrips and revalidate silently in the background!
+  try {
+    const fastMeta = resolveFastCachedAppMeta(slug);
+    if (fastMeta?.uiHash && fastMeta.uiHash !== ZERO_BYTES32) {
+      const fastHtml = await SlxUiBundleCache.getVerifiedHtml(fastMeta.uiHash);
+      if (fastHtml?.html) {
+        await mountVerifiedHostAppBundle({
+          appMeta: fastMeta,
+          verifiedBundle: { ...fastHtml, cacheHit: true, loadedFrom: 'local-cache' },
+        });
+        revalidateMountedAppInBackground(slug, fastMeta.uiHash, storeClient);
+        return;
+      }
+    }
+  } catch (_) {}
+
+  // Cold / First-Load Path: Render crisp skeleton while fetching, verifying & caching HTML locally
   document.body.innerHTML = `
     <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#050a14;color:#e2e8f0;font-family:'JetBrains Mono',monospace;">
       <div style="max-width:460px;width:100%;padding:20px 22px;border-radius:14px;border:1px solid rgba(56,189,248,0.4);background:rgba(8,17,34,0.95);text-align:center;">
         <div style="font-size:13px;font-weight:800;color:#7dd3fc;">🧩 Loading Verified HFS App Bundle ("${slug}")…</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:6px;">Verifying <code>keccak256</code> digest &amp; decompressing gzip UI stream</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:6px;">Verifying <code>keccak256</code> digest, decompressing gzip stream &amp; caching HTML locally</div>
       </div>
     </div>
   `;
 
   try {
-    const storeClient = new AppStoreClient({ rpcUrl: getDefaultNodeWsUrl() });
     const appMeta = await resolveEffectiveAppMeta(slug, storeClient);
     if (!appMeta) {
       throw new Error(`App "${slug}" was not found in AppStore HFS or genesis catalog.`);
@@ -36,6 +65,8 @@ async function bootHostStub() {
     const verifiedBundle = await storeClient.fetchVerifiedBundleHtml({
       uiHash: appMeta.uiHash,
       fallbackBundleUrl: appMeta.bundleUrl || '',
+      slug: appMeta.slug,
+      title: appMeta.title,
     });
 
     await mountVerifiedHostAppBundle({ appMeta, verifiedBundle });
