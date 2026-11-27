@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EtherCall — Serverless WebRTC Voice, Video &amp; Mesh Rooms — SuperLexicon</title>
+  <title>EtherCall — Serverless WebRTC Calls, Discord Channels &amp; Live Broadcasts — SuperLexicon</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/src/slx-wallet.css" />
   <link rel="stylesheet" href="/src/slx-inst.css" />
@@ -48,17 +48,19 @@
     <!-- Top Status & Zero-Server Architecture Strip -->
     <section class="ec-top-strip">
       <div class="ec-top-left">
-        <span class="ec-badge ec-badge-emerald">📹 HPS #28 • webrtc_signal.wasm</span>
-        <span class="ec-badge ec-badge-cyan">🔐 Identity-Pinned DTLS-SRTP</span>
-        <span class="ec-badge ec-badge-violet">📦 secp256k1 ECDH + Gzip (~750 B)</span>
-        <span class="ec-status-text mono" id="txStatusMsg">Ready — 0 Socket.io / 0 Twilio / 0 EC2 signaling servers</span>
+        <span class="ec-badge ec-badge-emerald">📹 HPS #28 v2 • webrtc_signal.wasm</span>
+        <span class="ec-badge ec-badge-cyan">🎧 Discord Channels</span>
+        <span class="ec-badge ec-badge-violet">📡 P2P Broadcast Tree</span>
+        <span class="ec-status-text mono" id="txStatusMsg">Ready — 0 Socket.io / 0 Twilio / 0 SFU cloud servers</span>
       </div>
       <div class="ec-top-metrics mono">
         <span>Peers: <strong id="statProfiles">0</strong></span>
         <span>•</span>
         <span>Calls: <strong id="statCalls">0</strong></span>
         <span>•</span>
-        <span>Rooms: <strong id="statRooms">0</strong></span>
+        <span>Channels: <strong id="statChannels">0</strong></span>
+        <span>•</span>
+        <span>Streams: <strong id="statBroadcasts">0</strong></span>
       </div>
     </section>
 
@@ -139,14 +141,21 @@
         </div>
       </aside>
 
-      <!-- CENTER STAGE: 1:1 Direct Call Viewport & 6-Peer Mesh Conference Rooms -->
+      <!-- CENTER STAGE: 3 Modes (1:1 Direct Calls | Discord Channels | Live Broadcast & Stage) -->
       <section class="ec-col ec-col-center">
         <div class="ec-stage-tabs">
-          <button id="tabBtnDirect" type="button" class="ec-stage-tab active">📹 1:1 Direct P2P Stage</button>
-          <button id="tabBtnRooms" type="button" class="ec-stage-tab">👥 6-Peer Mesh Conference Rooms</button>
+          <button id="tabBtnDirect" type="button" class="ec-stage-tab active">📹 1:1 Direct Calls</button>
+          <button id="tabBtnChannels" type="button" class="ec-stage-tab">
+            🎧 Discord Channels <span id="tabChannelsCount" class="ec-tab-count">0</span>
+          </button>
+          <button id="tabBtnBroadcast" type="button" class="ec-stage-tab">
+            📡 Live Broadcast &amp; Stage <span id="tabBroadcastLiveDot" class="ec-tab-live" style="display:none;">LIVE</span>
+          </button>
         </div>
 
-        <!-- VIEW 1: 1:1 Direct Call Stage -->
+        <!-- ================================================================ -->
+        <!-- VIEW 1: 1:1 Direct Call Stage                                    -->
+        <!-- ================================================================ -->
         <div id="stageDirectPane" class="ec-stage-card">
           <div class="ec-viewport" id="videoViewport">
             <video id="remoteVideo" class="ec-remote-video" autoplay playsinline></video>
@@ -156,7 +165,7 @@
               <div class="ec-avatar-ring" id="stageAvatarIcon">📹</div>
               <div class="ec-stage-headline" id="stageHeadline">Serverless WebRTC Ready</div>
               <div class="ec-stage-sub" id="stageSubline">
-                Dial any Subnet 1 Identity on the left — or click <strong>🧪 Loopback Test</strong> below for instant solo P2P verification.
+                Dial any Subnet 1 Identity on the left, drop into a <strong>🎧 Discord Channel</strong>, or start a <strong>📡 Live Broadcast</strong>!
               </div>
             </div>
 
@@ -195,35 +204,152 @@
           </div>
         </div>
 
-        <!-- VIEW 2: Multi-Peer Mesh Conference Rooms (Up to 6 Peers) -->
-        <div id="stageRoomsPane" class="ec-stage-card" style="display:none;">
+        <!-- ================================================================ -->
+        <!-- VIEW 2: Discord-Style Persistent Voice, Video & Screen Channels  -->
+        <!-- ================================================================ -->
+        <div id="stageChannelsPane" class="ec-stage-card" style="display:none;">
           <div class="ec-room-create-bar">
-            <input id="inpRoomTitle" class="ec-input" type="text" maxlength="64" placeholder="New Conference Room Title (e.g. Validator Engineering Standup)" />
-            <select id="selRoomMedia" class="ec-select ec-select-sm">
-              <option value="2">📹 Video Mesh</option>
-              <option value="1">🎙️ Voice Mesh</option>
+            <input id="inpChannelName" class="ec-input" type="text" maxlength="48" placeholder="New Discord Channel (e.g. #validator-war-room)" />
+            <input id="inpChannelTopic" class="ec-input" type="text" maxlength="80" placeholder="Optional channel topic…" />
+            <select id="selChannelKind" class="ec-select ec-select-sm">
+              <option value="1">🔊 Voice Lounge</option>
+              <option value="2" selected>📹 Video &amp; Screen</option>
+              <option value="3">🏛️ Guild Lounge</option>
             </select>
-            <button id="btnCreateRoom" type="button" class="ec-btn ec-btn-emerald">+ Create Room ($0 Gas)</button>
+            <button id="btnCreateChannel" type="button" class="ec-btn ec-btn-emerald">+ Create Channel</button>
           </div>
 
-          <div class="ec-rooms-split">
-            <div class="ec-rooms-sidebar">
+          <!-- Optional Guild Filter Banner (when deep-linked from CommonsRF Social) -->
+          <div id="guildFilterBanner" class="ec-guild-banner" style="display:none;">
+            <span id="guildFilterLabel" class="mono">🏛️ Guild Filter Active</span>
+            <button id="btnClearGuildFilter" type="button" class="ec-btn ec-btn-xs">Show All Channels</button>
+          </div>
+
+          <div class="ec-discord-split">
+            <!-- Discord Left Channel Tree + Live Occupant Rosters -->
+            <div class="ec-discord-sidebar">
               <div class="ec-card-hdr">
-                <span class="ec-card-title">🏛️ On-Chain Rooms</span>
-                <button id="btnRefreshRooms" type="button" class="ec-icon-btn">↻</button>
+                <span class="ec-card-title">🔊 VOICE &amp; VIDEO CHANNELS</span>
+                <button id="btnRefreshChannels" type="button" class="ec-icon-btn" title="Refresh channels">↻</button>
               </div>
-              <div id="roomsList" class="ec-list">
-                <div class="ec-empty">No conference rooms created yet.</div>
+              <div id="discordChannelsList" class="ec-discord-tree">
+                <div class="ec-empty">Loading persistent channels…</div>
+              </div>
+
+              <!-- Discord Bottom "Voice Connected" Status Bar -->
+              <div id="discordVoiceConnectedBar" class="ec-discord-conn-bar" style="display:none;">
+                <div class="ec-discord-conn-info">
+                  <div class="ec-discord-conn-status">🟢 Connected (P2P Mesh)</div>
+                  <div class="ec-discord-conn-name mono" id="discordConnChannelName">#General</div>
+                </div>
+                <button id="btnLeaveChannelQuick" type="button" class="ec-btn ec-btn-rose ec-btn-xs" title="Disconnect">📴</button>
               </div>
             </div>
 
-            <div class="ec-room-active-stage">
+            <!-- Discord Right Active Participant Stage Grid -->
+            <div class="ec-discord-stage">
               <div class="ec-card-hdr">
-                <span class="ec-card-title" id="activeRoomHeader">Select or create a room to join up to 6 peers</span>
-                <button id="btnLeaveRoom" type="button" class="ec-btn ec-btn-rose ec-btn-xs" style="display:none;">📴 Leave Room</button>
+                <div>
+                  <div class="ec-card-title" id="activeChannelTitle">Select any channel on the left to drop in instantly</div>
+                  <div class="ec-peer-sub mono" id="activeChannelTopic">Persistent channels stay open 24/7 with zero ringing — speak, share camera, or stream 1080p screens.</div>
+                </div>
+                <span id="activeChannelPeerBadge" class="ec-pill-mini">Standby</span>
               </div>
-              <div id="meshVideoGrid" class="ec-mesh-grid">
-                <div class="ec-empty">When you join a room, pairwise P2P WebRTC streams with up to 6 participants appear here automatically.</div>
+
+              <div id="channelVideoGrid" class="ec-mesh-grid">
+                <div class="ec-empty">Click any <strong>🔊 Voice</strong> or <strong>📹 Video</strong> channel on the left to join immediately! Green rings light up around whoever is speaking.</div>
+              </div>
+
+              <!-- Discord Channel Media Controls Dock -->
+              <div class="ec-controls-dock">
+                <button id="btnChanMute" type="button" class="ec-ctrl-btn" disabled>🎙️ Mic On</button>
+                <button id="btnChanDeafen" type="button" class="ec-ctrl-btn" disabled>🎧 Audio On</button>
+                <button id="btnChanVideo" type="button" class="ec-ctrl-btn" disabled>📹 Cam Off</button>
+                <button id="btnChanScreen" type="button" class="ec-ctrl-btn" disabled>🖥️ Share Screen</button>
+                <button id="btnChanDisconnect" type="button" class="ec-ctrl-btn ec-ctrl-hangup" disabled>📴 Disconnect</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- VIEW 3: Live Video/Audio Broadcasting & Discord Stage (P2P Tree) -->
+        <!-- ================================================================ -->
+        <div id="stageBroadcastPane" class="ec-stage-card" style="display:none;">
+          <!-- Go Live Broadcast Launcher Bar -->
+          <div class="ec-room-create-bar">
+            <input id="inpBroadcastTitle" class="ec-input" type="text" maxlength="64" placeholder="Broadcast Title (e.g. SuperLexicon Live Townhall &amp; Demo)" />
+            <select id="selBroadcastMedia" class="ec-select ec-select-sm">
+              <option value="2" selected>📹 HD Camera + Mic</option>
+              <option value="3">🖥️ Screen Share + Voice</option>
+              <option value="1">🎙️ Audio Stage Only</option>
+            </select>
+            <select id="selBroadcastFanout" class="ec-select ec-select-sm" title="Max child viewers relayed per P2P tree node">
+              <option value="4" selected>🌳 Fanout K=4 (256+ Viewers)</option>
+              <option value="2">🌳 Fanout K=2 (Multi-Hop Test)</option>
+            </select>
+            <button id="btnStartBroadcast" type="button" class="ec-btn ec-btn-rose">🔴 Go Live ($0 Gas)</button>
+          </div>
+
+          <div class="ec-discord-split">
+            <!-- Left Sidebar: Active Live Streams + P2P Relay Tree Topology -->
+            <div class="ec-discord-sidebar">
+              <div class="ec-card-hdr">
+                <span class="ec-card-title">🔴 LIVE STREAMS &amp; STAGES</span>
+                <button id="btnRefreshBroadcasts" type="button" class="ec-icon-btn" title="Refresh streams">↻</button>
+              </div>
+              <div id="broadcastsList" class="ec-list">
+                <div class="ec-empty">No live broadcasts right now — click <strong>🔴 Go Live</strong> above!</div>
+              </div>
+
+              <div class="ec-divider"></div>
+              <div class="ec-card-hdr">
+                <span class="ec-card-title">🌳 P2P Fanout Tree &amp; Stage</span>
+                <span id="bcastTreeDepthBadge" class="ec-pill-mini">Tier 0</span>
+              </div>
+              <div id="broadcastTreeList" class="ec-tree-list mono">
+                <div class="ec-empty">Join or host a stream to inspect real-time P2P relay hops &amp; raised hands.</div>
+              </div>
+            </div>
+
+            <!-- Right Broadcast Theatre Player + Stage Speaker Tiles -->
+            <div class="ec-discord-stage">
+              <div class="ec-viewport ec-bcast-viewport">
+                <video id="broadcastVideo" class="ec-remote-video" autoplay playsinline></video>
+
+                <div id="bcastCenterOverlay" class="ec-stage-overlay">
+                  <div class="ec-avatar-ring">📡</div>
+                  <div class="ec-stage-headline" id="bcastHeadline">Serverless P2P Live Broadcasting</div>
+                  <div class="ec-stage-sub" id="bcastSubline">
+                    Click <strong>🔴 Go Live</strong> above to stream video, audio, or your screen — or click <strong>▶️ Watch</strong> on any live stream with 0 camera/mic prompts!
+                  </div>
+                </div>
+
+                <div class="ec-hud-top">
+                  <span id="hudBcastBadge" class="ec-hud-pill">⚪ Offline</span>
+                  <span id="hudBcastViewers" class="ec-hud-pill mono">👁️ 0 watching</span>
+                  <span id="hudBcastTier" class="ec-hud-pill ec-hud-shield mono" style="display:none;">🌳 Tier 0</span>
+                  <button id="btnUnmuteBroadcast" type="button" class="ec-btn ec-btn-emerald ec-btn-xs ec-hud-interactive" style="display:none;">
+                    🔊 Tap to Unmute Stream
+                  </button>
+                </div>
+
+                <div class="ec-hud-bottom-left mono" id="hudBcastStats">
+                  K-ary WebRTC Relay Tree • 0 Media Servers
+                </div>
+              </div>
+
+              <!-- Co-Speaker Stage Strip (when Audience members are promoted to Stage) -->
+              <div id="stageSpeakersStrip" class="ec-stage-speakers" style="display:none;"></div>
+
+              <!-- Broadcast & Stage Action Dock -->
+              <div class="ec-controls-dock">
+                <button id="btnBcastRaiseHand" type="button" class="ec-ctrl-btn" disabled>✋ Raise Hand</button>
+                <button id="btnBcastJoinStageMedia" type="button" class="ec-ctrl-btn ec-ctrl-accent" style="display:none;">🎤 Enable Stage Mic/Cam</button>
+                <button id="btnBcastMuteMic" type="button" class="ec-ctrl-btn" disabled>🎙️ Mic On</button>
+                <button id="btnBcastSwitchScreen" type="button" class="ec-ctrl-btn" disabled>🖥️ Share Screen</button>
+                <button id="btnBcastReparent" type="button" class="ec-ctrl-btn" disabled title="Switch upstream P2P relay parent">🔄 Switch Relay Hop</button>
+                <button id="btnBcastLeaveOrEnd" type="button" class="ec-ctrl-btn ec-ctrl-hangup" disabled>📴 Leave Stream</button>
               </div>
             </div>
           </div>
@@ -234,11 +360,11 @@
       <aside class="ec-col ec-col-right">
         <div class="ec-card ec-chat-card">
           <div class="ec-card-hdr">
-            <span class="ec-card-title">💬 0ms P2P DataChannel Chat</span>
+            <span class="ec-card-title" id="chatPanelTitle">💬 0ms P2P DataChannel Chat</span>
             <span id="dcStateBadge" class="ec-pill-mini">Standby</span>
           </div>
           <div id="chatMessages" class="ec-chat-log">
-            <div class="ec-empty">Messages here travel directly browser-to-browser over SCTP/DTLS with 0 ms server delay and 0 blockchain txs!</div>
+            <div class="ec-empty">Messages here travel directly browser-to-browser over SCTP/DTLS (1:1, Channel Mesh, or Broadcast Tree) with 0 ms server delay and 0 blockchain txs!</div>
           </div>
           <form id="chatForm" class="ec-chat-form">
             <input id="inpChatMsg" class="ec-input" type="text" maxlength="280" placeholder="Send instant P2P message…" />
@@ -257,7 +383,7 @@
             </div>
             <div class="ec-ins-row">
               <span>WASM CodeHash</span>
-              <strong title="0x98d13aeb1bc31f7b4a2e297b4026ef79238e0debad619cd81fea1be31e0574c5">0x98d13aeb…74c5</strong>
+              <strong title="0x6883e5a1c75848f8d08717076d90fcf812ac280b6a2fd8d909aed95a2463100b">0x6883e5a1…100b (v2)</strong>
             </div>
             <div class="ec-ins-row">
               <span>SDP Envelope</span>
@@ -281,7 +407,7 @@
             </div>
             <div class="ec-ins-row">
               <span>Cloud Servers</span>
-              <strong style="color:#38bdf8;">0 Socket.io • 0 Twilio • 0 EC2</strong>
+              <strong style="color:#38bdf8;">0 Socket.io • 0 Twilio • 0 SFU</strong>
             </div>
           </div>
         </div>

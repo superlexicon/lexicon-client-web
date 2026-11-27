@@ -3662,7 +3662,11 @@ function renderCompanyGroupsSocialTab() {
             <strong>${escapeHtml(active.label)}</strong>
             <span class="mono" style="color:#7dd3fc;margin-left:6px;">Charter ${escapeHtml(active.charterAddr.slice(0, 10))}…</span>
           </div>
-          <a href="/charter.html?hfs=${encodeURIComponent(active.charterAddr)}#sec-company-social" class="sc-btn" style="text-decoration:none;font-size:0.68rem;padding:0.22rem 0.5rem;">Open Charter Chat &amp; Roster →</a>
+          <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+            <a href="/telephony.html?tab=channels&amp;guild=${encodeURIComponent(active.charterAddr)}&amp;name=${encodeURIComponent(active.label)}" class="sc-btn sc-btn-cyan" style="text-decoration:none;font-size:0.68rem;padding:0.22rem 0.5rem;">🎧 Voice &amp; Video Lounge</a>
+            <a href="/telephony.html?tab=broadcast&amp;guild=${encodeURIComponent(active.charterAddr)}&amp;name=${encodeURIComponent(active.label)}" class="sc-btn sc-btn-rose" style="text-decoration:none;font-size:0.68rem;padding:0.22rem 0.5rem;">📡 Live Stage</a>
+            <a href="/charter.html?hfs=${encodeURIComponent(active.charterAddr)}#sec-company-social" class="sc-btn" style="text-decoration:none;font-size:0.68rem;padding:0.22rem 0.5rem;">Open Charter Chat &amp; Roster →</a>
+          </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:0.45rem;max-height:260px;overflow-y:auto;">
           ${

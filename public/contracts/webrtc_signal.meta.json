@@ -1,6 +1,6 @@
 {
   "artifact": "dist/webrtc_signal.wasm",
-  "code_hash": "0x98d13aeb1bc31f7b4a2e297b4026ef79238e0debad619cd81fea1be31e0574c5",
+  "code_hash": "0x6883e5a1c75848f8d08717076d90fcf812ac280b6a2fd8d909aed95a2463100b",
   "exports": [
     "memory",
     "main"
@@ -17,6 +17,6 @@
   ],
   "initial_memory_pages": 32,
   "max_memory_pages": 64,
-  "optimized_wasm_bytes": 29657,
-  "raw_wasm_bytes": 29693
+  "optimized_wasm_bytes": 53896,
+  "raw_wasm_bytes": 53932
 }
