@@ -211,7 +211,7 @@ async function populateMediaDevices() {
   }
 }
 
-async function ensureLocalStream(mediaKind = RTC_MEDIA_KIND.VIDEO, { allowSyntheticFallback = false } = {}) {
+async function ensureLocalStream(mediaKind = RTC_MEDIA_KIND.VIDEO, { allowSyntheticFallback = true } = {}) {
   const wantVideo = mediaKind !== RTC_MEDIA_KIND.VOICE;
   if (localStream && !previewOnly) {
     const hasVid = localStream.getVideoTracks().length > 0;
@@ -248,8 +248,12 @@ async function ensureLocalStream(mediaKind = RTC_MEDIA_KIND.VIDEO, { allowSynthe
         ? 'You (Live Cam)'
         : 'You (Mic Only)';
   }
-  if (res.fallbackReason && !res.isSynthetic) {
-    setStatus(`ℹ️ ${res.fallbackReason}`);
+  if (res.fallbackReason) {
+    setStatus(
+      res.isSynthetic
+        ? `⚠️ Hardware camera/mic busy or unavailable (${res.fallbackReason}) — connected using Simulated Stream.`
+        : `ℹ️ ${res.fallbackReason}`
+    );
   }
   await populateMediaDevices();
   return localStream;
@@ -401,13 +405,24 @@ function renderMyKeyPreview() {
   const badge = document.getElementById('myPresenceBadge');
   if (badge) {
     if (myProf) {
-      badge.textContent = myProf.availabilityLabel;
-      badge.className = `ec-pill-mini${myProf.availability === 1 ? ' online' : ''}`;
+      const keyMatch =
+        !myProf.compressedPub33 ||
+        myProf.compressedPub33.toLowerCase() === sigKeys.compressedPubKey.toLowerCase();
+      if (!keyMatch) {
+        badge.textContent = '⚠️ Republish Key';
+        badge.className = 'ec-pill-mini';
+        badge.title = 'This browser wallet differs from the E2EE key published on-chain — click Publish Presence to sync.';
+      } else {
+        badge.textContent = myProf.availabilityLabel;
+        badge.className = `ec-pill-mini${myProf.availability === 1 ? ' online' : ''}`;
+        badge.title = '';
+      }
       const inp = document.getElementById('inpDisplayLabel');
       if (inp && !inp.value && myProf.displayLabel) inp.value = myProf.displayLabel;
     } else {
       badge.textContent = 'Unpublished';
       badge.className = 'ec-pill-mini';
+      badge.title = '';
     }
   }
 }
@@ -553,18 +568,20 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
   callSetupBusy = true;
   try {
     setStageTab('direct');
-    cleanupDirectCallUi('Preparing Encrypted Call…', 'Requesting camera/microphone & gathering LAN + STUN ICE…');
+    cleanupDirectCallUi('Preparing Encrypted Call…', '1/3 Verifying Identity & requesting Camera/Microphone…');
+    document.getElementById('hudCallState').textContent = '🟡 Dialing…';
     setStatus('1/3 Verifying Identity & requesting Camera/Microphone…');
 
     const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall WebRTC' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
     if (myId === callee) {
-      setStatus('Cannot dial your own Identity — click 🧪 Loopback Test or open a second browser/device!', true);
-      cleanupDirectCallUi();
+      const selfMsg = 'Cannot dial your own Identity — click 🧪 Loopback Test or open a second browser/device!';
+      cleanupDirectCallUi('Cannot Dial Own Identity', selfMsg);
+      setStatus(selfMsg, true);
       return;
     }
 
-    const stream = await ensureLocalStream(mediaKind, { allowSyntheticFallback: false });
+    const stream = await ensureLocalStream(mediaKind, { allowSyntheticFallback: true });
     const myKeys = deriveRtcSignalingKeys(wallet.keypair.privateKey, myId);
     const peerProfile = await rtcClient.getPeerProfile(callee);
     const peerPub64 = peerProfile?.pub64 || null;
@@ -583,8 +600,10 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
       },
     });
 
+    document.getElementById('stageSubline').textContent =
+      '2/3 Gathering host + STUN ICE candidates & sealing secp256k1 ECDH + Gzip SDP Offer…';
     setStatus('2/3 Gathering host + STUN ICE candidates & sealing E2EE SDP Offer…');
-    const offerBundle = await peerSession.createBundledOffer({ iceWaitMs: 2400 });
+    const offerBundle = await peerSession.createBundledOffer({ iceWaitMs: 2200 });
     const sealedOffer = await sealRtcSignalEnvelope(
       {
         v: 1,
@@ -598,6 +617,8 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
       { recipientPub64: peerPub64 }
     );
 
+    document.getElementById('stageSubline').textContent =
+      `3/3 Submitting On-Chain Ring (${sealedOffer.wireBytes} B E2EE Offer, ${offerBundle.candidates.length} ICE) to Subnet 1…`;
     setStatus(`3/3 Ringing ${shortAddr(callee)} on Subnet 1 (${sealedOffer.wireBytes} B Offer, ${offerBundle.candidates.length} ICE)…`);
     const { callId } = await rtcClient.placeCall({
       wallet,
@@ -611,7 +632,7 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
     activeCallId = callId;
     answerApplied = false;
     appliedCalleeIceBatches = 0;
-    // Now unlock trickle dispatch so any late candidates buffered during block confirmation flush cleanly!
+    // Now unlock trickle dispatch so any late candidates gathered during block confirmation flush cleanly!
     peerSession.enableTrickleDispatch();
 
     const peerName = await resolveDisplayName(callee);
@@ -633,8 +654,9 @@ async function placeCallTx(rawPeerAddr, mediaKind = RTC_MEDIA_KIND.VIDEO) {
     startStatsLoop();
     await syncState();
   } catch (err) {
-    cleanupDirectCallUi();
-    setStatus(err?.message || String(err), true);
+    const errMsg = err?.message || String(err);
+    cleanupDirectCallUi('⚠️ Call Setup Failed', errMsg);
+    setStatus(errMsg, true);
   } finally {
     callSetupBusy = false;
   }
@@ -649,6 +671,8 @@ async function acceptIncomingCallTx(acceptMediaKind) {
 
   try {
     setStageTab('direct');
+    cleanupDirectCallUi('Answering Incoming Call…', `1/3 Opening Call #${callId} Offer & verifying Caller DTLS-SRTP…`);
+    document.getElementById('hudCallState').textContent = '🟡 Answering…';
     setStatus(`1/3 Opening Call #${callId} Offer & verifying Caller DTLS-SRTP fingerprint…`);
     const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall WebRTC' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
@@ -656,6 +680,7 @@ async function acceptIncomingCallTx(acceptMediaKind) {
 
     const session = await rtcClient.getCallSession(callId);
     if (!session || session.status !== RTC_CALL_STATUS.RINGING) {
+      cleanupDirectCallUi('Call No Longer Ringing', `Call #${callId} was canceled or already answered.`);
       setStatus(`Call #${callId} is no longer ringing.`, true);
       ringingCallMeta = null;
       return;
@@ -666,7 +691,7 @@ async function acceptIncomingCallTx(acceptMediaKind) {
     });
     if (!openedOffer?.payload?.sdp) {
       throw new Error(
-        'Could not decrypt Offer envelope — ensure you are signed into the Callee Identity that published this E2EE key.'
+        'Could not decrypt Offer envelope — click "📡 Publish E2EE Presence" on this device so your active browser wallet matches your on-chain E2EE key.'
       );
     }
 
@@ -674,8 +699,10 @@ async function acceptIncomingCallTx(acceptMediaKind) {
       ? decompressSecp256k1Compressed33(openedOffer.payload.senderPub33)
       : (await rtcClient.getPeerProfile(session.caller))?.pub64 || null;
 
+    document.getElementById('stageSubline').textContent =
+      `2/3 Acquiring Camera/Mic & gathering ICE candidates for Call #${callId}…`;
     setStatus(`2/3 Acquiring Camera/Mic & gathering ICE candidates for Call #${callId}…`);
-    const stream = await ensureLocalStream(acceptMediaKind, { allowSyntheticFallback: false });
+    const stream = await ensureLocalStream(acceptMediaKind, { allowSyntheticFallback: true });
     peerSession = new SlxWebRtcPeerSession({
       iceServers: getActiveIceServers(),
       localStream: stream,
@@ -698,7 +725,7 @@ async function acceptIncomingCallTx(acceptMediaKind) {
     const answerBundle = await peerSession.acceptOfferAndCreateBundledAnswer(
       openedOffer.payload,
       session.callerDtlsFp,
-      { iceWaitMs: 2400 }
+      { iceWaitMs: 2200 }
     );
 
     // Apply any already-trickled caller ICE batches
@@ -724,6 +751,8 @@ async function acceptIncomingCallTx(acceptMediaKind) {
       { recipientPub64: callerPub64 }
     );
 
+    document.getElementById('stageSubline').textContent =
+      `3/3 Submitting encrypted SDP Answer (${sealedAnswer.wireBytes} B, ${answerBundle.candidates.length} ICE) to Subnet 1…`;
     setStatus(`3/3 Submitting encrypted SDP Answer (${sealedAnswer.wireBytes} B, ${answerBundle.candidates.length} ICE)…`);
     await rtcClient.answerCall({
       wallet,
@@ -758,8 +787,9 @@ async function acceptIncomingCallTx(acceptMediaKind) {
     setStatus(`🟢 Answered Call #${callId} — establishing P2P DTLS-SRTP stream!`);
     startStatsLoop();
   } catch (err) {
-    cleanupDirectCallUi();
-    setStatus(err?.message || String(err), true);
+    const errMsg = err?.message || String(err);
+    cleanupDirectCallUi('⚠️ Could Not Answer Call', errMsg);
+    setStatus(errMsg, true);
   } finally {
     callSetupBusy = false;
   }
@@ -827,15 +857,21 @@ async function reconcileActiveDirectCall() {
     if (openedAns?.payload?.sdp) {
       await peerSession.applyBundledAnswer(openedAns.payload, sess.calleeDtlsFp);
       answerApplied = true;
+      const calleeName = await resolveDisplayName(sess.callee);
       document.getElementById('hudCallState').textContent = `🟢 Call #${sess.callId} Active`;
       document.getElementById('hudDtlsBadge').style.display = 'inline-flex';
+      document.getElementById('stageHeadline').textContent = `Connected with ${calleeName}`;
+      document.getElementById('stageSubline').textContent =
+        sess.mediaKind === RTC_MEDIA_KIND.VOICE
+          ? '🎙️ Encrypted P2P DTLS-SRTP Voice Call Active'
+          : '📹 Direct P2P DTLS-SRTP Video & Audio Active';
       updateInspector({
         callerFp: sess.callerDtlsFp,
         calleeFp: sess.calleeDtlsFp,
         mitmStatus: '✅ Verified (Zero-CA Match)',
         mitmOk: true,
       });
-      setStatus(`🟢 Peer accepted Call #${sess.callId} — P2P DTLS-SRTP media live!`);
+      setStatus(`🟢 ${calleeName} accepted Call #${sess.callId} — P2P DTLS-SRTP media live!`);
     }
   }
 
@@ -864,11 +900,13 @@ async function detectIncomingRingingCalls() {
   const myId = getMyIdentityOrEoa();
   if (!myId) return;
 
+  const curBlk = Number(hubOverview?.currentBlock || 0);
   const incoming = recentCalls.find(
     (c) =>
       c.callee === myId &&
       c.status === RTC_CALL_STATUS.RINGING &&
-      !dismissedCallIds.has(c.callId)
+      !dismissedCallIds.has(c.callId) &&
+      (!curBlk || !c.createdBlock || curBlk - c.createdBlock <= 90)
   );
 
   const banner = document.getElementById('incomingCallBanner');
@@ -877,6 +915,7 @@ async function detectIncomingRingingCalls() {
       ringingCallMeta = null;
       ringtone.stop();
       if (banner) banner.style.display = 'none';
+      cleanupDirectCallUi();
     }
     return;
   }
@@ -887,6 +926,10 @@ async function detectIncomingRingingCalls() {
     `Incoming ${incoming.mediaLabel} from ${callerName} (#${incoming.callId})`;
   document.getElementById('incomingCallerMeta').textContent =
     `Caller Identity: ${shortAddr(incoming.caller)} • On-Chain DTLS-256: ${shortHex(incoming.callerDtlsFp, 8, 6)}`;
+  document.getElementById('hudCallState').textContent = `🔔 Incoming #${incoming.callId}`;
+  document.getElementById('stageHeadline').textContent = `🔔 Incoming ${incoming.mediaLabel} from ${callerName}`;
+  document.getElementById('stageSubline').textContent =
+    `Click "✅ Accept Video" or "🎙️ Voice Only" in the glowing green banner above!`;
   if (banner) banner.style.display = 'flex';
   ringtone.start();
 }
@@ -1014,7 +1057,7 @@ async function createRoomTx() {
     const idRec = await wallet.ensureIdentityWithPrompt({ rpcUrl, appName: 'EtherCall WebRTC' });
     const myId = (idRec?.identityAddr || wallet.keypair.address).toLowerCase();
     const mediaKind = Number(document.getElementById('selRoomMedia')?.value || RTC_MEDIA_KIND.VIDEO);
-    const stream = await ensureLocalStream(mediaKind, { allowSyntheticFallback: false });
+    const stream = await ensureLocalStream(mediaKind, { allowSyntheticFallback: true });
 
     const probe = new SlxWebRtcPeerSession({ iceServers: [], localStream: stream, isInitiator: true });
     const probeOffer = await probe.createBundledOffer({ iceWaitMs: 120 });
@@ -1049,7 +1092,7 @@ async function joinMeshRoomTx(roomId) {
     const rm = await rtcClient.getRoomState(roomId);
     if (!rm || !rm.isOpen) throw new Error('Room is closed or does not exist.');
 
-    const stream = await ensureLocalStream(rm.mediaKind, { allowSyntheticFallback: false });
+    const stream = await ensureLocalStream(rm.mediaKind, { allowSyntheticFallback: true });
     const probe = new SlxWebRtcPeerSession({ iceServers: [], localStream: stream, isInitiator: true });
     const probeOffer = await probe.createBundledOffer({ iceWaitMs: 120 });
     probe.close();
@@ -1091,6 +1134,7 @@ async function leaveMeshRoomTx() {
 async function reconcileActiveMeshRoom() {
   if (!joinedRoomId) return;
   const myId = getMyIdentityOrEoa();
+  const myKeys = deriveRtcSignalingKeys(wallet.keypair.privateKey, myId);
   const rm = await rtcClient.getRoomState(joinedRoomId);
   if (!rm || !rm.isOpen) return;
   activeRoomState = rm;
@@ -1098,7 +1142,7 @@ async function reconcileActiveMeshRoom() {
   document.getElementById('activeRoomHeader').textContent =
     `🏛️ Room #${rm.roomId}: ${rm.title} (${rm.peerCount}/6 peers)`;
 
-  const stream = await ensureLocalStream(rm.mediaKind, { allowSyntheticFallback: false });
+  const stream = await ensureLocalStream(rm.mediaKind, { allowSyntheticFallback: true });
   ensureMeshTile(myId, `You (${shortAddr(myId)})`, stream, true);
 
   for (const peer of rm.peers) {
@@ -1106,6 +1150,10 @@ async function reconcileActiveMeshRoom() {
     const peerId = peer.identity;
     let entry = meshPeers.get(peerId);
     const amInitiator = myId < peerId;
+    const peerProf =
+      directoryProfiles.find((p) => p.identity === peerId) ||
+      (await rtcClient.getPeerProfile(peerId).catch(() => null));
+    const peerPub64 = peerProf?.pub64 || null;
 
     if (!entry) {
       const peerLabel = await resolveDisplayName(peerId);
@@ -1127,14 +1175,18 @@ async function reconcileActiveMeshRoom() {
     if (amInitiator && !entry.offerSent) {
       entry.offerSent = true;
       const offer = await entry.session.createBundledOffer({ iceWaitMs: 2000 });
-      const env = await sealRtcSignalEnvelope({
-        v: 1,
-        type: 'offer',
-        sdp: offer.sdp,
-        candidates: offer.candidates,
-        dtlsFp: offer.dtlsFp,
-        ts: Date.now(),
-      });
+      const env = await sealRtcSignalEnvelope(
+        {
+          v: 1,
+          type: 'offer',
+          sdp: offer.sdp,
+          candidates: offer.candidates,
+          senderPub33: myKeys.compressedPubKey,
+          dtlsFp: offer.dtlsFp,
+          ts: Date.now(),
+        },
+        { recipientPub64: peerPub64 }
+      );
       await rtcClient.postRoomSignal({
         wallet,
         roomId: joinedRoomId,
@@ -1148,19 +1200,28 @@ async function reconcileActiveMeshRoom() {
     const inbound = await rtcClient.getPairSignal(joinedRoomId, peerId, myId);
     if (inbound && inbound.seq > entry.lastHandledSeq) {
       entry.lastHandledSeq = inbound.seq;
-      const opened = await openRtcSignalEnvelope(inbound.envelope);
+      const opened = await openRtcSignalEnvelope(inbound.envelope, {
+        signalPrivHex: myKeys.signalPrivHex,
+      });
       const pay = opened?.payload;
       if (pay?.type === 'offer' && !amInitiator) {
         const expectedFp = pay.dtlsFp || peer.dtlsFp;
         const ans = await entry.session.acceptOfferAndCreateBundledAnswer(pay, expectedFp, { iceWaitMs: 2000 });
-        const sealedAns = await sealRtcSignalEnvelope({
-          v: 1,
-          type: 'answer',
-          sdp: ans.sdp,
-          candidates: ans.candidates,
-          dtlsFp: ans.dtlsFp,
-          ts: Date.now(),
-        });
+        const replyPub64 = pay.senderPub33
+          ? decompressSecp256k1Compressed33(pay.senderPub33)
+          : peerPub64;
+        const sealedAns = await sealRtcSignalEnvelope(
+          {
+            v: 1,
+            type: 'answer',
+            sdp: ans.sdp,
+            candidates: ans.candidates,
+            senderPub33: myKeys.compressedPubKey,
+            dtlsFp: ans.dtlsFp,
+            ts: Date.now(),
+          },
+          { recipientPub64: replyPub64 }
+        );
         await rtcClient.postRoomSignal({
           wallet,
           roomId: joinedRoomId,

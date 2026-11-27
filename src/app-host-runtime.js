@@ -179,11 +179,19 @@ export function resolveFastCachedAppMeta(slug) {
     .find((a) => String(a.slug || '').toLowerCase() === cleanSlug);
 
   if (!base && !installed && !localOverrides) return null;
-  const merged = {
-    ...(base || {}),
-    ...(installed || {}),
-    ...(localOverrides || {}),
-  };
+  // For system core apps, prefer freshly synced genesis `base` over older Personal Container pins
+  // unless an explicit local Studio override exists.
+  const merged = base?.isSystemCore
+    ? {
+        ...(installed || {}),
+        ...base,
+        ...(localOverrides || {}),
+      }
+    : {
+        ...(base || {}),
+        ...(installed || {}),
+        ...(localOverrides || {}),
+      };
   if (base && merged.uiHash && base.uiHash && merged.uiHash.toLowerCase() !== base.uiHash.toLowerCase()) {
     merged.bundleUrl = '';
   }

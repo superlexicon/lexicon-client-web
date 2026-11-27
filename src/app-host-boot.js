@@ -14,6 +14,7 @@ import {
   shortHex,
 } from '@superlexicon/sdk';
 import {
+  loadGenesisAppCatalog,
   resolveFastCachedAppMeta,
   resolveEffectiveAppMeta,
   revalidateMountedAppInBackground,
@@ -29,8 +30,16 @@ async function bootHostStub() {
 
   const storeClient = new AppStoreClient({ rpcUrl: getDefaultNodeWsUrl() });
 
-  // Fast Path (< 5 ms): If app metadata + pre-verified HTML are already in local cache,
-  // mount immediately with zero network roundtrips and revalidate silently in the background!
+  // Quick manifest freshness check (bounded to 650 ms so LAN/HTTPS loads always pick up newly
+  // deployed bundle versions on the VERY FIRST refresh while offline/slow links still boot fast).
+  try {
+    await Promise.race([
+      loadGenesisAppCatalog({ forceNetwork: true }),
+      new Promise((resolve) => setTimeout(resolve, 650)),
+    ]);
+  } catch (_) {}
+
+  // Fast Path: If the current `uiHash` is already verified in local IndexedDB/CAS, mount immediately!
   try {
     const fastMeta = resolveFastCachedAppMeta(slug);
     if (fastMeta?.uiHash && fastMeta.uiHash !== ZERO_BYTES32) {
