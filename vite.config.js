@@ -47,6 +47,7 @@ export default defineConfig({
         rewards: resolve(rootDir, 'rewards.html'),
         crowdfunding: resolve(rootDir, 'crowdfunding.html'),
         telephony: resolve(rootDir, 'telephony.html'),
+        volatileVoles: resolve(rootDir, 'volatile-voles.html'),
       },
     },
   },

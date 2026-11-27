@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🐹 VOLATILE VOLES — Chaotic Burrow Sabotage (SuperLexicon HFS #22)</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/volatile-voles.css" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+</head>
+<body>
+  <div class="vv-shell">
+    <div id="slxUnifiedHeaderMount"></div>
+    <button id="btnHowToPlay" data-uh-unhide="1" class="vv-btn" style="display:none;">📖 How to Play</button>
+
+    <main class="vv-main">
+      <!-- Left / Center: Interactive Burrow Tabletop -->
+      <section class="vv-board-col">
+        <div id="vvWelcomeMount"></div>
+        <div id="vvCoachMount"></div>
+
+        <!-- Top Status & Quick-Action Ribbon -->
+        <div class="vv-ribbon">
+          <div class="vv-ribbon-left mono">
+            <span class="vv-kv">TURN <strong id="hudTurn">0</strong></span>
+            <span class="vv-sep">•</span>
+            <span class="vv-kv">GOAL <strong id="hudTargetVoles">7 VOLES</strong></span>
+            <span class="vv-sep">•</span>
+            <span id="hudPhaseBadge" class="vv-phase-pill">Syncing Burrow HFS…</span>
+          </div>
+          <div class="vv-ribbon-actions">
+            <button type="button" id="btnQuickMatch" class="vv-btn vv-btn-amber" title="Start an instant 4-seat match (You + 3 Tactical AI Vole Bots) in 1 block at $0.00 gas">
+              ⚡ Quick Match (vs 3 AI)
+            </button>
+            <button type="button" id="btnOpenMultiplayerModal" class="vv-btn" title="Create or join a 2–5 player PvP Burrow Table">
+              🪑 PvP Lobby
+            </button>
+            <button type="button" id="btnOpenCompendium" class="vv-btn vv-btn-violet" title="Browse all 25 bespoke Volatile Voles cards &amp; effects">
+              📚 All 25 Cards
+            </button>
+          </div>
+        </div>
+
+        <!-- Opponents' Burrows Row -->
+        <div id="opponentsRow" class="vv-opponents-grid"></div>
+
+        <!-- Center Tabletop: Nest, Draw Deck, Scrap Heap & Reaction Stack / Lobby CTA -->
+        <div class="vv-center-mat">
+          <div class="vv-piles-row">
+            <!-- The Nest (Baby Voles) -->
+            <button type="button" id="pileNest" class="vv-pile-card vv-pile-nest" title="Inspect The Nest — Baby Voles return here whenever destroyed, sacrificed, or bounced!">
+              <div class="vv-pile-art-wrap">
+                <img src="/assets/volatile-voles/card_00.jpg" alt="The Nest" />
+                <span class="vv-pile-cnt mono" id="lblNestCount">8</span>
+              </div>
+              <div class="vv-pile-meta">
+                <strong>🪺 The Nest</strong>
+                <span>Baby Voles</span>
+              </div>
+            </button>
+
+            <!-- Draw Pile -->
+            <div class="vv-pile-card vv-pile-deck">
+              <div class="vv-pile-art-wrap">
+                <img src="/assets/volatile-voles/card_back.jpg" alt="Draw Deck" />
+                <span class="vv-pile-cnt mono" id="lblDeckCount">68</span>
+              </div>
+              <div class="vv-pile-meta">
+                <strong>🃏 Draw Pile</strong>
+                <span id="lblPlaysLeft">Main Deck</span>
+              </div>
+              <button type="button" id="btnForageDraw" class="vv-btn vv-btn-emerald vv-forage-btn" disabled title="Skip playing a card to draw +1 extra card and end your Action Phase">
+                🌰 Forage (+1)
+              </button>
+            </div>
+
+            <!-- Scrap Heap -->
+            <button type="button" id="pileScrap" class="vv-pile-card vv-pile-scrap" title="Click to inspect all cards in the Scrap Heap">
+              <div class="vv-pile-art-wrap" id="scrapArtWrap">
+                <div class="vv-pile-empty">🗑️</div>
+                <span class="vv-pile-cnt mono" id="lblScrapCount">0</span>
+              </div>
+              <div class="vv-pile-meta">
+                <strong>🗑️ Scrap Heap</strong>
+                <span id="lblTopScrap">Empty</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Dynamic Stage Banner: Lobby / SQUEAK-NO! Counter-Stack / Targeting Wizard / Victory -->
+          <div id="centerStagePanel" class="vv-stage-panel"></div>
+        </div>
+
+        <!-- Player's Own Burrow -->
+        <div id="myBurrowZone" class="vv-my-burrow">
+          <div class="vv-my-burrow-hdr">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span class="vv-my-title" id="lblMyBurrowTitle">🏡 Your Burrow</span>
+              <span class="vv-vole-meter mono" id="lblMyVoleMeter">0 / 7 Voles</span>
+              <div id="myModPills" class="vv-mod-pills"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button type="button" id="btnEndActionEarly" class="vv-btn" style="display:none;">End Turn →</button>
+              <span class="mono" style="font-size:0.72rem;color:#94a3b8;" id="lblHandCounter">Hand: 0 / 7</span>
+            </div>
+          </div>
+          <div id="myBurrowCards" class="vv-burrow-strip"></div>
+        </div>
+
+        <!-- Player's Interactive Fanned Hand -->
+        <div class="vv-hand-tray">
+          <div id="targetingBar" class="vv-targeting-bar" style="display:none;"></div>
+          <div id="myHandFan" class="vv-hand-fan"></div>
+        </div>
+      </section>
+
+      <!-- Right Sidebar: Scoreboard, Active Tables & Live Burrow Chronicle -->
+      <aside class="vv-side-col">
+        <div class="vv-side-card">
+          <div class="vv-side-hdr">
+            <h2>🏆 Burrow Standings</h2>
+            <span id="lblSeatSummary" class="mono vv-muted">0 Seated</span>
+          </div>
+          <div id="standingsList" class="vv-standings-list"></div>
+        </div>
+
+        <div class="vv-side-card vv-log-card">
+          <div class="vv-side-hdr">
+            <h2>📜 Chaos Chronicle</h2>
+            <span class="mono vv-live-dot">● $0 GAS HFS</span>
+          </div>
+          <div id="chronicleFeed" class="vv-feed"></div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Card Zoom / Pile Inspector / Compendium / PvP Lobby Modal -->
+    <div id="vvModalBackdrop" class="vv-modal-backdrop" style="display:none;">
+      <div class="vv-modal">
+        <div class="vv-modal-hdr">
+          <h3 id="vvModalTitle">Card Details</h3>
+          <button type="button" id="btnCloseVvModal" class="vv-btn">✕</button>
+        </div>
+        <div id="vvModalBody" class="vv-modal-body"></div>
+      </div>
+    </div>
+
+    <div id="vvToast" class="vv-toast" style="display:none;"></div>
+  </div>
+
+  <script type="module" src="/src/volatile-voles.js"></script>
+</body>
+</html>

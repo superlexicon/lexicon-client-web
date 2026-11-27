@@ -278,6 +278,27 @@
     },
     {
       "appId": 14,
+      "slug": "volatile-voles",
+      "slugId": "0xe83632544c919b18f9362495e876afec33a99fe56b3f52638d551bd6c0772c1e",
+      "title": "Volatile Voles \u2014 Chaotic Burrow Sabotage",
+      "summary": "2\u20135 player chaotic creature-collection & out-of-turn SQUEAK-NO! counter-stack card game with Baby Nest, Perks, and Potato Hexes.",
+      "icon": "\ud83d\udc39",
+      "category": 5,
+      "version": "1.0.0",
+      "execMode": 1,
+      "uiHash": "0xc6c847ba97b4dc247f226f36c8b3ce9674a31a8db51545bcd31652da0a6ff105",
+      "uncompressedLen": 92127,
+      "compressedLen": 22837,
+      "chunkCount": 1,
+      "bundleUrl": "/app-bundles/volatile-voles.html.gz",
+      "route": "/volatile-voles.html",
+      "wasmCodeHash": "0x764b74a0b4f862023dc1993abf4cdc8b982f7c314f306d106e3e7db72842566d",
+      "defaultHfsAddr": "0x0165878a594ca255338adfa4d48449f69242eb8f",
+      "publisherLabel": "SuperLexicon Core \u00b7 HFS",
+      "isSystemCore": true
+    },
+    {
+      "appId": 15,
       "slug": "rf-micro-poll",
       "slugId": "0xfa8eeed1a96e5d1ffdc381328b4e9f0fb2db02208200ea5f529afad1c7507e88",
       "title": "RF Mesh Pulse Poll",
@@ -298,7 +319,7 @@
       "isSystemCore": false
     },
     {
-      "appId": 15,
+      "appId": 16,
       "slug": "mesh-repeater-wall",
       "slugId": "0x54c6cac78e2192d72345ce431721089bdc888fa03efa3df855035ac5323215f6",
       "title": "Mesh Repeater Beacon Wall",
@@ -319,7 +340,7 @@
       "isSystemCore": false
     },
     {
-      "appId": 16,
+      "appId": 17,
       "slug": "hfs-bounty-splits",
       "slugId": "0xc090a02e57ee16c295823c28b4135199600cdc46dd086b1b05b422389215926e",
       "title": "HFS R&D Bounty Splits",

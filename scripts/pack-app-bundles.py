@@ -258,6 +258,19 @@ CORE_APPS = [
         "instKey": "",
         "hasCss": True,
     },
+    {
+        "slug": "volatile-voles",
+        "title": "Volatile Voles — Chaotic Burrow Sabotage",
+        "icon": "🐹",
+        "category": 5,
+        "version": "1.0.0",
+        "summary": "2–5 player chaotic creature-collection & out-of-turn SQUEAK-NO! counter-stack card game with Baby Nest, Perks, and Potato Hexes.",
+        "wasmKey": "volatile_voles",
+        "wasmFile": "volatile_voles.wasm",
+        "instKey": "",
+        "defaultHfsPath": ("volatileVoles", "contractAddr"),
+        "hasCss": True,
+    },
 ]
 
 COMMUNITY_SANDBOX_APPS = [

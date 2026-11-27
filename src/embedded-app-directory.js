@@ -38,6 +38,7 @@ const ICON_GRADIENTS = {
   'cipher-noir': 'linear-gradient(145deg, #c084fc 0%, #7e22ce 55%, #1e1b4b 100%)',
   hegemony: 'linear-gradient(145deg, #f43f5e 0%, #be123c 55%, #4c0519 100%)',
   lottery: 'linear-gradient(145deg, #fbbf24 0%, #f97316 58%, #c2410c 100%)',
+  'volatile-voles': 'linear-gradient(145deg, #fb923c 0%, #e11d48 55%, #881337 100%)',
   'rf-micro-poll': 'linear-gradient(145deg, #2dd4bf 0%, #0284c7 100%)',
   'mesh-repeater-wall': 'linear-gradient(145deg, #60a5fa 0%, #4338ca 100%)',
   'hfs-bounty-splits': 'linear-gradient(145deg, #34d399 0%, #047857 100%)',

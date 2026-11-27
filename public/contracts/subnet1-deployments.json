@@ -26,7 +26,8 @@
     "secret_ballot": "0x1817db8449f5166890989a1c56c5552fd21a9af39dfa4c963073a7dfc85adf8f",
     "subnet_registry": "0x5365ed423586cdd689b264c188f9230b2ba4e1562d8d1a76f802e04ff6547e0f",
     "app_store": "0xee9d0de546e867f3a564e67cca86ea8988b965246b240eb93c9c2fc83ee90646",
-    "webrtc_signal": "0x6883e5a1c75848f8d08717076d90fcf812ac280b6a2fd8d909aed95a2463100b"
+    "webrtc_signal": "0x6883e5a1c75848f8d08717076d90fcf812ac280b6a2fd8d909aed95a2463100b",
+    "volatile_voles": "0x764b74a0b4f862023dc1993abf4cdc8b982f7c314f306d106e3e7db72842566d"
   },
   "webrtcSignal": {
     "contractAddr": "0x95eada4348b88464bc777f38e54070ea82807d64",
@@ -718,5 +719,10 @@
       "restrictAppStorePublishToDevelopersSubgroup": true,
       "directRfSubnetIngressUnrestricted": true
     }
+  },
+  "volatileVoles": {
+    "contractAddr": "0x0165878a594ca255338adfa4d48449f69242eb8f",
+    "defaultTableId": "0x564f4c4154494c455f564f4c45535f425552524f575f30310000000000000000",
+    "label": "High-Voltage Burrow Arena #1"
   }
 }

@@ -64,6 +64,7 @@ const ICON_GRADIENTS_BY_SLUG = {
   'cipher-noir': 'linear-gradient(145deg, #c084fc 0%, #7e22ce 55%, #1e1b4b 100%)',
   hegemony: 'linear-gradient(145deg, #f43f5e 0%, #be123c 55%, #4c0519 100%)',
   lottery: 'linear-gradient(145deg, #fbbf24 0%, #f97316 58%, #c2410c 100%)',
+  'volatile-voles': 'linear-gradient(145deg, #fb923c 0%, #e11d48 55%, #881337 100%)',
 };
 
 const WASM_LABELS_BY_SLUG = {
@@ -80,6 +81,7 @@ const WASM_LABELS_BY_SLUG = {
   'cipher-noir': 'cipher_noir.wasm',
   hegemony: 'hegemony.wasm',
   lottery: 'lottery.wasm + vrf_beacon.wasm',
+  'volatile-voles': 'volatile_voles.wasm',
 };
 
 const state = {
