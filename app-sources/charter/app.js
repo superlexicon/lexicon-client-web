@@ -71,12 +71,12 @@ import {
   shortAddr,
   fmtNum,
   escapeHtml,
-} from './slx-inst-suite.js';
+} from '@superlexicon/sdk/inst-suite';
 import {
   deployNewCorporateCharterHfs,
   HfsRegistryAbi,
   setUrlHfsParam,
-} from './slx-hfs-registry.js';
+} from '@superlexicon/sdk/hfs-deployers';
 
 const STORAGE_RES_KEY = 'slx_gamified_charter_resolutions_v2';
 const STORAGE_AUC_KEY = 'slx_gamified_charter_auctions_v2';

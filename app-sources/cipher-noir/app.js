@@ -41,8 +41,8 @@ import {
   decodeNoirCaseState,
 } from '@superlexicon/sdk';
 import { mountSlxUnifiedHeader } from '@superlexicon/sdk/ui';
-import { mountHfsRegistryDropdown } from './slx-hfs-registry.js';
-import { mountSlxGameGuide } from './game-guide.js';
+import { mountHfsRegistryDropdown } from '@superlexicon/sdk/hfs-deployers';
+import { mountSlxGameGuide } from '@superlexicon/sdk/ui/game-guide';
 
 // ---------------------------------------------------------------------------
 // 18 Original Sabotage Dossiers & Facility Topology

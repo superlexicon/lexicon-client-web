@@ -22,20 +22,20 @@ import {
   shortAddr,
   fmtNum,
   escapeHtml,
-} from './slx-inst-suite.js';
-import { fetchRegisteredHfsByType } from './slx-hfs-registry.js';
+} from '@superlexicon/sdk/inst-suite';
+import { fetchRegisteredHfsByType } from '@superlexicon/sdk/hfs-deployers';
 import {
   DEFAULT_VALUATION_PARAMS,
   computeTriangulatedValuation,
   buildValuationSensitivityGrid,
-} from './ifrs-valuation.js';
+} from '@superlexicon/sdk/ifrs-valuation';
 import {
   FRIENDLY_COA,
   GL_SCENARIO_BLUEPRINTS,
   renderHumanBlueprintHtml,
   translateLiveJournalEntry,
   describePostingLineEffect,
-} from './ifrs-human-gl.js';
+} from '@superlexicon/sdk/ifrs-human-gl';
 import {
   hexToBytes,
   bytesToHex,
@@ -45,6 +45,8 @@ import {
   randomBytes,
   u16BEBytes,
   u64BEBytes,
+  readU32BE,
+  readI64BE,
   keccak256Bytes,
   keccak256Hex,
   slxWatchChainApp,
@@ -194,16 +196,6 @@ const TOPIC_AUDITOR_KEY_GRANTED = keccak256Hex(
 
 const ANCHOR_HEADER_BYTES = 272;
 const FLASH_TTL_MS = 4800;
-
-function readU32BE(b, off) {
-  return ((b[off] << 24) | (b[off + 1] << 16) | (b[off + 2] << 8) | b[off + 3]) >>> 0;
-}
-
-function readI64BE(b, off) {
-  const hi = (b[off] << 24) | (b[off + 1] << 16) | (b[off + 2] << 8) | b[off + 3];
-  const lo = ((b[off + 4] << 24) | (b[off + 5] << 16) | (b[off + 6] << 8) | b[off + 7]) >>> 0;
-  return Number((BigInt(hi) << 32n) | BigInt(lo));
-}
 
 function fmtSigned(n) {
   if (n < 0) return `(${fmtNum(Math.abs(n))})`;

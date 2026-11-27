@@ -28,12 +28,12 @@ import {
   shortAddr,
   fmtNum,
   escapeHtml,
-} from './slx-inst-suite.js';
+} from '@superlexicon/sdk/inst-suite';
 import {
   IFRS_VALUATION_TOPICS,
   decodeIfrsStatementsHex,
   computeTriangulatedValuation,
-} from './ifrs-valuation.js';
+} from '@superlexicon/sdk/ifrs-valuation';
 import {
   hexToBytes,
   fetchRegisteredHfsByType,

@@ -25,7 +25,7 @@ import {
   decodeAddrWord,
   shortAddr,
   fmtNum,
-} from './slx-inst-suite.js';
+} from '@superlexicon/sdk/inst-suite';
 import {
   hexToBytes,
   bytesToHex,

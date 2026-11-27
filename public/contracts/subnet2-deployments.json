@@ -1,23 +1,6 @@
 {
   "chainId": 1337,
-  "codeHashes": {
-    "hfs_registry": "0x2ec51fe027c2cf006ce58658068b6bfb06deb4ec8a923872893d3651cba4b18d",
-    "subnet_registry": "0x5365ed423586cdd689b264c188f9230b2ba4e1562d8d1a76f802e04ff6547e0f",
-    "messaging": "0xe5eb6cbc561a2e6b84ac8047d86492b942e63c3f9a43ce6fe527d600ed1fac63"
-  },
-  "hfsRegistry": "0xd7983d631634bb6d1dea4318a25dd413066ad5fc",
-  "subnetRegistry": "0x160c3cb57486da472efeb15f3f637cc7d6a3d58a",
-  "messaging": "0x07fd8feb5638a3b33a24dc6acf7fe9839ce5c92f",
-  "publicRpcUrls": [
-    "wss://node21.superlexicon.com/rpc",
-    "wss://node22.superlexicon.com/rpc",
-    "wss://node23.superlexicon.com/rpc"
-  ],
-  "publicWsUrls": [
-    "wss://node21.superlexicon.com",
-    "wss://node22.superlexicon.com",
-    "wss://node23.superlexicon.com"
-  ],
+  "messaging": "0xcbc44e040bbc49208fca88fbf2a73e5b53c8abbe",
   "repeaterRpcUrl": "http://192.168.50.4:8545",
   "repeaterWsUrl": "ws://192.168.50.4:8566",
   "rpcUrls": [
@@ -26,16 +9,10 @@
     "http://192.168.50.94:18545"
   ],
   "subnet1Id": "e40af3dd",
-  "subnet1Lat": 1.30308,
-  "subnet1Lon": 103.9128,
-  "subnet1LocationLabel": "Marine Crescent (Blks 28–35), Singapore",
   "subnet1Messaging": "0x4e9bc36f233ccb81d00ccceb892fdf08e28196fb",
   "subnetId": "6eaa3da4",
-  "lat": 1.30322,
-  "lon": 103.91302,
-  "locationLabel": "Marine Crescent (Blks 28, 29 & 35), Singapore",
   "transport": "tcp",
-  "updatedAtMs": 1795515744782,
+  "updatedAtMs": 1795743566797,
   "wsUrls": [
     "ws://192.168.50.91:18566",
     "ws://192.168.50.92:18566",

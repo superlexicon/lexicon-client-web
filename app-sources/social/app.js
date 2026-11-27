@@ -23,6 +23,14 @@ import {
   selectorBytes,
   computeAddress,
   signLexiconTx,
+  wordU64,
+  wordBool,
+  wordAddress as wordAddr,
+  wordBytes32 as wordB32,
+  tailBytes,
+  readU16LE,
+  readU32LE,
+  readU64LEBig,
   SlxWalletManager,
   SlxHfsCache,
   slxNodeRpc,
@@ -42,7 +50,7 @@ import {
   fetchRegisteredHfsByType,
 } from '@superlexicon/sdk';
 import { mountSlxUnifiedHeader } from '@superlexicon/sdk/ui';
-import { mountHfsRegistryDropdown } from './slx-hfs-registry.js';
+import { mountHfsRegistryDropdown } from '@superlexicon/sdk/hfs-deployers';
 
 // ---------------------------------------------------------------------------
 // Capabilities & ABI Encoders for Identity, ProductLedger & Social Subroutines
@@ -51,42 +59,6 @@ import { mountHfsRegistryDropdown } from './slx-hfs-registry.js';
 export const CAP_SOCIAL_RELATIONSHIPS = keccak256Hex(utf8ToBytes('CAP_SOCIAL_RELATIONSHIPS'));
 export const CAP_SOCIAL_MESSAGING = keccak256Hex(utf8ToBytes('CAP_SOCIAL_MESSAGING'));
 export const CAP_SOCIAL_EVENTS = keccak256Hex(utf8ToBytes('CAP_SOCIAL_EVENTS'));
-
-function wordU64(v) {
-  const b = new Uint8Array(32);
-  let n = BigInt(v);
-  for (let i = 31; i >= 24; i--) {
-    b[i] = Number(n & 0xffn);
-    n >>= 8n;
-  }
-  return b;
-}
-
-function wordBool(flag) {
-  return wordU64(flag ? 1 : 0);
-}
-
-function wordAddr(addrHex) {
-  const b = new Uint8Array(32);
-  if (addrHex && addrHex !== '0x') {
-    b.set(hexToBytes(addrHex).slice(-20), 12);
-  }
-  return b;
-}
-
-function wordB32(b32Hex) {
-  const b = new Uint8Array(32);
-  if (b32Hex && b32Hex !== '0x') {
-    b.set(hexToBytes(b32Hex).slice(0, 32), 0);
-  }
-  return b;
-}
-
-function tailBytes(data) {
-  const raw = typeof data === 'string' ? utf8ToBytes(data) : data;
-  const pad = (32 - (raw.length % 32)) % 32;
-  return concatBytes(wordU64(raw.length), raw, new Uint8Array(pad));
-}
 
 export function computeEncounterCommitHex(charterAddr, initiatorId, targetId, secretNonceHex) {
   return keccak256Hex(
@@ -380,22 +352,6 @@ export const EventsAbi = {
 // ---------------------------------------------------------------------------
 // Binary Snapshot Decoders
 // ---------------------------------------------------------------------------
-
-function readU16LE(b, o) {
-  return b[o] | (b[o + 1] << 8);
-}
-
-function readU32LE(b, o) {
-  return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
-}
-
-function readU64LEBig(b, o) {
-  let v = 0n;
-  for (let i = 7; i >= 0; i--) {
-    v = (v << 8n) | BigInt(b[o + i]);
-  }
-  return v;
-}
 
 function parseMeta(str) {
   const [name = 'Neighbor', handle = '@neighbor', role = 'Resident', device = 'Slate'] =

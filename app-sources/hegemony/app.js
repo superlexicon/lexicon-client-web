@@ -26,8 +26,8 @@ import {
   slxWatchChainApp,
 } from '@superlexicon/sdk';
 import { mountSlxUnifiedHeader } from '@superlexicon/sdk/ui';
-import { mountHfsRegistryDropdown } from './slx-hfs-registry.js';
-import { mountSlxGameGuide } from './game-guide.js';
+import { mountHfsRegistryDropdown } from '@superlexicon/sdk/hfs-deployers';
+import { mountSlxGameGuide } from '@superlexicon/sdk/ui/game-guide';
 
 // ---------------------------------------------------------------------------
 // 36-Sector Shattered Pangaea Topology (Exact match to `examples/hegemony/src/main.rs`)

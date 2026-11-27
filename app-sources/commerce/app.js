@@ -13,12 +13,12 @@ import {
   shortAddr,
   fmtNum,
   escapeHtml,
-} from './slx-inst-suite.js';
+} from '@superlexicon/sdk/inst-suite';
 import {
   GL_SCENARIO_BLUEPRINTS,
   buildLiveProductCheckoutPreview,
   renderHumanBlueprintHtml,
-} from './ifrs-human-gl.js';
+} from '@superlexicon/sdk/ifrs-human-gl';
 import { hexToBytes, slxWatchChainApp, createSingleFlightRefresh } from '@superlexicon/sdk';
 
 const SKU_ICONS_BY_CODE = {

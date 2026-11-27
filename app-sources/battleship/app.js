@@ -21,6 +21,12 @@ import {
   keccak256Hex,
   selectorBytes,
   signLexiconTx,
+  wordU64,
+  wordBytes32,
+  wordAddress,
+  readU16BE,
+  readU32BE,
+  readU64BE,
   SlxWalletManager,
   SlxHfsCache,
   slxNodeRpc,
@@ -31,8 +37,8 @@ import {
   slxWaitForReceipt,
 } from '@superlexicon/sdk';
 import { mountSlxUnifiedHeader } from '@superlexicon/sdk/ui';
-import { mountHfsRegistryDropdown } from './slx-hfs-registry.js';
-import { mountSlxGameGuide, hasSeenGameWelcome } from './game-guide.js';
+import { mountHfsRegistryDropdown } from '@superlexicon/sdk/hfs-deployers';
+import { mountSlxGameGuide, hasSeenGameWelcome } from '@superlexicon/sdk/ui/game-guide';
 import {
   FleetSocialClient,
   FleetSocialAbi,
@@ -40,7 +46,7 @@ import {
   squadronChannelHash,
   deterministicEncounterNonce,
   computeEncounterCommit,
-} from './slx-fleet-social.js';
+} from '@superlexicon/sdk/fleet-social';
 
 // ---------------------------------------------------------------------------
 // Game Balance Tables (Exact 1:1 Mirror of `examples/battleship/src/main.rs`)
@@ -405,30 +411,6 @@ function computeDirectMovePreview(ship, cursorTx, cursorTy, dirOverride, view) {
 // ABI Calldata & Binary State / Event Log Decoders for `battleship.wasm`
 // ---------------------------------------------------------------------------
 
-function wordU64(n) {
-  const b = new Uint8Array(32);
-  let v = BigInt(Math.max(0, Math.floor(Number(n))));
-  for (let i = 31; i >= 24; i--) {
-    b[i] = Number(v & 0xffn);
-    v >>= 8n;
-  }
-  return b;
-}
-
-function wordBytes32(hex32) {
-  const b = new Uint8Array(32);
-  b.set(hexToBytes(hex32).slice(0, 32), 0);
-  return b;
-}
-
-function wordAddress(addrHex) {
-  const b = new Uint8Array(32);
-  if (addrHex && addrHex !== '0x') {
-    b.set(hexToBytes(addrHex).slice(-20), 12);
-  }
-  return b;
-}
-
 export const NavalAbi = {
   createBattle(bid) {
     return bytesToHex(concatBytes(selectorBytes('createBattle(bytes32)'), wordBytes32(bid)));
@@ -607,25 +589,6 @@ export const NavalAbi = {
     );
   },
 };
-
-function readU16BE(b, off) {
-  return (b[off] << 8) | b[off + 1];
-}
-
-function readU32BE(b, off) {
-  return (
-    ((b[off] << 24) >>> 0) +
-    ((b[off + 1] << 16) >>> 0) +
-    ((b[off + 2] << 8) >>> 0) +
-    b[off + 3]
-  );
-}
-
-function readU64BE(b, off) {
-  let n = 0n;
-  for (let i = 0; i < 8; i++) n = (n << 8n) | BigInt(b[off + i]);
-  return Number(n);
-}
 
 export function decodeShipMovedLog(receipt) {
   if (!receipt || !Array.isArray(receipt.logs)) return null;

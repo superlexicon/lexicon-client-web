@@ -8,17 +8,26 @@
 
 import * as sdk from '@superlexicon/sdk';
 import * as sdkUi from '@superlexicon/sdk/ui';
-import * as instSuite from './slx-inst-suite.js';
-import * as hfsRegistry from './slx-hfs-registry.js';
-import * as ifrsValuation from './ifrs-valuation.js';
-import * as ifrsHumanGl from './ifrs-human-gl.js';
-import * as gameGuide from './game-guide.js';
-import * as fleetSocial from './slx-fleet-social.js';
-import * as legalConsent from './legal-consent.js';
+import * as instSuite from '@superlexicon/sdk/inst-suite';
+import * as hfsRegistry from '@superlexicon/sdk/hfs-deployers';
+import * as ifrsValuation from '@superlexicon/sdk/ifrs-valuation';
+import * as ifrsHumanGl from '@superlexicon/sdk/ifrs-human-gl';
+import * as gameGuide from '@superlexicon/sdk/ui/game-guide';
+import * as fleetSocial from '@superlexicon/sdk/fleet-social';
+import * as legalConsent from '@superlexicon/sdk/ui/legal-consent';
 
 export const HOST_MODULE_MAP = Object.freeze({
+  // Canonical @superlexicon/sdk submodule imports (used by all on-chain HFS UI bundles)
   '@superlexicon/sdk': sdk,
   '@superlexicon/sdk/ui': sdkUi,
+  '@superlexicon/sdk/inst-suite': instSuite,
+  '@superlexicon/sdk/hfs-deployers': hfsRegistry,
+  '@superlexicon/sdk/ifrs-valuation': ifrsValuation,
+  '@superlexicon/sdk/ifrs-human-gl': ifrsHumanGl,
+  '@superlexicon/sdk/ui/game-guide': gameGuide,
+  '@superlexicon/sdk/fleet-social': fleetSocial,
+  '@superlexicon/sdk/ui/legal-consent': legalConsent,
+  // Backwards-compatible aliases for previously forked/cached bundles
   './slx-inst-suite.js': instSuite,
   '/src/slx-inst-suite.js': instSuite,
   './slx-hfs-registry.js': hfsRegistry,

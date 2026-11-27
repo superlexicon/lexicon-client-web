@@ -18,6 +18,7 @@ import {
   keccak256Bytes,
   encodeAbi,
   decodeUintWord,
+  u64BEBytes,
   readU16BE,
   readU32BE,
   readU64BE,
@@ -32,213 +33,15 @@ import {
   getDefaultNodeWsUrl,
   readOnChainIdentityNickname,
   slxWatchChainApp,
+  ED_BASE_PT as ED_BASE,
+  edEncode,
+  edDecode,
+  vrfHashToCurve,
+  verifyDleq,
+  lagrangeCombinePoints,
 } from '@superlexicon/sdk';
 import { mountSlxUnifiedHeader } from '@superlexicon/sdk/ui';
-import { mountHfsRegistryDropdown } from './slx-hfs-registry.js';
-
-// ============================================================================
-// 1. Pure-JS Edwards25519 Prime-Order-ℓ DLEQ + Lagrange Verifier (RFC 8032)
-// ============================================================================
-
-const ED_P = (1n << 255n) - 19n;
-const ED_L = (1n << 252n) + 27742317777372353535851937790883648493n;
-
-function mod(a, m) {
-  const r = a % m;
-  return r < 0n ? r + m : r;
-}
-
-function modPow(base, exp, m) {
-  let res = 1n;
-  let b = mod(base, m);
-  let e = exp;
-  while (e > 0n) {
-    if (e & 1n) res = (res * b) % m;
-    b = (b * b) % m;
-    e >>= 1n;
-  }
-  return res;
-}
-
-function modInv(a, m) {
-  return modPow(a, m - 2n, m);
-}
-
-const ED_D = mod(-121665n * modInv(121666n, ED_P), ED_P);
-const ED_SQRT_M1 = modPow(2n, (ED_P - 1n) / 4n, ED_P);
-const ED_IDENTITY = { X: 0n, Y: 1n, Z: 1n, T: 0n };
-
-function recoverX(y, sign) {
-  if (y >= ED_P) return null;
-  const y2 = (y * y) % ED_P;
-  const u = mod(y2 - 1n, ED_P);
-  const v = mod(ED_D * y2 + 1n, ED_P);
-  const x2 = (u * modInv(v, ED_P)) % ED_P;
-  if (x2 === 0n) return sign ? null : 0n;
-  let x = modPow(x2, (ED_P + 3n) / 8n, ED_P);
-  if (mod(x * x - x2, ED_P) !== 0n) {
-    x = (x * ED_SQRT_M1) % ED_P;
-  }
-  if (mod(x * x - x2, ED_P) !== 0n) return null;
-  if ((x & 1n) !== BigInt(sign)) x = ED_P - x;
-  return x;
-}
-
-const ED_BY = (4n * modInv(5n, ED_P)) % ED_P;
-const ED_BX = recoverX(ED_BY, 0);
-const ED_BASE = { X: ED_BX, Y: ED_BY, Z: 1n, T: (ED_BX * ED_BY) % ED_P };
-
-function edAdd(P, Q) {
-  const A = mod((P.Y - P.X) * (Q.Y - Q.X), ED_P);
-  const B = mod((P.Y + P.X) * (Q.Y + Q.X), ED_P);
-  const C = mod(2n * P.T * Q.T * ED_D, ED_P);
-  const D = mod(2n * P.Z * Q.Z, ED_P);
-  const E = mod(B - A, ED_P);
-  const F = mod(D - C, ED_P);
-  const G = mod(D + C, ED_P);
-  const H = mod(B + A, ED_P);
-  return {
-    X: (E * F) % ED_P,
-    Y: (G * H) % ED_P,
-    Z: (F * G) % ED_P,
-    T: (E * H) % ED_P,
-  };
-}
-
-function edNeg(P) {
-  return { X: mod(-P.X, ED_P), Y: P.Y, Z: P.Z, T: mod(-P.T, ED_P) };
-}
-
-function edMul(scalar, P) {
-  let R = ED_IDENTITY;
-  let Q = P;
-  let k = scalar;
-  while (k > 0n) {
-    if (k & 1n) R = edAdd(R, Q);
-    Q = edAdd(Q, Q);
-    k >>= 1n;
-  }
-  return R;
-}
-
-function edEncode(P) {
-  const zi = modInv(P.Z, ED_P);
-  const x = (P.X * zi) % ED_P;
-  const y = (P.Y * zi) % ED_P;
-  const out = new Uint8Array(32);
-  let tmp = y;
-  for (let i = 0; i < 32; i++) {
-    out[i] = Number(tmp & 0xffn);
-    tmp >>= 8n;
-  }
-  out[31] |= Number(x & 1n) << 7;
-  return out;
-}
-
-function edDecode(bytes32) {
-  if (!bytes32 || bytes32.length !== 32) return null;
-  let y = 0n;
-  for (let i = 0; i < 32; i++) {
-    const b = i === 31 ? bytes32[31] & 0x7f : bytes32[i];
-    y |= BigInt(b) << BigInt(8 * i);
-  }
-  const sign = (bytes32[31] >> 7) & 1;
-  const x = recoverX(y, sign);
-  if (x === null) return null;
-  const P = { X: x, Y: y, Z: 1n, T: (x * y) % ED_P };
-  const re = edEncode(P);
-  for (let i = 0; i < 32; i++) {
-    if (re[i] !== bytes32[i]) return null;
-  }
-  return P;
-}
-
-function edIsIdentity(P) {
-  return mod(P.X, ED_P) === 0n && mod(P.Y - P.Z, ED_P) === 0n;
-}
-
-function leBytesToBigInt(bytes) {
-  let acc = 0n;
-  for (let i = 0; i < bytes.length; i++) {
-    acc |= BigInt(bytes[i]) << BigInt(8 * i);
-  }
-  return acc;
-}
-
-function u64BeBytes(n) {
-  const b = new Uint8Array(8);
-  let v = BigInt(n);
-  for (let i = 7; i >= 0; i--) {
-    b[i] = Number(v & 0xffn);
-    v >>= 8n;
-  }
-  return b;
-}
-
-async function sha512Bytes(data) {
-  const buf = await crypto.subtle.digest('SHA-512', data);
-  return new Uint8Array(buf);
-}
-
-async function hashToCurveJs(alphaBytes) {
-  const prefix = utf8ToBytes('SLX_VM_VRF_H2C_V1');
-  const lenBe = u64BeBytes(alphaBytes.length);
-  for (let ctr = 0; ctr <= 255; ctr++) {
-    const digest = await sha512Bytes(
-      concatBytes(prefix, lenBe, alphaBytes, new Uint8Array([ctr]))
-    );
-    const cand = digest.slice(0, 32);
-    cand[31] &= 0x7f;
-    const rawPt = edDecode(cand);
-    if (rawPt) {
-      const cleared = edMul(8n, rawPt); // mul_by_cofactor()
-      if (!edIsIdentity(cleared)) return cleared;
-    }
-  }
-  return ED_BASE;
-}
-
-async function verifyDleqJs(G1, Y1, G2, Y2, auxCtx, proof64) {
-  const c = leBytesToBigInt(proof64.slice(0, 32));
-  const z = leBytesToBigInt(proof64.slice(32, 64));
-  if (c >= ED_L || z >= ED_L) return false;
-
-  const R1 = edAdd(edMul(z, G1), edNeg(edMul(c, Y1)));
-  const R2 = edAdd(edMul(z, G2), edNeg(edMul(c, Y2)));
-  const digest = await sha512Bytes(
-    concatBytes(
-      utf8ToBytes('SLX_VM_DLEQ_CHAL_V1'),
-      edEncode(G1),
-      edEncode(Y1),
-      edEncode(G2),
-      edEncode(Y2),
-      edEncode(R1),
-      edEncode(R2),
-      u64BeBytes(auxCtx.length),
-      auxCtx
-    )
-  );
-  const expectedC = leBytesToBigInt(digest) % ED_L;
-  return c === expectedC;
-}
-
-function lagrangeCombineJs(shares) {
-  let combined = ED_IDENTITY;
-  for (let i = 0; i < shares.length; i++) {
-    const xi = BigInt(shares[i].valIdx + 1);
-    let num = 1n;
-    let den = 1n;
-    for (let j = 0; j < shares.length; j++) {
-      if (i === j) continue;
-      const xj = BigInt(shares[j].valIdx + 1);
-      num = mod(num * xj, ED_L);
-      den = mod(den * (xj - xi), ED_L);
-    }
-    const lambda = mod(num * modInv(den, ED_L), ED_L);
-    combined = edAdd(combined, edMul(lambda, shares[i].gammaPt));
-  }
-  return edEncode(combined);
-}
+import { mountHfsRegistryDropdown } from '@superlexicon/sdk/hfs-deployers';
 
 function deriveUnbiased4dJs(random32, reqId32) {
   const prefix = utf8ToBytes('QUANTUM_4D_NUM_V1:');
@@ -880,7 +683,7 @@ async function verifyRoundProofInBrowser(reqIdHex, roundId, expectedWin4d) {
     }
 
     // Step 1: Hash-to-Curve H(alpha)
-    const H = await hashToCurveJs(alpha);
+    const H = vrfHashToCurve(alpha);
     const hHex = bytesToHex(edEncode(H));
 
     // Step 2: Verify every validator's Chaum-Pedersen DLEQ proof!
@@ -892,7 +695,7 @@ async function verifyRoundProofInBrowser(reqIdHex, roundId, expectedWin4d) {
       const ok =
         spkPt &&
         gammaPt &&
-        (await verifyDleqJs(ED_BASE, spkPt, H, gammaPt, alpha, sh.proof64));
+        verifyDleq(ED_BASE, spkPt, H, gammaPt, alpha, sh.proof64);
       if (!ok) throw new Error(`Validator #${sh.valIdx} DLEQ proof failed!`);
       if (verifiedShares.length < threshold) {
         verifiedShares.push({ valIdx: sh.valIdx, gammaPt });
@@ -903,7 +706,7 @@ async function verifyRoundProofInBrowser(reqIdHex, roundId, expectedWin4d) {
     }
 
     // Step 3: Lagrange-combine first `threshold` verified shares in ℤ_ℓ!
-    const combinedGamma = lagrangeCombineJs(verifiedShares);
+    const combinedGamma = edEncode(lagrangeCombinePoints(verifiedShares));
     const gammaMatch = bytesToHex(combinedGamma) === bytesToHex(gammaOnChain);
     if (!gammaMatch) throw new Error('Lagrange-combined Gamma mismatch!');
 
@@ -912,7 +715,7 @@ async function verifyRoundProofInBrowser(reqIdHex, roundId, expectedWin4d) {
       concatBytes(
         utf8ToBytes('SLX_VM_VRF_OUT_V1:'),
         epochPk,
-        u64BeBytes(alpha.length),
+        u64BEBytes(alpha.length),
         alpha,
         combinedGamma
       )

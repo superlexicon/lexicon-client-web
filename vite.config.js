@@ -8,8 +8,8 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: '@superlexicon/sdk/ui/styles.css',
-        replacement: resolve(__dirname, 'packages/sdk/src/ui/styles.css'),
+        find: /^@superlexicon\/sdk\/(.+\.css)$/,
+        replacement: resolve(__dirname, 'packages/sdk/src/$1'),
       },
       {
         find: '@superlexicon/sdk/ui',
