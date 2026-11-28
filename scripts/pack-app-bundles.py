@@ -22,7 +22,19 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 APP_SOURCES_DIR = ROOT / "app-sources"
 OUT_BUNDLES_DIR = ROOT / "public" / "app-bundles"
 CONTRACTS_DIR = ROOT / "public" / "contracts"
+ASSETS_DIR = ROOT / "public" / "assets"
 SRC_DIR = ROOT / "src"
+
+MIME_BY_EXT = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+    ".gif": "image/gif",
+    ".avif": "image/avif",
+}
+MAX_ONCHAIN_ASSET_BYTES = 262_144  # 256 KiB per 0x0101 blob
 
 # ---------------------------------------------------------------------------
 # Exact Pure-Python Keccak-256 (Ethereum / SuperLexicon 0x01 Domain Byte)
@@ -627,12 +639,49 @@ def migrate_sources_if_needed() -> None:
             chtml.write_text(cspec["html"])
 
 
-def build_self_contained_core_html(spec: dict) -> str:
+def collect_app_onchain_assets(raw_sources: str) -> tuple[dict, list[dict]]:
+    """
+    Scans `app.html + app.css + app.js` for `/assets/<subdir>/...` references, includes all files
+    inside each referenced `public/assets/<subdir>/` directory (supporting dynamic template paths
+    such as `/assets/cipher-noir/card_${id}.jpg`), verifies `<= 256 KiB` per blob, and computes
+    `keccak256` digests for `UI_BUNDLE_STORE` (`0x0101`).
+    """
+    subdirs = sorted(set(re.findall(r"/assets/([a-zA-Z0-9_-]+)/", raw_sources)))
+    inline_map: dict[str, dict] = {}
+    manifest_list: list[dict] = []
+
+    for sub in subdirs:
+        dpath = ASSETS_DIR / sub
+        if not dpath.is_dir():
+            continue
+        for fpath in sorted(dpath.iterdir()):
+            if not fpath.is_file():
+                continue
+            data = fpath.read_bytes()
+            if len(data) > MAX_ONCHAIN_ASSET_BYTES:
+                raise ValueError(
+                    f"Asset {fpath} is {len(data)} bytes (> {MAX_ONCHAIN_ASSET_BYTES} 0x0101 cap). Compress it first!"
+                )
+            ahash = keccak256_hex(data)
+            mime = MIME_BY_EXT.get(fpath.suffix.lower(), "application/octet-stream")
+            web_path = f"/assets/{sub}/{fpath.name}"
+            inline_map[web_path] = {"hash": ahash, "mime": mime, "size": len(data)}
+            manifest_list.append(
+                {"path": web_path, "hash": ahash, "mime": mime, "size": len(data)}
+            )
+    return inline_map, manifest_list
+
+
+def build_self_contained_core_html(spec: dict) -> tuple[str, list[dict]]:
     slug = spec["slug"]
     sdir = APP_SOURCES_DIR / slug
     raw_html = (sdir / "app.html").read_text()
     raw_js = (sdir / "app.js").read_text()
     raw_css = (sdir / "app.css").read_text() if (sdir / "app.css").exists() else ""
+
+    inline_assets, manifest_assets = collect_app_onchain_assets(
+        f"{raw_html}\n{raw_css}\n{raw_js}"
+    )
 
     # Strip external local stylesheet links (`/src/...css`) and external `<script src="/src/...">` tags
     cleaned = re.sub(
@@ -648,6 +697,13 @@ def build_self_contained_core_html(spec: dict) -> str:
         flags=re.I,
     )
 
+    if inline_assets:
+        assets_json = json.dumps(inline_assets, separators=(",", ":"), sort_keys=True)
+        asset_tag = (
+            f'\n  <script type="application/json" id="slx-bundle-assets">{assets_json}</script>\n'
+        )
+        cleaned = re.sub(r"</head>", lambda _: asset_tag + "</head>", cleaned, count=1, flags=re.I)
+
     # Escape accidental `</style` or `</script` inside embedded CSS/JS safely if needed
     if raw_css:
         style_block = f'\n  <style data-slx-bundle-css="{slug}">\n{raw_css}\n  </style>\n'
@@ -657,7 +713,7 @@ def build_self_contained_core_html(spec: dict) -> str:
     safe_js = re.sub(r"</script>", r"<\/script>", raw_js, flags=re.I)
     script_block = f'\n  <script type="module" data-slx-bundle-entry="{slug}">\n{safe_js}\n  </script>\n'
     cleaned = re.sub(r"</body>", lambda _: script_block + "</body>", cleaned, count=1, flags=re.I)
-    return cleaned
+    return cleaned, manifest_assets
 
 
 def emit_host_stub_html(slug: str, title: str, icon: str) -> str:
@@ -695,7 +751,7 @@ def main() -> None:
     # 1. Pack all 12 Core System HFS Apps + write Universal Host Stubs to `/<slug>.html`
     for spec in CORE_APPS:
         slug = spec["slug"]
-        full_html = build_self_contained_core_html(spec)
+        full_html, manifest_assets = build_self_contained_core_html(spec)
         raw_bytes = full_html.encode("utf-8")
         gz_bytes = deterministic_gzip(raw_bytes)
         ui_hash = keccak256_hex(gz_bytes)
@@ -737,12 +793,14 @@ def main() -> None:
                 "route": f"/{slug}.html",
                 "wasmCodeHash": wasm_hash.lower(),
                 "defaultHfsAddr": default_hfs.lower(),
+                "assets": manifest_assets,
                 "publisherLabel": "SuperLexicon Core · HFS",
                 "isSystemCore": True,
             }
         )
+        asset_note = f" + {len(manifest_assets):2d} assets" if manifest_assets else ""
         print(
-            f"[CORE #{app_id_seq:02d}] {slug:14s} | raw={len(raw_bytes)/1024:6.1f} KiB -> gzip={len(gz_bytes)/1024:5.1f} KiB ({chunks} chunk) | uiHash={ui_hash[:18]}…"
+            f"[CORE #{app_id_seq:02d}] {slug:14s} | raw={len(raw_bytes)/1024:6.1f} KiB -> gzip={len(gz_bytes)/1024:5.1f} KiB ({chunks} chunk{asset_note}) | uiHash={ui_hash[:18]}…"
         )
         app_id_seq += 1
 

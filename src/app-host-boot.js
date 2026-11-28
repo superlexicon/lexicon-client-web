@@ -3,8 +3,8 @@
  *
  * Boots ANY SuperLexicon HFS app from the single universal `/app.html` shell (including clean URL
  * routes like `/<slug>.html`, `/app/<slug>`, and `/app.html?app=<slug>`) with zero per-app HTML
- * entrypoints — resolving `uiHash` from Subnet 1 `app_store.wasm`, verifying `keccak256` integrity,
- * decompressing gzip in-browser, and mounting the verified UI dynamically.
+ * entrypoints — resolving `uiHash`, `defaultHfsAddr`, `wasmCodeHash`, and `0x0101` media blobs
+ * directly from Subnet 1 (`app_store.wasm` + `UI_BUNDLE_STORE`) with local `IndexedDB` caching.
  */
 
 import {
@@ -17,7 +17,6 @@ import {
   shortHex,
 } from '@superlexicon/sdk';
 import {
-  loadGenesisAppCatalog,
   resolveFastCachedAppMeta,
   resolveEffectiveAppMeta,
   revalidateMountedAppInBackground,
@@ -64,19 +63,24 @@ async function bootHostStub() {
   }
 
   const storeClient = new AppStoreClient({ rpcUrl: getDefaultNodeWsUrl() });
+  const pinnedInstalled = SlxPersonalAppContainer.getInstalled(slug);
 
-  // Quick manifest freshness check (bounded to 650 ms so LAN/HTTPS loads always pick up newly
-  // deployed bundle versions on the VERY FIRST refresh while offline/slow links still boot fast).
-  try {
-    await Promise.race([
-      loadGenesisAppCatalog({ forceNetwork: true }),
-      new Promise((resolve) => setTimeout(resolve, 650)),
-    ]);
-  } catch (_) {}
+  // 1. Query live on-chain `AppStore` first (bounded to 1200ms so offline/RF cached boot still works
+  //    even if disconnected, while connected clients ALWAYS pick up new UI/WASM/HFS releases on Subnet 1
+  //    immediately without ever redeploying the static web server!).
+  let liveMeta = null;
+  if (!pinnedInstalled) {
+    try {
+      liveMeta = await Promise.race([
+        resolveEffectiveAppMeta(slug, storeClient),
+        new Promise((resolve) => setTimeout(() => resolve(null), 1200)),
+      ]);
+    } catch (_) {}
+  }
 
-  // Fast Path: If the current `uiHash` is already verified in local IndexedDB/CAS, mount immediately!
+  // 2. Fast Path: If the resolved `uiHash` is already verified in local IndexedDB/CAS, mount immediately!
   try {
-    const fastMeta = resolveFastCachedAppMeta(slug);
+    const fastMeta = pinnedInstalled || liveMeta || resolveFastCachedAppMeta(slug);
     if (fastMeta && fastMeta.execMode === APP_EXEC_MODE.SANDBOX_IFRAME && !fastMeta.isSystemCore) {
       window.location.replace(`/apps.html?run=${encodeURIComponent(slug)}`);
       return;
@@ -87,6 +91,7 @@ async function bootHostStub() {
         await mountVerifiedHostAppBundle({
           appMeta: fastMeta,
           verifiedBundle: { ...fastHtml, cacheHit: true, loadedFrom: 'local-cache' },
+          storeClient,
         });
         revalidateMountedAppInBackground(slug, fastMeta.uiHash, storeClient);
         return;
@@ -94,19 +99,18 @@ async function bootHostStub() {
     }
   } catch (_) {}
 
-  // Cold / First-Load Path: Render crisp skeleton while fetching, verifying & caching HTML locally
+  // 3. Cold / Updated Bundle Path: Fetch, `keccak256`-verify & cache from `0x0101` (`UI_BUNDLE_STORE`)
   document.body.innerHTML = `
     <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#050a14;color:#e2e8f0;font-family:'JetBrains Mono',monospace;">
-      <div style="max-width:460px;width:100%;padding:20px 22px;border-radius:14px;border:1px solid rgba(56,189,248,0.4);background:rgba(8,17,34,0.95);text-align:center;">
-        <div style="font-size:13px;font-weight:800;color:#7dd3fc;">🧩 Loading Verified HFS App Bundle ("${slug}")…</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:6px;">Verifying <code>keccak256</code> digest, decompressing gzip stream &amp; caching HTML locally</div>
+      <div style="max-width:480px;width:100%;padding:20px 22px;border-radius:14px;border:1px solid rgba(56,189,248,0.4);background:rgba(8,17,34,0.95);text-align:center;">
+        <div style="font-size:13px;font-weight:800;color:#7dd3fc;">🧩 Syncing Verified On-Chain App ("${slug}")…</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:6px;">Fetching UI &amp; media from Subnet 1 <code>0x0101</code>, verifying <code>keccak256</code> &amp; caching in <code>IndexedDB</code></div>
       </div>
     </div>
   `;
 
   try {
-    const pinnedInstalled = SlxPersonalAppContainer.getInstalled(slug);
-    const appMeta = pinnedInstalled || (await resolveEffectiveAppMeta(slug, storeClient));
+    const appMeta = pinnedInstalled || liveMeta || (await resolveEffectiveAppMeta(slug, storeClient));
     if (!appMeta) {
       throw new Error(`App "${slug}" was not found in AppStore HFS or genesis catalog.`);
     }
@@ -122,7 +126,7 @@ async function bootHostStub() {
       title: appMeta.title,
     });
 
-    await mountVerifiedHostAppBundle({ appMeta, verifiedBundle });
+    await mountVerifiedHostAppBundle({ appMeta, verifiedBundle, storeClient });
     if (pinnedInstalled) {
       revalidateMountedAppInBackground(slug, appMeta.uiHash, storeClient);
     }

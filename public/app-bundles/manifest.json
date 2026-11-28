@@ -22,6 +22,7 @@
       "route": "/accounting.html",
       "wasmCodeHash": "0x059131d44d88e520cea3f223acd5b219ab014c6f94d6e5046fa1bc61ea92907b",
       "defaultHfsAddr": "0x4f225000bcb350d37d38d320b3bf50394d235724",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -43,6 +44,7 @@
       "route": "/charter.html",
       "wasmCodeHash": "0x033c48f881aa37b01c496b9f6b0e1ded3cb9b65989796acb33bbe5c6d8d4ec2b",
       "defaultHfsAddr": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -64,6 +66,7 @@
       "route": "/dex.html",
       "wasmCodeHash": "0x0225c10b0447dc9ef3e7bee6c8878bbf43bc0ec4d529a6fccca48027572f9818",
       "defaultHfsAddr": "0x79319a0e4616b598d10e1ee4af362343c4af5138",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -85,6 +88,7 @@
       "route": "/rides.html",
       "wasmCodeHash": "0xd92f9b0e1577d5fbe1d79970de65850d8e09911c0f0830d54c3786ad949f0ebc",
       "defaultHfsAddr": "0xcbeaf3bde82155f56486fb5a1072cb8baaf547cc",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -106,6 +110,7 @@
       "route": "/commerce.html",
       "wasmCodeHash": "0x590bdeb07de7b13758fd84976f624bc5dabe411aa56d7245f7603c629977fa32",
       "defaultHfsAddr": "0xb0e642e03a200d6a19c4cab2eb39575a37079e57",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -127,6 +132,7 @@
       "route": "/crowdfunding.html",
       "wasmCodeHash": "0xd4a5b5f6f9c6bde2ac202cd7cc5f21433641a25b99fecce3b4d1854c1d6fe126",
       "defaultHfsAddr": "0x0000000000000000000000000000000000000000",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -148,6 +154,7 @@
       "route": "/rewards.html",
       "wasmCodeHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
       "defaultHfsAddr": "0x0000000000000000000000000000000000000000",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -169,6 +176,7 @@
       "route": "/ballot.html",
       "wasmCodeHash": "0x1817db8449f5166890989a1c56c5552fd21a9af39dfa4c963073a7dfc85adf8f",
       "defaultHfsAddr": "0x0000000000000000000000000000000000000000",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -190,6 +198,7 @@
       "route": "/social.html",
       "wasmCodeHash": "0xcb336f1c9d24be323ae9c4c5e51b25adfa43b562bbb00ca4a7fc7ff4ec57f698",
       "defaultHfsAddr": "0x0000000000000000000000000000000000000000",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -211,6 +220,7 @@
       "route": "/telephony.html",
       "wasmCodeHash": "0x6883e5a1c75848f8d08717076d90fcf812ac280b6a2fd8d909aed95a2463100b",
       "defaultHfsAddr": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -232,6 +242,7 @@
       "route": "/battleship.html",
       "wasmCodeHash": "0x6a5e510168af50485deb952def622bccbd768ad065d3e08e7c5f781aafa0db1d",
       "defaultHfsAddr": "0x0000000000000000000000000000000000000000",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -245,14 +256,130 @@
       "category": 5,
       "version": "2.2.0",
       "execMode": 1,
-      "uiHash": "0x7b679291dd37356eeb2482f0d04ca6be9a9a1aee940138cbbe03fceb39e4eb19",
-      "uncompressedLen": 79584,
-      "compressedLen": 20088,
+      "uiHash": "0xd597edf93fb7304f6ec70ce6a6c239fd69c4a65b5721910ddada1396b959c3dc",
+      "uncompressedLen": 82566,
+      "compressedLen": 21391,
       "chunkCount": 1,
       "bundleUrl": "/app-bundles/cipher-noir.html.gz",
       "route": "/cipher-noir.html",
       "wasmCodeHash": "0x09dc9c499c3a1e6ed78562e0c26a44bb3b5ce7a259a946796e32142bf57e0826",
       "defaultHfsAddr": "0x0000000000000000000000000000000000000000",
+      "assets": [
+        {
+          "path": "/assets/cipher-noir/card_00.jpg",
+          "hash": "0x1034c20881f7689895cca20e648875efc30fd0ba1bca5516762930183ad32e72",
+          "mime": "image/jpeg",
+          "size": 54948
+        },
+        {
+          "path": "/assets/cipher-noir/card_01.jpg",
+          "hash": "0x54b90c60a584c1f0f654064fe1cacee6996505f59f9813881f6b02c64eb9d3b2",
+          "mime": "image/jpeg",
+          "size": 48214
+        },
+        {
+          "path": "/assets/cipher-noir/card_02.jpg",
+          "hash": "0x71e07bcd72950c052336894b84db0b2c62aa052e4d804ba95e75a09f7fd7333c",
+          "mime": "image/jpeg",
+          "size": 56261
+        },
+        {
+          "path": "/assets/cipher-noir/card_03.jpg",
+          "hash": "0x7a71ea81bda962cb948afe87715ce1d52890e20861898103d337590f6f29cd6d",
+          "mime": "image/jpeg",
+          "size": 60962
+        },
+        {
+          "path": "/assets/cipher-noir/card_04.jpg",
+          "hash": "0x9decf6fd3d9e91c80fd336f80b4159e1dd2f99bba4737fa35a64884b940c1b7d",
+          "mime": "image/jpeg",
+          "size": 50636
+        },
+        {
+          "path": "/assets/cipher-noir/card_05.jpg",
+          "hash": "0xfec9a01d5a9a2d6bc7ffec1c1d6a5f4e9940733578d03e20d1fd106fdb3710f5",
+          "mime": "image/jpeg",
+          "size": 36358
+        },
+        {
+          "path": "/assets/cipher-noir/card_06.jpg",
+          "hash": "0x47f2a8f6e6e9c7df79b14aeefef25aa843ab5f7f1895c7101ef78e30d0fbf2ba",
+          "mime": "image/jpeg",
+          "size": 43935
+        },
+        {
+          "path": "/assets/cipher-noir/card_07.jpg",
+          "hash": "0x7bf8ad7903a2322ec96bd9f499e625f5a940f3df880b4456379c11fddbd70f2e",
+          "mime": "image/jpeg",
+          "size": 38925
+        },
+        {
+          "path": "/assets/cipher-noir/card_08.jpg",
+          "hash": "0x5edf69e0cad3b35c5e1cb23c5fe07e9dfd72ab092003088f11d09cb843c3fd1e",
+          "mime": "image/jpeg",
+          "size": 46569
+        },
+        {
+          "path": "/assets/cipher-noir/card_09.jpg",
+          "hash": "0x021df59d217a05a19c5149dc982b55a7b2af7316c4adac3c8a8972b852037b9f",
+          "mime": "image/jpeg",
+          "size": 55903
+        },
+        {
+          "path": "/assets/cipher-noir/card_10.jpg",
+          "hash": "0x10c2730205e229c2c93053838efda340836f0cd522fe41afd65c66b63ca27b93",
+          "mime": "image/jpeg",
+          "size": 41914
+        },
+        {
+          "path": "/assets/cipher-noir/card_11.jpg",
+          "hash": "0x3c39384788d79c0d8343ae726e83bc3478d4fa1b64fb5f09707672ef7159f6a5",
+          "mime": "image/jpeg",
+          "size": 54032
+        },
+        {
+          "path": "/assets/cipher-noir/card_12.jpg",
+          "hash": "0x0354e99606db2fcd236794b510873b179f121173134c98c4ebaab5ae1c2b0f85",
+          "mime": "image/jpeg",
+          "size": 43565
+        },
+        {
+          "path": "/assets/cipher-noir/card_13.jpg",
+          "hash": "0x5513fc9f8cf814f9be69ccfd313ceb0a45b26136633bec612a9d6c0b7ec07157",
+          "mime": "image/jpeg",
+          "size": 43542
+        },
+        {
+          "path": "/assets/cipher-noir/card_14.jpg",
+          "hash": "0xf37879c6beb6195c17c60d269cd1dea6b6db892cb62d40f451aae7e5f8508e7b",
+          "mime": "image/jpeg",
+          "size": 32319
+        },
+        {
+          "path": "/assets/cipher-noir/card_15.jpg",
+          "hash": "0x8996abac11caad33247288c0402abfe191c47b8b39c9437235ed27f259190756",
+          "mime": "image/jpeg",
+          "size": 34696
+        },
+        {
+          "path": "/assets/cipher-noir/card_16.jpg",
+          "hash": "0x440f50d91dcd3509a12447b6c8518322a61785a6a2fa8705a562c2911307f4df",
+          "mime": "image/jpeg",
+          "size": 47799
+        },
+        {
+          "path": "/assets/cipher-noir/card_17.jpg",
+          "hash": "0x774e8a078037481d2f48a644b2cb87fe8c36cf3cdcbb79194731b9d2f52e9d9f",
+          "mime": "image/jpeg",
+          "size": 40270
+        },
+        {
+          "path": "/assets/cipher-noir/vault_seal.jpg",
+          "hash": "0x31136e7ecb8e32250db9ea3764dfbb5862b2fa2dea7147d77261b8a1c92e0d92",
+          "mime": "image/jpeg",
+          "size": 68215
+        }
+      ],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -266,14 +393,22 @@
       "category": 5,
       "version": "2.2.0",
       "execMode": 1,
-      "uiHash": "0x771870082bb91e78a5ea89de6abe569f6964b43a137f2d2fc7d5500ffb69abf2",
-      "uncompressedLen": 63370,
-      "compressedLen": 17676,
+      "uiHash": "0x7f5973c324bc18008b44bb28e11c8c1f7cae072e857fc3d0791e14bcc51fd8df",
+      "uncompressedLen": 63584,
+      "compressedLen": 17799,
       "chunkCount": 1,
       "bundleUrl": "/app-bundles/hegemony.html.gz",
       "route": "/hegemony.html",
       "wasmCodeHash": "0x6ec4d45aac397c97f2a9e98daa18831ca9fcee2f8a839a082d16ad2d46aee66e",
       "defaultHfsAddr": "0x0000000000000000000000000000000000000000",
+      "assets": [
+        {
+          "path": "/assets/hegemony/world_map.jpg",
+          "hash": "0x30bb3364548c303f9746cd4a7482c2264d5280af0bcf3406ead3888b81b5d513",
+          "mime": "image/jpeg",
+          "size": 145028
+        }
+      ],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -295,6 +430,7 @@
       "route": "/lottery.html",
       "wasmCodeHash": "0x47ad30cec9bea929e83508ac042394ce0bce98caa120afe871bd79e3850bd354",
       "defaultHfsAddr": "0x0000000000000000000000000000000000000000",
+      "assets": [],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -308,14 +444,172 @@
       "category": 5,
       "version": "1.0.2",
       "execMode": 1,
-      "uiHash": "0x0302490b5fa8aa1dd0db52e50831bf7bd334ae116148605e32981040e10257a2",
-      "uncompressedLen": 93969,
-      "compressedLen": 23115,
+      "uiHash": "0x281b28a12fd2d00c7add6909edb4a6fae3c8f91cb1a30af122492a3c9c4f80dc",
+      "uncompressedLen": 97888,
+      "compressedLen": 24730,
       "chunkCount": 1,
       "bundleUrl": "/app-bundles/volatile-voles.html.gz",
       "route": "/volatile-voles.html",
       "wasmCodeHash": "0x89110333caf31c9b2aa5f41d2d54b8b855cf7f4950887ba9a92ad68b96546bcb",
       "defaultHfsAddr": "0xfbc22278a96299d91d41c453234d97b4f5eb9b2d",
+      "assets": [
+        {
+          "path": "/assets/volatile-voles/card_00.jpg",
+          "hash": "0xbdff5171273381313165df14a128360b24b8d0476d99f6a66462e4651b65b310",
+          "mime": "image/jpeg",
+          "size": 36427
+        },
+        {
+          "path": "/assets/volatile-voles/card_01.jpg",
+          "hash": "0xbe5a2ba853c6f08c225ebd972b75ccede11ab7f08a9edba3581fbaa1d1182278",
+          "mime": "image/jpeg",
+          "size": 40879
+        },
+        {
+          "path": "/assets/volatile-voles/card_02.jpg",
+          "hash": "0xb6839b9bb394925986641de4e7785a1bf7aba440ba6734a84f21ddba1ed341fe",
+          "mime": "image/jpeg",
+          "size": 42746
+        },
+        {
+          "path": "/assets/volatile-voles/card_03.jpg",
+          "hash": "0xc81ccac790e187b5b4d9d3433bd0baf92fbd8a35cc77460d40c16287fb9e832c",
+          "mime": "image/jpeg",
+          "size": 50648
+        },
+        {
+          "path": "/assets/volatile-voles/card_04.jpg",
+          "hash": "0x36882d943cd276ebdc85391b9d06b597fdfb9ee90f5d56baa426438144f743f7",
+          "mime": "image/jpeg",
+          "size": 55150
+        },
+        {
+          "path": "/assets/volatile-voles/card_05.jpg",
+          "hash": "0x83c377812678605f086ee95fc696743f59c0100b2475899ee9bbda759b60eb2a",
+          "mime": "image/jpeg",
+          "size": 39649
+        },
+        {
+          "path": "/assets/volatile-voles/card_06.jpg",
+          "hash": "0x6d4520d0fc2d368beb1d5c5b0a724316d8806a6af4da859639590e32237696bb",
+          "mime": "image/jpeg",
+          "size": 62271
+        },
+        {
+          "path": "/assets/volatile-voles/card_07.jpg",
+          "hash": "0x82b6c2bfe5d71dd437f3d29850ccd5fe85be66a76d3cf9a13f736cbbabd76b0b",
+          "mime": "image/jpeg",
+          "size": 69114
+        },
+        {
+          "path": "/assets/volatile-voles/card_08.jpg",
+          "hash": "0x881b7b527546d79aa2f209d7ae41713449188dacae07cd1fb1c8549ece27520c",
+          "mime": "image/jpeg",
+          "size": 60851
+        },
+        {
+          "path": "/assets/volatile-voles/card_09.jpg",
+          "hash": "0xf938d846ce9dfd6a2b8345736be78b1a883aaa179fe6d4294e1623be9f97c9d5",
+          "mime": "image/jpeg",
+          "size": 63441
+        },
+        {
+          "path": "/assets/volatile-voles/card_10.jpg",
+          "hash": "0xf9bd7c3205029278bcedc60e68c95a36ec9e855bf6570747e6f85e6f766ed943",
+          "mime": "image/jpeg",
+          "size": 56410
+        },
+        {
+          "path": "/assets/volatile-voles/card_11.jpg",
+          "hash": "0xb1f832724f06ab0650b1b46ee66242384b1f1f58ad9bb1de0ed8a953b630eee5",
+          "mime": "image/jpeg",
+          "size": 55057
+        },
+        {
+          "path": "/assets/volatile-voles/card_12.jpg",
+          "hash": "0xd6e832c283f8e79709518f8ab323aff039cfab81c99b689d1a2a9a2cbb2368c0",
+          "mime": "image/jpeg",
+          "size": 52549
+        },
+        {
+          "path": "/assets/volatile-voles/card_13.jpg",
+          "hash": "0x9f73cf316b48427316ff52a3f913c4d140c893cf44a10be08136c9392c347c7e",
+          "mime": "image/jpeg",
+          "size": 61880
+        },
+        {
+          "path": "/assets/volatile-voles/card_14.jpg",
+          "hash": "0x8ff2b18653daac5b516b3aefb951fa5e95dd0274d3f5a598ce6f3bc6ba1b6e3e",
+          "mime": "image/jpeg",
+          "size": 57270
+        },
+        {
+          "path": "/assets/volatile-voles/card_15.jpg",
+          "hash": "0x194cca2490cda6dc2107de9e33bfca75daae65bc4667d9af144133ba4107bacd",
+          "mime": "image/jpeg",
+          "size": 54795
+        },
+        {
+          "path": "/assets/volatile-voles/card_16.jpg",
+          "hash": "0x6def35529cfccf8b72d5c2f14b265f97868086adc9c06415f715d4297e525627",
+          "mime": "image/jpeg",
+          "size": 46899
+        },
+        {
+          "path": "/assets/volatile-voles/card_17.jpg",
+          "hash": "0xcd4ee4b801b0af6ae487050b2a42a87046b6abd18e2472bc334067728570eb7e",
+          "mime": "image/jpeg",
+          "size": 62599
+        },
+        {
+          "path": "/assets/volatile-voles/card_18.jpg",
+          "hash": "0x1592d3bac4826556d646e902bd3f69d2af48e121d4631838eac867eda01f8bba",
+          "mime": "image/jpeg",
+          "size": 71110
+        },
+        {
+          "path": "/assets/volatile-voles/card_19.jpg",
+          "hash": "0x4b8b510998e0a55a307162fadaaa31793022795e4290723aaabf381d433d2325",
+          "mime": "image/jpeg",
+          "size": 57928
+        },
+        {
+          "path": "/assets/volatile-voles/card_20.jpg",
+          "hash": "0x66591dadd7d494200ca6b29070f1048cf2ed47ec3c28aeee266a15a540de1776",
+          "mime": "image/jpeg",
+          "size": 60853
+        },
+        {
+          "path": "/assets/volatile-voles/card_21.jpg",
+          "hash": "0xffeff6338902a8d092ff50b5aba4e451efcadb292f5338012719164ec067812b",
+          "mime": "image/jpeg",
+          "size": 63561
+        },
+        {
+          "path": "/assets/volatile-voles/card_22.jpg",
+          "hash": "0xbcf6ac7cc967cc13115dbbf33679cc9c9c97ab5c4ff7f790b987471299f1821a",
+          "mime": "image/jpeg",
+          "size": 36750
+        },
+        {
+          "path": "/assets/volatile-voles/card_23.jpg",
+          "hash": "0x161f65ef118cb4db9bd8a32dd1052e6241943dd22fd87b5f57a4f8cee0506436",
+          "mime": "image/jpeg",
+          "size": 55112
+        },
+        {
+          "path": "/assets/volatile-voles/card_24.jpg",
+          "hash": "0x4c7066813a54c8d41f7c506b8f48f6d1c3650e57d0927be82c66d9f6f2bb53fe",
+          "mime": "image/jpeg",
+          "size": 62686
+        },
+        {
+          "path": "/assets/volatile-voles/card_back.jpg",
+          "hash": "0x32c9d945390d0c844d39dda8ada26720b965cf03eb16061c2f264a3175abdba0",
+          "mime": "image/jpeg",
+          "size": 63217
+        }
+      ],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },
@@ -329,14 +623,76 @@
       "category": 5,
       "version": "2.0.0",
       "execMode": 1,
-      "uiHash": "0xade9bae8bedbdb90427b61eb0de6eb7a7a7d3e29c93be03224c0e0de6b4887ee",
-      "uncompressedLen": 115057,
-      "compressedLen": 30120,
+      "uiHash": "0x92ce63b26a71666003b47f65548417817af85824304bf408abf061c10025e059",
+      "uncompressedLen": 116582,
+      "compressedLen": 30864,
       "chunkCount": 1,
       "bundleUrl": "/app-bundles/jones.html.gz",
       "route": "/jones.html",
       "wasmCodeHash": "0x00cdcbfe6f094d77487ec418907918ba069145269780574b531bf2811c3c11e8",
       "defaultHfsAddr": "0x1c85638e118b37167e9298c2268758e058ddfda0",
+      "assets": [
+        {
+          "path": "/assets/jones/bandit_sam.jpg",
+          "hash": "0x7d77f7c52a58524309f36d2e8c124d737fe998bce12eded79497acc4cfaaf70d",
+          "mime": "image/jpeg",
+          "size": 94076
+        },
+        {
+          "path": "/assets/jones/keeper_bank.jpg",
+          "hash": "0x3fa52355bad1ff8844189eaf7c57181ce86e7add0ca03eff412769c612062850",
+          "mime": "image/jpeg",
+          "size": 109247
+        },
+        {
+          "path": "/assets/jones/keeper_burgers.jpg",
+          "hash": "0x645092040c6df03e575cd0dc64e81891ef9836910de4865bf39ecfdc2deb9490",
+          "mime": "image/jpeg",
+          "size": 99136
+        },
+        {
+          "path": "/assets/jones/keeper_clothing.jpg",
+          "hash": "0x5b117c079f07091c809148a48458b3e7204b7793228bd7b20dc5b6e4e5e991c2",
+          "mime": "image/jpeg",
+          "size": 110256
+        },
+        {
+          "path": "/assets/jones/keeper_employment.jpg",
+          "hash": "0x9973271fda2be93b831196ceefeece04f70279869a15af145b345816741b7ffb",
+          "mime": "image/jpeg",
+          "size": 54738
+        },
+        {
+          "path": "/assets/jones/keeper_market.jpg",
+          "hash": "0x403131b886bceae5a398a0f114403271048626d6fd5905031b14166802193774",
+          "mime": "image/jpeg",
+          "size": 117212
+        },
+        {
+          "path": "/assets/jones/keeper_tech.jpg",
+          "hash": "0xc85dcbb9cd1f4e917f55ca3c7621511a4ea891c4d167817135556afa1b7c8f35",
+          "mime": "image/jpeg",
+          "size": 118653
+        },
+        {
+          "path": "/assets/jones/keeper_university.jpg",
+          "hash": "0xa4c609e677b90b616afd1304b2253b91d5a62c5d224d1a9cd5c7290783a55b90",
+          "mime": "image/jpeg",
+          "size": 108289
+        },
+        {
+          "path": "/assets/jones/rival_jones.jpg",
+          "hash": "0x78619554947f2307205794cb82334bef8546003c4af4c30efc1a57dc5de46a71",
+          "mime": "image/jpeg",
+          "size": 82889
+        },
+        {
+          "path": "/assets/jones/town_center.jpg",
+          "hash": "0xf62b7e73502636207bdaab8fbc761d0abfc6ed576690e988440578e10b5271cd",
+          "mime": "image/jpeg",
+          "size": 229122
+        }
+      ],
       "publisherLabel": "SuperLexicon Core \u00b7 HFS",
       "isSystemCore": true
     },

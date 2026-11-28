@@ -92,7 +92,10 @@ const VAULT_SEAL_IMG = '/assets/cipher-noir/vault_seal.jpg';
 
 function dossierImg(id) {
   if (id == null || id < 0 || id > 17) return VAULT_SEAL_IMG;
-  return `/assets/cipher-noir/card_${String(id).padStart(2, '0')}.jpg`;
+  const p = `/assets/cipher-noir/card_${String(id).padStart(2, '0')}.jpg`;
+  return typeof globalThis !== 'undefined' && typeof globalThis.__SLX_RESOLVE_ASSET__ === 'function'
+    ? globalThis.__SLX_RESOLVE_ASSET__(p)
+    : p;
 }
 
 function isSectorReachable(fromSec, toSec, wasPulled) {

@@ -2,8 +2,8 @@
  * SuperLexicon Universal HFS App Host Shared Runtime (`src/app-host-runtime.js`)
  *
  * Bundled once by the static Host Shell so dynamically fetched & `keccak256`-verified HFS UI
- * bundles (`app_store.wasm` / `IndexedDB` CAS / `.html.gz`) never duplicate cryptographic, RLP,
- * WebSocket JSON-RPC, Unified Header, or IFRS/Governance libraries across apps.
+ * bundles + `0x0101` media assets never require static web-server redeployments when apps,
+ * artwork, manuals, or WASM contracts are published or upgraded on Subnet 1.
  */
 
 import * as sdk from '@superlexicon/sdk';
@@ -17,6 +17,10 @@ import * as ifrsHumanGl from '@superlexicon/sdk/ifrs-human-gl';
 import * as gameGuide from '@superlexicon/sdk/ui/game-guide';
 import * as fleetSocial from '@superlexicon/sdk/fleet-social';
 import * as legalConsent from '@superlexicon/sdk/ui/legal-consent';
+
+const ONCHAIN_META_CACHE_KEY = 'slx_onchain_app_meta_v1';
+const _blobUrlByAssetHash = new Map();
+let _activeAssetObserver = null;
 
 export const HOST_MODULE_MAP = Object.freeze({
   // Canonical @superlexicon/sdk submodule imports (used by all on-chain HFS UI bundles)
@@ -52,6 +56,25 @@ if (typeof globalThis !== 'undefined') {
   globalThis.__SLX_HOST_MODULES__ = HOST_MODULE_MAP;
 }
 
+function _loadCachedOnChainAppMap() {
+  if (typeof localStorage === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(ONCHAIN_META_CACHE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function _saveCachedOnChainAppMeta(slug, meta) {
+  if (typeof localStorage === 'undefined' || !slug || !meta?.uiHash) return;
+  try {
+    const map = _loadCachedOnChainAppMap();
+    map[String(slug).toLowerCase()] = { ...meta, cachedAt: Date.now() };
+    localStorage.setItem(ONCHAIN_META_CACHE_KEY, JSON.stringify(map));
+  } catch (_) {}
+}
+
 /**
  * Rewrites static ES `import ... from '<hostSpecifier>'` statements inside a verified HFS UI
  * bundle's `<script type="module">` into `globalThis.__SLX_HOST_MODULES__[...]` bindings so the
@@ -72,13 +95,11 @@ export function rewriteHostModuleImports(jsSource) {
       .replace(/\/\/[^\n]*/g, '')
       .trim();
 
-    // Form 1: `import * as ns from '...'`
     const nsMatch = trimmedClause.match(/^\*\s+as\s+([A-Za-z_$][\w$]*)$/);
     if (nsMatch) {
       return `const ${nsMatch[1]} = ${modExpr};`;
     }
 
-    // Form 2: `import { a, b as c } from '...'`
     if (trimmedClause.startsWith('{') && trimmedClause.endsWith('}')) {
       const inner = trimmedClause.slice(1, -1);
       const bindings = inner
@@ -92,7 +113,6 @@ export function rewriteHostModuleImports(jsSource) {
       return `const { ${bindings.join(', ')} } = ${modExpr};`;
     }
 
-    // Form 3: `import defName, { a, b as c } from '...'`
     const comboMatch = trimmedClause.match(/^([A-Za-z_$][\w$]*)\s*,\s*\{([\s\S]*)\}$/);
     if (comboMatch) {
       const defIdent = comboMatch[1];
@@ -107,7 +127,6 @@ export function rewriteHostModuleImports(jsSource) {
       return `const ${defIdent} = ${modExpr}.default; const { ${bindings.join(', ')} } = ${modExpr};`;
     }
 
-    // Form 4: `import defName from '...'`
     if (/^[A-Za-z_$][\w$]*$/.test(trimmedClause)) {
       return `const ${trimmedClause} = ${modExpr}.default ?? ${modExpr};`;
     }
@@ -163,10 +182,10 @@ export async function loadGenesisAppCatalog({ forceNetwork = false } = {}) {
 
 /**
  * Synchronous (`0 ms`) local metadata lookup across:
- *   1. Locally published Studio apps (`localStorage`)
- *   2. User's Personal App Container (`SlxPersonalAppContainer`)
- *   3. Cached Genesis catalog manifest (`localStorage`)
- * Enables `< 5 ms` instant boot from `SlxUiBundleCache` (`IndexedDB`) with zero network blocking.
+ *   1. User's Personal App Container (`SlxPersonalAppContainer`)
+ *   2. Cached live on-chain `AppStore` release (`slx_onchain_app_meta_v1`)
+ *   3. Locally published Studio apps (`localStorage`)
+ *   4. Cached Genesis catalog manifest (`localStorage`)
  */
 export function resolveFastCachedAppMeta(slug) {
   const cleanSlug = String(slug || '').trim().toLowerCase();
@@ -177,29 +196,23 @@ export function resolveFastCachedAppMeta(slug) {
     null;
   const installed = sdk.SlxPersonalAppContainer.getInstalled(cleanSlug);
   if (installed) {
-    const pinned = {
-      ...(base || {}),
-      ...installed,
-    };
-    if (
-      base &&
-      pinned.uiHash &&
-      base.uiHash &&
-      pinned.uiHash.toLowerCase() !== base.uiHash.toLowerCase()
-    ) {
+    const pinned = { ...(base || {}), ...installed };
+    if (base && pinned.uiHash && base.uiHash && pinned.uiHash.toLowerCase() !== base.uiHash.toLowerCase()) {
       pinned.bundleUrl = '';
     }
     return pinned;
   }
 
+  const cachedOnChain = _loadCachedOnChainAppMap()[cleanSlug] || null;
   const localOverrides = sdk
     .loadLocalPublishedApps()
     .find((a) => String(a.slug || '').toLowerCase() === cleanSlug);
 
-  if (!base && !localOverrides) return null;
+  if (!base && !localOverrides && !cachedOnChain) return null;
   const merged = {
     ...(base || {}),
     ...(localOverrides || {}),
+    ...(cachedOnChain || {}),
   };
   if (base && merged.uiHash && base.uiHash && merged.uiHash.toLowerCase() !== base.uiHash.toLowerCase()) {
     merged.bundleUrl = '';
@@ -207,14 +220,8 @@ export function resolveFastCachedAppMeta(slug) {
   return merged;
 }
 
-/**
- * Background update check after an app boots.
- * Never silently overwrites a user's pinned installed version — instead records `availableUpdate`
- * and renders an explicit opt-in "🔄 Update to vX.Y.Z" button so the user decides if/when to update.
- */
 export async function revalidateMountedAppInBackground(slug, mountedUiHash, storeClient) {
   try {
-    await loadGenesisAppCatalog({ forceNetwork: true });
     const latest = await resolveEffectiveAppMeta(slug, storeClient);
     if (!latest?.uiHash) return;
 
@@ -277,37 +284,37 @@ export async function revalidateMountedAppInBackground(slug, mountedUiHash, stor
 }
 
 /**
- * Resolves the latest metadata & `uiHash` for an app `slug` by merging:
- *   1. Genesis catalog (`/app-bundles/manifest.json`)
- *   2. Locally published / updated Studio apps (`localStorage`)
- *   3. Live on-chain `AppStore` HFS (`getAppBySlug`) if deployed on Subnet 1!
+ * Resolves the latest metadata & `uiHash` for an app `slug`, always preferring live on-chain
+ * `AppStore` state on Subnet 1 over any static genesis catalog file.
  */
 export async function resolveEffectiveAppMeta(slug, storeClient) {
   const cleanSlug = String(slug || '').trim().toLowerCase();
-  const catalog = await loadGenesisAppCatalog();
+  const [catalog, onChain] = await Promise.all([
+    loadGenesisAppCatalog().catch(() => ({ apps: [] })),
+    (async () => {
+      if (!storeClient) return null;
+      try {
+        const idMatch = cleanSlug.match(/^app-(\d+)$/);
+        if (idMatch && typeof storeClient.fetchAppById === 'function') {
+          const byId = await storeClient.fetchAppById(Number(idMatch[1]));
+          if (byId) return byId;
+        }
+        return await storeClient.fetchAppBySlug(cleanSlug);
+      } catch (_) {
+        return null;
+      }
+    })(),
+  ]);
+
   const base = (catalog.apps || []).find((a) => a.slug === cleanSlug) || null;
   const localOverrides = sdk
     .loadLocalPublishedApps()
     .find((a) => String(a.slug || '').toLowerCase() === cleanSlug);
 
-  let onChain = null;
-  if (storeClient) {
-    try {
-      const idMatch = cleanSlug.match(/^app-(\d+)$/);
-      if (idMatch && typeof storeClient.fetchAppById === 'function') {
-        onChain = await storeClient.fetchAppById(Number(idMatch[1]));
-      }
-      if (!onChain) {
-        onChain = await storeClient.fetchAppBySlug(cleanSlug);
-      }
-    } catch (_) {}
-  }
-
   if (!base && !localOverrides && !onChain) {
     return null;
   }
 
-  // Prefer live on-chain `AppStore` release if present, then local Studio override, then genesis!
   const merged = {
     ...(base || {}),
     ...(localOverrides || {}),
@@ -320,7 +327,10 @@ export async function resolveEffectiveAppMeta(slug, storeClient) {
           icon: onChain.icon || localOverrides?.icon || base?.icon,
           version: onChain.version || localOverrides?.version || base?.version,
           category: onChain.category || localOverrides?.category || base?.category,
-          execMode: base?.isSystemCore ? sdk.APP_EXEC_MODE.VERIFIED_HOST : onChain.execMode,
+          execMode:
+            base?.isSystemCore || onChain.execMode === sdk.APP_EXEC_MODE.VERIFIED_HOST
+              ? sdk.APP_EXEC_MODE.VERIFIED_HOST
+              : onChain.execMode,
           uiHash: onChain.uiHash,
           wasmCodeHash:
             onChain.wasmCodeHash !== sdk.ZERO_BYTES32
@@ -338,32 +348,155 @@ export async function resolveEffectiveAppMeta(slug, storeClient) {
       : {}),
   };
 
-  // Only keep static genesis `bundleUrl` fallback if `uiHash` still matches genesis `base.uiHash`
   if (base && merged.uiHash && merged.uiHash.toLowerCase() !== base.uiHash.toLowerCase()) {
     merged.bundleUrl = '';
+  }
+
+  if (onChain?.uiHash && onChain.uiHash !== sdk.ZERO_BYTES32) {
+    _saveCachedOnChainAppMeta(cleanSlug, merged);
   }
 
   return merged;
 }
 
+// ---------------------------------------------------------------------------
+// Content-Addressed On-Chain Media / Artwork Loader (`0x0101` + `IndexedDB`)
+// ---------------------------------------------------------------------------
+
+function _replaceAssetPathsInText(text, sortedEntries) {
+  let out = String(text || '');
+  for (const [webPath, blobUrl] of sortedEntries) {
+    if (out.includes(webPath)) {
+      out = out.split(webPath).join(blobUrl);
+    }
+  }
+  return out;
+}
+
+function _rewriteDomElementAssets(rootEl, sortedEntries, assetMap) {
+  if (!rootEl || !sortedEntries.length) return;
+  const applyNode = (el) => {
+    if (!el || el.nodeType !== 1) return;
+    for (const attr of ['src', 'href']) {
+      const val = el.getAttribute(attr);
+      if (val && assetMap.has(val)) {
+        el.setAttribute(attr, assetMap.get(val));
+      }
+    }
+    const st = el.getAttribute('style');
+    if (st && st.includes('/assets/')) {
+      const nextSt = _replaceAssetPathsInText(st, sortedEntries);
+      if (nextSt !== st) el.setAttribute('style', nextSt);
+    }
+  };
+  applyNode(rootEl);
+  rootEl.querySelectorAll?.('img[src], image[href], [style*="/assets/"]').forEach(applyNode);
+}
+
+async function _hydrateBundleOnChainAssets(doc, storeClient) {
+  const assetScript = doc.getElementById('slx-bundle-assets');
+  if (!assetScript) {
+    return { assetMap: new Map(), sortedEntries: [], total: 0, onChainLoads: 0, cacheHits: 0 };
+  }
+  let parsed = null;
+  try {
+    parsed = JSON.parse(assetScript.textContent || '{}');
+  } catch (_) {
+    parsed = null;
+  }
+  assetScript.remove();
+  if (!parsed || typeof parsed !== 'object') {
+    return { assetMap: new Map(), sortedEntries: [], total: 0, onChainLoads: 0, cacheHits: 0 };
+  }
+
+  const entries = Object.entries(parsed);
+  if (!entries.length) {
+    return { assetMap: new Map(), sortedEntries: [], total: 0, onChainLoads: 0, cacheHits: 0 };
+  }
+
+  const effectiveClient =
+    storeClient || new sdk.AppStoreClient({ rpcUrl: sdk.getDefaultNodeWsUrl() });
+  const assetMap = new Map();
+  let onChainLoads = 0;
+  let cacheHits = 0;
+
+  await Promise.all(
+    entries.map(async ([webPath, spec]) => {
+      const cleanHash = String(spec?.hash || '').trim().toLowerCase();
+      const mime = spec?.mime || 'image/jpeg';
+      if (!cleanHash || cleanHash === sdk.ZERO_BYTES32) return;
+
+      const memo = _blobUrlByAssetHash.get(cleanHash);
+      if (memo?.blobUrl) {
+        assetMap.set(webPath, memo.blobUrl);
+        cacheHits += 1;
+        return;
+      }
+
+      try {
+        const res = await effectiveClient.fetchVerifiedAssetBytes({
+          assetHash: cleanHash,
+          fallbackUrl: webPath,
+        });
+        const blobUrl = URL.createObjectURL(new Blob([res.bytes], { type: mime }));
+        _blobUrlByAssetHash.set(cleanHash, { blobUrl, loadedFrom: res.loadedFrom });
+        assetMap.set(webPath, blobUrl);
+        if (res.cacheHit) cacheHits += 1;
+        else if (res.loadedFrom === 'onchain-ui-bundle-store') onChainLoads += 1;
+      } catch (_) {
+        // Leave original webPath intact if offline & uncached
+      }
+    })
+  );
+
+  // Sort longest paths first so substring replacement never collides on prefixes
+  const sortedEntries = Array.from(assetMap.entries()).sort((a, b) => b[0].length - a[0].length);
+  return {
+    assetMap,
+    sortedEntries,
+    total: assetMap.size,
+    onChainLoads,
+    cacheHits,
+  };
+}
+
 /**
  * Mounts a `keccak256`-verified `VERIFIED_HOST` single-file HTML bundle directly into the current
- * document so URL query/hash deep-links, `localStorage` wallet state, WebSocket JSON-RPC, and DOM
- * styling run with 100% native fidelity, plus a compact non-intrusive Verified Bundle Inspector pill.
+ * document, hydrating all `#slx-bundle-assets` artwork from `0x0101` + `IndexedDB` and exposing
+ * live `AppStore` `defaultHfsAddr` + `wasmCodeHash` via `globalThis.__SLX_MOUNTED_APP__`.
  */
-export async function mountVerifiedHostAppBundle({ appMeta, verifiedBundle }) {
+export async function mountVerifiedHostAppBundle({ appMeta, verifiedBundle, storeClient = null }) {
+  if (_activeAssetObserver) {
+    _activeAssetObserver.disconnect();
+    _activeAssetObserver = null;
+  }
+
+  if (typeof globalThis !== 'undefined') {
+    globalThis.__SLX_MOUNTED_APP__ = Object.freeze({ ...(appMeta || {}) });
+  }
+
   const parser = new DOMParser();
   const doc = parser.parseFromString(verifiedBundle.html, 'text/html');
+
+  // Hydrate content-addressed artwork/media from IndexedDB (`< 2 ms`) or `0x0101` (`slx_getUiBundle`)
+  const assetHydration = await _hydrateBundleOnChainAssets(doc, storeClient);
+  const { assetMap, sortedEntries } = assetHydration;
+
+  if (typeof globalThis !== 'undefined') {
+    globalThis.__SLX_RESOLVE_ASSET__ = (p) => assetMap.get(String(p || '')) || p;
+  }
 
   if (doc.title) {
     document.title = doc.title;
   }
 
-  // Inject <style> blocks from the bundle into <head>
+  // Inject <style> blocks from the bundle into <head> (with `/assets/...` rewritten to `blob:` URLs)
   doc.head.querySelectorAll('style').forEach((styleEl) => {
     const clone = document.createElement('style');
     clone.setAttribute('data-slx-mounted-bundle', appMeta.slug || 'app');
-    clone.textContent = styleEl.textContent;
+    clone.textContent = sortedEntries.length
+      ? _replaceAssetPathsInText(styleEl.textContent, sortedEntries)
+      : styleEl.textContent;
     document.head.appendChild(clone);
   });
 
@@ -377,7 +510,11 @@ export async function mountVerifiedHostAppBundle({ appMeta, verifiedBundle }) {
     scr.remove();
   });
 
-  // Reset inline stub styles on <body> so the app's own CSS rules govern <body> cleanly
+  // Rewrite any static `<img src="/assets/...">` inside `doc.body` BEFORE touching live `document.body`
+  if (sortedEntries.length) {
+    _rewriteDomElementAssets(doc.body, sortedEntries, assetMap);
+  }
+
   document.body.removeAttribute('style');
   if (doc.body.className) {
     document.body.className = doc.body.className;
@@ -387,19 +524,40 @@ export async function mountVerifiedHostAppBundle({ appMeta, verifiedBundle }) {
   }
   document.body.innerHTML = doc.body.innerHTML;
 
-  // Mount site-wide legal consent footer & modal
+  // Observe dynamic DOM mutations so runtime `innerHTML` templates using `/assets/...` also swap to `blob:` URLs!
+  if (sortedEntries.length && typeof MutationObserver !== 'undefined') {
+    _activeAssetObserver = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === 'attributes') {
+          _rewriteDomElementAssets(m.target, sortedEntries, assetMap);
+        } else if (m.type === 'childList') {
+          m.addedNodes.forEach((n) => {
+            if (n.nodeType === 1) _rewriteDomElementAssets(n, sortedEntries, assetMap);
+          });
+        }
+      }
+    });
+    _activeAssetObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['src', 'href', 'style'],
+    });
+  }
+
   try {
     legalConsent.mountLegalConsent();
   } catch (_) {}
 
-  // Append compact, collapsible Verified HFS Bundle Inspector Pill (bottom-left)
-  mountVerifiedBundleBadge({ appMeta, verifiedBundle });
+  mountVerifiedBundleBadge({ appMeta, verifiedBundle, assetHydration });
 
-  // Execute extracted module / inline scripts via Blob ES module URLs
   for (const s of scripts) {
     if (!s.code.trim()) continue;
+    const withAssets = sortedEntries.length
+      ? _replaceAssetPathsInText(s.code, sortedEntries)
+      : s.code;
     if (s.type === 'module') {
-      const rewritten = rewriteHostModuleImports(s.code);
+      const rewritten = rewriteHostModuleImports(withAssets);
       const blob = new Blob([rewritten], { type: 'text/javascript' });
       const blobUrl = URL.createObjectURL(blob);
       try {
@@ -409,13 +567,13 @@ export async function mountVerifiedHostAppBundle({ appMeta, verifiedBundle }) {
       }
     } else {
       const el = document.createElement('script');
-      el.textContent = s.code;
+      el.textContent = withAssets;
       document.body.appendChild(el);
     }
   }
 }
 
-function mountVerifiedBundleBadge({ appMeta, verifiedBundle }) {
+function mountVerifiedBundleBadge({ appMeta, verifiedBundle, assetHydration }) {
   if (document.getElementById('slxBundleVerifiedPill')) return;
   const gzKb = ((verifiedBundle.compressedLen || appMeta.compressedLen || 0) / 1024).toFixed(1);
   const srcTag = verifiedBundle.cacheHit
@@ -424,6 +582,10 @@ function mountVerifiedBundleBadge({ appMeta, verifiedBundle }) {
     ? '⛓️ On-Chain UI Store'
     : 'Verified CAS';
   const shortUi = sdk.shortHex(verifiedBundle.uiHash || appMeta.uiHash || '', 8, 6);
+  const mediaBadge =
+    assetHydration?.total > 0
+      ? `<span style="color:#64748b;">•</span><span style="color:#f0abfc;" title="${assetHydration.total} content-addressed media blobs verified from 0x0101 / IndexedDB">🎨 ${assetHydration.total} Media</span>`
+      : '';
 
   const wrap = document.createElement('div');
   wrap.id = 'slxBundleVerifiedPill';
@@ -448,6 +610,7 @@ function mountVerifiedBundleBadge({ appMeta, verifiedBundle }) {
     `<span style="color:#6ee7b7;font-weight:800;" title="keccak256(gzipBundle) verified before DOM execution">🧩 UI ${shortUi}</span>` +
     `<span style="color:#64748b;">•</span>` +
     `<span style="color:#93c5fd;">${gzKb}KB gz (${srcTag})</span>` +
+    mediaBadge +
     `<button type="button" data-slx-pill-install="1"></button>` +
     `<a href="/apps.html?edit=${encodeURIComponent(appMeta.slug || '')}" style="color:#fde68a;text-decoration:none;font-weight:700;margin-left:2px;" title="Inspect, fork, or hot-publish a new UI version in the HFS App Store without redeploying the web client">✏ Studio</a>` +
     `<a href="/apps.html" style="color:#38bdf8;text-decoration:none;font-weight:700;" title="Open SuperLexicon HFS App Store Directory">🏪 Directory</a>`;
