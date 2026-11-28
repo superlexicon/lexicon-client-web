@@ -1,0 +1,21 @@
+{
+  "artifact": "dist/jones_blockchain.wasm",
+  "code_hash": "0xec36f6ca98b7f8e7eb55f0bc279066d3f02070dffd50768a26654d3038695dcf",
+  "exports": [
+    "memory",
+    "main"
+  ],
+  "hps": "jones-blockchain",
+  "imports": [
+    "env::host_state_set",
+    "env::get_calldata",
+    "env::host_emit_event",
+    "env::get_msg_sender",
+    "env::get_block_number",
+    "env::host_state_get"
+  ],
+  "initial_memory_pages": 32,
+  "max_memory_pages": 64,
+  "optimized_wasm_bytes": 28874,
+  "raw_wasm_bytes": 28874
+}

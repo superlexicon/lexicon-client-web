@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🕰️ JONES IN THE BLOCKCHAIN — Cozy Life-Sim &amp; Career Strategy (SuperLexicon HFS #24)</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+</head>
+<body>
+  <div class="jb-shell">
+    <div id="slxUnifiedHeaderMount"></div>
+    <button id="btnHowToPlay" data-uh-unhide="1" class="jb-btn" style="display:none;">📖 How to Play</button>
+
+    <main class="jb-main">
+      <!-- Left / Center: 12-Building Perimeter Town Board & Interactive Interior Stage -->
+      <section class="jb-board-col">
+        <div id="jbWelcomeMount"></div>
+        <div id="jbCoachMount"></div>
+
+        <!-- Top Town Status & New Game Ribbon -->
+        <div class="jb-ribbon">
+          <div class="jb-ribbon-left mono">
+            <span class="jb-chip jb-chip-sun">📅 WEEK <strong id="hudWeek">1</strong></span>
+            <span class="jb-chip" id="hudEconomyChip">☀️ Economy 100%</span>
+            <span class="jb-chip jb-chip-phase" id="hudTurnBadge">Syncing Sunnyvale HFS…</span>
+          </div>
+          <div class="jb-ribbon-actions">
+            <button type="button" id="btnNewSoloModal" class="jb-btn jb-btn-gold" title="Start a new Solo game against Rival Jones (choose Quick Stroll, Classic, or Long-Haul Tycoon)">
+              ☀️ Play vs. Jones
+            </button>
+            <button type="button" id="btnOpenLobbyModal" class="jb-btn jb-btn-sky" title="Create or join a persistent 2–4 player Family &amp; Friends board">
+              👨‍👩‍👧‍👦 Family / PvP Boards
+            </button>
+            <button type="button" id="btnOpenCatalogModal" class="jb-btn" title="Browse all 12 Sunnyvale Careers, 4 Degrees, and 6 Time-Saving Appliances">
+              🎓 Careers &amp; Guide
+            </button>
+          </div>
+        </div>
+
+        <!-- Classic 4x4 Perimeter Ring Board (12 Buildings around 2x2 Center Stage) -->
+        <div class="jb-perimeter-board" id="perimeterBoard">
+          <!-- 12 Building Tiles dynamically rendered in clockwise ring positions + Center 2x2 Stage -->
+          <div id="tileMount0" class="jb-tile-slot" style="grid-area: t0;"></div>
+          <div id="tileMount1" class="jb-tile-slot" style="grid-area: t1;"></div>
+          <div id="tileMount2" class="jb-tile-slot" style="grid-area: t2;"></div>
+          <div id="tileMount3" class="jb-tile-slot" style="grid-area: t3;"></div>
+          <div id="tileMount4" class="jb-tile-slot" style="grid-area: t4;"></div>
+          <div id="tileMount5" class="jb-tile-slot" style="grid-area: t5;"></div>
+          <div id="tileMount6" class="jb-tile-slot" style="grid-area: t6;"></div>
+          <div id="tileMount7" class="jb-tile-slot" style="grid-area: t7;"></div>
+          <div id="tileMount8" class="jb-tile-slot" style="grid-area: t8;"></div>
+          <div id="tileMount9" class="jb-tile-slot" style="grid-area: t9;"></div>
+          <div id="tileMount10" class="jb-tile-slot" style="grid-area: t10;"></div>
+          <div id="tileMount11" class="jb-tile-slot" style="grid-area: t11;"></div>
+
+          <!-- Center 2x2 Illustrated Sunnyvale Stage / Building Counter -->
+          <div class="jb-center-stage" id="centerStage"></div>
+        </div>
+
+        <!-- Weekly Pocket-Watch & Atomic Week Planner Bar -->
+        <div class="jb-planner-bar" id="plannerBar">
+          <div class="jb-watch-box">
+            <div class="jb-watch-dial">
+              <span class="jb-watch-icon">🕰️</span>
+              <div>
+                <div class="jb-watch-label">WEEKLY CLOCK</div>
+                <div class="jb-watch-hours mono"><strong id="lblHoursLeft">60</strong> / <span id="lblHoursMax">60</span> hrs</div>
+              </div>
+            </div>
+            <div class="jb-watch-track">
+              <div class="jb-watch-fill" id="barHoursFill" style="width: 100%;"></div>
+            </div>
+          </div>
+
+          <div class="jb-plan-steps-wrap">
+            <div class="jb-plan-hdr">
+              <span class="mono" id="lblPlanSummary">Planned Steps (0): Click any building around town to stroll, work, study, or shop!</span>
+              <div class="jb-plan-mini-btns">
+                <button type="button" id="btnUndoStep" class="jb-btn jb-btn-xs" disabled>↩ Undo</button>
+                <button type="button" id="btnResetWeek" class="jb-btn jb-btn-xs" disabled>↺ Reset</button>
+              </div>
+            </div>
+            <div class="jb-plan-pills" id="planPillsRow"></div>
+          </div>
+
+          <button type="button" id="btnFinishWeek" class="jb-btn jb-btn-emerald jb-finish-btn" disabled>
+            🌙 Finish Week &amp; Roll Weekend!
+          </button>
+        </div>
+      </section>
+
+      <!-- Right Sidebar: 4 Life Goal Pillars, Home Inventory, Rivals & Weekend Gazette -->
+      <aside class="jb-side-col">
+        <!-- Your 4 Life Pillars Card -->
+        <div class="jb-card jb-goals-card">
+          <div class="jb-card-hdr">
+            <span class="jb-card-title" id="lblMyCardTitle">🌟 Your Life Goals</span>
+            <span class="jb-badge mono" id="lblNetWealth">$240 Net</span>
+          </div>
+          <div id="myGoalsMount" class="jb-goals-list"></div>
+          <div id="myStatsMount" class="jb-my-stats"></div>
+        </div>
+
+        <!-- Rivals ("Keeping Up With Jones" & Family Seats) -->
+        <div class="jb-card">
+          <div class="jb-card-hdr">
+            <span class="jb-card-title">🏃 Keeping Up With Jones</span>
+            <span class="jb-sub-mono mono" id="lblSeatCount">2 Seats</span>
+          </div>
+          <div id="rivalsMount" class="jb-rivals-list"></div>
+        </div>
+
+        <!-- "Oh, What a Weekend!" Illustrated Town Gazette -->
+        <div class="jb-card jb-gazette-card">
+          <div class="jb-card-hdr">
+            <span class="jb-card-title">🗞️ “Oh, What a Weekend!” Gazette</span>
+            <span class="jb-sub-mono mono">Town Ticker</span>
+          </div>
+          <div id="gazetteMount" class="jb-gazette-list"></div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Solo Preset Picker Modal -->
+    <div class="jb-modal-backdrop" id="soloModal">
+      <div class="jb-modal-card">
+        <div class="jb-modal-hdr">
+          <h3>☀️ Start a Cozy Game vs. Jones</h3>
+          <button type="button" class="jb-close-btn" data-close="soloModal">✕</button>
+        </div>
+        <div class="jb-modal-body">
+          <div class="jb-solo-hero">
+            <img src="/assets/jones/rival_jones.jpg" alt="Rival Jones" class="jb-solo-avatar" />
+            <div>
+              <div style="font-weight:800;font-size:0.95rem;color:#fef08a;">“Hey neighbor! Ready to see who hits 100% first?”</div>
+              <p style="margin:4px 0 0;font-size:0.8rem;color:#cbd5e1;line-height:1.45;">
+                Pick a game length that fits your mood, and choose how many town rivals join the board. Every game saves permanently on Subnet 1 at <strong>$0.00 gas</strong>!
+              </p>
+            </div>
+          </div>
+
+          <div class="jb-field-label">1. Choose Game Pace &amp; Victory Targets</div>
+          <div class="jb-preset-grid" id="soloPresetGrid">
+            <button type="button" class="jb-preset-card is-selected" data-preset="0">
+              <div class="jb-preset-badge">🌱 Quick Afternoon Stroll (~15 min)</div>
+              <strong>$2,500 Wealth · 40 Hap · 2 Degrees · Lv.4 Career</strong>
+              <span>Great for kids, first-timers, or a breezy coffee-break game!</span>
+            </button>
+            <button type="button" class="jb-preset-card" data-preset="1">
+              <div class="jb-preset-badge">🕰️ Classic Fast-Lane (~30 min)</div>
+              <strong>$5,000 Wealth · 65 Hap · 3 Degrees · Lv.6 Career</strong>
+              <span>The balanced 1990s PC classic — degrees, appliances, and stock swings!</span>
+            </button>
+            <button type="button" class="jb-preset-card" data-preset="2">
+              <div class="jb-preset-badge">🏛️ Long-Haul Tycoon (~60+ min)</div>
+              <strong>$10,000 Wealth · 100 Hap · All 4 Degrees · Executive</strong>
+              <span>An epic multi-evening marathon to Bank President or Chief Architect!</span>
+            </button>
+          </div>
+
+          <div class="jb-field-label" style="margin-top:10px;">2. Choose Town Rivals</div>
+          <div class="jb-bot-row" id="soloBotCountRow">
+            <button type="button" class="jb-chip-btn is-selected" data-bots="1">🕶️ Just Jones (2 Seats)</button>
+            <button type="button" class="jb-chip-btn" data-bots="2">🐷 Jones + Penny Hodl (3 Seats)</button>
+            <button type="button" class="jb-chip-btn" data-bots="3">🛴 Full Town: Jones + Penny + Sunny (4 Seats)</button>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;">
+            <button type="button" class="jb-btn" data-close="soloModal">Cancel</button>
+            <button type="button" id="btnConfirmSoloStart" class="jb-btn jb-btn-gold">🚀 Move Into Sunnyvale ($0 Gas)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Family / Friends Multiplayer Lobby Modal -->
+    <div class="jb-modal-backdrop" id="lobbyModal">
+      <div class="jb-modal-card">
+        <div class="jb-modal-hdr">
+          <h3>👨‍👩‍👧‍👦 Family &amp; Friends Town Boards (1–4 Players)</h3>
+          <button type="button" class="jb-close-btn" data-close="lobbyModal">✕</button>
+        </div>
+        <div class="jb-modal-body">
+          <div class="jb-lobby-create-box">
+            <div style="font-weight:800;font-size:0.86rem;color:#fde68a;">🏡 Open a New Family / PvP Lobby</div>
+            <p style="margin:2px 0 8px;font-size:0.77rem;color:#cbd5e1;">
+              Create a persistent town board where friends or family can join from their own browsers — and optionally fill empty seats with Jones!
+            </p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <select id="selLobbyPreset" class="jb-select">
+                <option value="0">🌱 Quick Stroll ($2,500 / 2 Deg)</option>
+                <option value="1" selected>🕰️ Classic ($5,000 / 3 Deg)</option>
+                <option value="2">🏛️ Long-Haul Tycoon ($10,000 / 4 Deg)</option>
+              </select>
+              <button type="button" id="btnCreateLobbyGame" class="jb-btn jb-btn-emerald">+ Create Open Board</button>
+            </div>
+          </div>
+
+          <div class="jb-field-label" style="margin-top:10px;">📋 Active &amp; Open Sunnyvale Boards on This HFS</div>
+          <div id="gamesDirectoryMount" class="jb-games-dir"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Career, University & Appliance Reference Modal -->
+    <div class="jb-modal-backdrop" id="catalogModal">
+      <div class="jb-modal-card jb-modal-wide">
+        <div class="jb-modal-hdr">
+          <h3>🎓 Sunnyvale Almanac — 12 Careers, 4 Degrees &amp; 6 Appliances</h3>
+          <button type="button" class="jb-close-btn" data-close="catalogModal">✕</button>
+        </div>
+        <div class="jb-modal-body" id="catalogBodyMount"></div>
+      </div>
+    </div>
+
+    <div id="jbToast" class="jb-toast"></div>
+  </div>
+</body>
+</html>

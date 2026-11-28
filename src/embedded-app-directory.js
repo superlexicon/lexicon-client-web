@@ -39,6 +39,7 @@ const ICON_GRADIENTS = {
   hegemony: 'linear-gradient(145deg, #f43f5e 0%, #be123c 55%, #4c0519 100%)',
   lottery: 'linear-gradient(145deg, #fbbf24 0%, #f97316 58%, #c2410c 100%)',
   'volatile-voles': 'linear-gradient(145deg, #fb923c 0%, #e11d48 55%, #881337 100%)',
+  jones: 'linear-gradient(145deg, #fde047 0%, #f59e0b 52%, #0284c7 100%)',
   rides: 'linear-gradient(145deg, #fbbf24 0%, #059669 55%, #064e3b 100%)',
   'rf-micro-poll': 'linear-gradient(145deg, #2dd4bf 0%, #0284c7 100%)',
   'mesh-repeater-wall': 'linear-gradient(145deg, #60a5fa 0%, #4338ca 100%)',

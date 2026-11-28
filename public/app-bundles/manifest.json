@@ -321,6 +321,27 @@
     },
     {
       "appId": 16,
+      "slug": "jones",
+      "slugId": "0xd69aa66bf48d4ecbea1b5f342eb2a9ed776131a7512afa04d8c31e6abe64b71f",
+      "title": "Jones in the Blockchain \u2014 Cozy Life-Sim",
+      "summary": "Cozy 1\u20134 player career, Haltproof University & life-sim board game inspired by Jones in the Fast Lane\u2014reach 100% in Wealth, Happiness, Education & Career!",
+      "icon": "\ud83d\udd70\ufe0f",
+      "category": 5,
+      "version": "1.0.0",
+      "execMode": 1,
+      "uiHash": "0x5987eeb56b112f67c648ed5f7627d69be28642a0dc929c1fd58cf915918df68e",
+      "uncompressedLen": 111282,
+      "compressedLen": 29081,
+      "chunkCount": 1,
+      "bundleUrl": "/app-bundles/jones.html.gz",
+      "route": "/jones.html",
+      "wasmCodeHash": "0xec36f6ca98b7f8e7eb55f0bc279066d3f02070dffd50768a26654d3038695dcf",
+      "defaultHfsAddr": "0x2e2ed0cfd3ad2f1d34481277b3204d807ca2f8c2",
+      "publisherLabel": "SuperLexicon Core \u00b7 HFS",
+      "isSystemCore": true
+    },
+    {
+      "appId": 17,
       "slug": "rf-micro-poll",
       "slugId": "0xfa8eeed1a96e5d1ffdc381328b4e9f0fb2db02208200ea5f529afad1c7507e88",
       "title": "RF Mesh Pulse Poll",
@@ -341,7 +362,7 @@
       "isSystemCore": false
     },
     {
-      "appId": 17,
+      "appId": 18,
       "slug": "mesh-repeater-wall",
       "slugId": "0x54c6cac78e2192d72345ce431721089bdc888fa03efa3df855035ac5323215f6",
       "title": "Mesh Repeater Beacon Wall",
@@ -362,7 +383,7 @@
       "isSystemCore": false
     },
     {
-      "appId": 18,
+      "appId": 19,
       "slug": "hfs-bounty-splits",
       "slugId": "0xc090a02e57ee16c295823c28b4135199600cdc46dd086b1b05b422389215926e",
       "title": "HFS R&D Bounty Splits",

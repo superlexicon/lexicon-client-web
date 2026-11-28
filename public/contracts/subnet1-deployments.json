@@ -27,7 +27,8 @@
     "webrtc_signal": "0x6883e5a1c75848f8d08717076d90fcf812ac280b6a2fd8d909aed95a2463100b",
     "volatile_voles": "0x764b74a0b4f862023dc1993abf4cdc8b982f7c314f306d106e3e7db72842566d",
     "app_store": "0xeb4814dda67ae256ea63bf3d7b2154d24352368f8538faa250e7fbc380c2a07a",
-    "ride_exchange": "0xd92f9b0e1577d5fbe1d79970de65850d8e09911c0f0830d54c3786ad949f0ebc"
+    "ride_exchange": "0xd92f9b0e1577d5fbe1d79970de65850d8e09911c0f0830d54c3786ad949f0ebc",
+    "jones_blockchain": "0xec36f6ca98b7f8e7eb55f0bc279066d3f02070dffd50768a26654d3038695dcf"
   },
   "battleship": {
     "contractAddr": "0xabb7f6c0ea97ed6f946a51b5d0a944f98226cab1",
@@ -730,5 +731,11 @@
     "quoteLedger": "0xfd471836031dc5108809d173a067e8486b9047a3",
     "quoteSymbol": "SGD-RIDE",
     "label": "Singapore Metro Ride Exchange (6-Regime AON Service Futures)"
+  },
+  "jonesBlockchain": {
+    "contractAddr": "0x2e2ed0cfd3ad2f1d34481277b3204d807ca2f8c2",
+    "defaultGameId": "0x4a4f4e45535f53554e4e5956414c455f424f4152445f30310000000000000000",
+    "openLobbyId": "0x4a4f4e45535f46414d494c595f4c4f4242595f30310000000000000000000000",
+    "label": "Sunnyvale Subnet #1 — Keeping Up With Jones"
   }
 }

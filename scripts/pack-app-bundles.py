@@ -284,6 +284,19 @@ CORE_APPS = [
         "defaultHfsPath": ("volatileVoles", "contractAddr"),
         "hasCss": True,
     },
+    {
+        "slug": "jones",
+        "title": "Jones in the Blockchain — Cozy Life-Sim",
+        "icon": "🕰️",
+        "category": 5,
+        "version": "1.0.0",
+        "summary": "Cozy 1–4 player career, Haltproof University & life-sim board game inspired by Jones in the Fast Lane—reach 100% in Wealth, Happiness, Education & Career!",
+        "wasmKey": "jones_blockchain",
+        "wasmFile": "jones_blockchain.wasm",
+        "instKey": "",
+        "defaultHfsPath": ("jonesBlockchain", "contractAddr"),
+        "hasCss": True,
+    },
 ]
 
 COMMUNITY_SANDBOX_APPS = [
