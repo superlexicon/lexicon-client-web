@@ -29,7 +29,7 @@
     "app_store": "0xeb4814dda67ae256ea63bf3d7b2154d24352368f8538faa250e7fbc380c2a07a",
     "ride_exchange": "0xd92f9b0e1577d5fbe1d79970de65850d8e09911c0f0830d54c3786ad949f0ebc",
     "jones_blockchain": "0x00cdcbfe6f094d77487ec418907918ba069145269780574b531bf2811c3c11e8",
-    "haltfree_ecosystem": "0x1dac7fd5b6db276f75127d7d9c82f633ae92a5b6a029202ba44c12ddc0deedda"
+    "haltfree_ecosystem": "0x72fd4e0042e42792037251cdfb96ba931c4009640932487f2d00110b41d51d91"
   },
   "battleship": {
     "contractAddr": "0xabb7f6c0ea97ed6f946a51b5d0a944f98226cab1",
@@ -740,7 +740,7 @@
     "label": "Neo-Sector #1 — Keeping Up With Jones"
   },
   "haltfreeEcosystem": {
-    "contractAddr": "0x0aec7c174554af8aec3680bb58431f6618311510",
-    "label": "Pearl River & Biosphere Sanctuary #1"
+    "contractAddr": "0xd3ffd73c53f139cebb80b6a524be280955b3f4db",
+    "label": "Pearl River & Biosphere Sanctuary v2"
   }
 }

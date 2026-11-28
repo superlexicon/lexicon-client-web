@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌿 Haltfree Ecosystem — Closed-Loop Permaculture &amp; Polyculture Simulator (SuperLexicon HFS #29)</title>
+  <title>🌿 Haltfree Ecosystem — Turn-Based On-Chain Closed-Loop Permaculture Game (SuperLexicon HFS #29)</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/src/slx-wallet.css" />
 </head>
@@ -13,73 +13,98 @@
     <button id="btnHowToPlay" data-uh-unhide="1" class="he-btn" style="display:none;">📖 How to Play</button>
 
     <main class="he-main">
-      <!-- Left / Center: Arena Selector + Live 60-FPS Animated Ecosystem Cross-Section + 6 Niche Slots -->
+      <!-- Left / Main Column: 4 Arena Campaign + 8-Season Track + 60-FPS Canvas + Round Command Deck -->
       <section class="he-sim-col">
         <div id="heWelcomeMount"></div>
         <div id="heCoachMount"></div>
 
-        <!-- 4 Progressive Ecological Arenas Selector -->
+        <!-- 4 Progressive Ecological Arenas -->
         <div class="he-arena-grid" id="arenaSelectorMount"></div>
 
-        <!-- Live 60-FPS HTML5 Canvas Ecosystem Cross-Section Stage -->
+        <!-- Live On-Chain Expedition Stage -->
         <div class="he-stage-card">
           <div class="he-stage-topbar">
             <div class="he-stage-title-wrap">
               <span class="he-era-pill mono" id="lblArenaEra">475 BCE · PEARL RIVER DELTA</span>
               <h2 class="he-stage-title" id="lblArenaTitle">🐟 The 2,400-Year-Old “Infinite Food” Mulberry-Dyke Pond</h2>
             </div>
-            <div class="he-stage-controls">
-              <span class="he-season-pill mono" id="lblSeasonClock">🌱 Live Preview · Season 12/12</span>
-              <button type="button" id="btnClearSlots" class="he-btn he-btn-xs" title="Reset all 6 ecological niches to empty">↺ Reset</button>
-              <button type="button" id="btnReplayAnim" class="he-btn he-btn-xs he-btn-cyan" title="Watch the 12-season ecological time-lapse animation">🎬 Play 12-Season Sim</button>
-              <button type="button" id="btnSealOnChain" class="he-btn he-btn-emerald" title="Verify &amp; seal your 12-season ecosystem on Subnet 1 ($0.00 gas)">
-                ♾️ Verify &amp; Seal Loop ($0 Gas)
+            <div class="he-stage-hud">
+              <span class="he-hud-chip he-chip-loop mono" id="lblLoopRing" title="Active closed-loop permaculture guilds on-chain">♾️ Loop 0/6</span>
+              <span class="he-hud-chip he-chip-streak mono" id="lblStreakChip" title="Consecutive symbiosis combo seasons">🔥 Streak 0</span>
+              <button type="button" id="btnStartOrResetRun" class="he-btn he-btn-xs he-btn-cyan">
+                🚀 New Expedition ($0 Gas)
               </button>
             </div>
           </div>
 
+          <!-- 8-Season Turn-by-Turn On-Chain Timeline + Weather Forecast -->
+          <div class="he-timeline-bar">
+            <div class="he-season-steps" id="seasonStepsMount"></div>
+            <div class="he-forecast-pill" id="forecastBannerMount">
+              ☀️ Start an on-chain expedition to receive your Season 1 forecast!
+            </div>
+          </div>
+
+          <!-- 60-FPS Living Cross-Section Canvas (Strictly Driven by Confirmed HFS State & Events!) -->
           <div class="he-canvas-wrap">
-            <canvas id="ecoCanvas" width="960" height="400"></canvas>
+            <canvas id="ecoCanvas" width="960" height="330"></canvas>
             <div class="he-canvas-banner" id="canvasStatusBanner"></div>
+            <div class="he-tx-overlay" id="canvasTxOverlay" style="display:none;">
+              <div class="he-tx-spinner"></div>
+              <div>
+                <div class="he-tx-title" id="lblTxPhaseTitle">⛓️ Confirming Season Action on Subnet 1…</div>
+                <div class="he-tx-sub mono" id="lblTxPhaseSub">Waiting for block finality &amp; HFS RoundResolved event ($0.00 gas)</div>
+              </div>
+            </div>
           </div>
 
           <!-- Historical & Scientific Story Strip -->
           <div class="he-history-strip" id="arenaStoryMount"></div>
         </div>
 
-        <!-- 6 Interlocking Ecological Niche Builder Slots -->
-        <div class="he-slots-header">
-          <div>
-            <strong>🧩 Engineer All 6 Ecological Niches</strong>
-            <span class="he-muted"> — Watch the living simulation above react immediately as you swap plants, fish, and microbes!</span>
+        <!-- Turn-Based On-Chain Command Deck -->
+        <div class="he-deck-card" id="commandDeckCard">
+          <div class="he-deck-hdr">
+            <div>
+              <span class="he-deck-step-badge mono" id="lblDeckRoundBadge">EXPEDITION STANDBY</span>
+              <strong id="lblDeckPrompt">Launch an 8-Season Sanctuary Expedition on Subnet 1 to play!</strong>
+            </div>
+            <button type="button" id="btnExecuteRoundAction" class="he-btn he-btn-emerald">
+              🚀 Start Season 1 Expedition ($0 Gas)
+            </button>
           </div>
-          <span class="he-loop-formula mono">☀️ Sunlight + 🌧️ Rain ➔ ♾️ Zero-Waste Food</span>
+
+          <!-- 6 Zone Tabs + 1 Tactical Stewardship Tab -->
+          <div class="he-zone-tabs" id="zoneTabsMount"></div>
+
+          <!-- 3 Selectable Action Cards for Active Tab -->
+          <div class="he-action-prompt" id="zoneQuestionMount"></div>
+          <div class="he-action-cards" id="actionCardsMount"></div>
         </div>
-        <div class="he-slots-grid" id="slotsGridMount"></div>
       </section>
 
-      <!-- Right Sidebar: Live Vital Gauges, Diagnostic Lab, Scholar Passport & Leaderboard -->
+      <!-- Right Column: Confirmed Vitals, Last Emitted HFS Event, Eco-Scholar Passport & Hall of Fame -->
       <aside class="he-side-col">
         <div class="he-card he-vitals-card">
           <div class="he-card-hdr">
-            <span class="he-card-title">📊 12-Season Ecosystem Vitals</span>
+            <span class="he-card-title">📊 Confirmed On-Chain Vitals</span>
             <span class="he-yield-badge mono" id="lblTotalYield">🧺 0 Harvest</span>
           </div>
           <div id="vitalsMount" class="he-vitals-list"></div>
-          <div id="diagnosisBox" class="he-diagnosis-box"></div>
+          <div id="lastEventBox" class="he-diagnosis-box"></div>
         </div>
 
         <div class="he-card">
           <div class="he-card-hdr">
-            <span class="he-card-title">🎖️ Your Eco-Scholar Passport</span>
-            <span class="he-sub-mono mono" id="lblTotalStars">⭐ 0 / 12</span>
+            <span class="he-card-title">🎖️ Eco-Scholar Passport &amp; Badges</span>
+            <span class="he-sub-mono mono" id="lblTotalStars">⭐ 0 / 12 · 0 XP</span>
           </div>
           <div id="passportMount" class="he-passport-box"></div>
         </div>
 
         <div class="he-card">
           <div class="he-card-hdr">
-            <span class="he-card-title">🏆 Halt-Free Ecology Hall of Fame</span>
+            <span class="he-card-title">🏆 Sanctuary Hall of Fame</span>
             <span class="he-sub-mono mono" id="lblLeaderCount">Subnet 1</span>
           </div>
           <div id="leaderboardMount" class="he-leader-list"></div>
@@ -87,8 +112,8 @@
 
         <div class="he-card">
           <div class="he-card-hdr">
-            <span class="he-card-title">🔬 Live Field Experiment Log</span>
-            <span class="he-sub-mono mono">On-Chain</span>
+            <span class="he-card-title">📡 Emitted HFS Event Feed</span>
+            <span class="he-sub-mono mono">Receipts</span>
           </div>
           <div id="logsMount" class="he-logs-list"></div>
         </div>

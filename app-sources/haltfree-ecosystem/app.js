@@ -1,19 +1,20 @@
 /**
- * HALTFREE ECOSYSTEM (`app-sources/haltfree-ecosystem/app.js` — SuperLexicon HFS #29)
+ * HALTFREE ECOSYSTEM v2.0 (`app-sources/haltfree-ecosystem/app.js` — SuperLexicon HFS #29)
  *
- * Educational Closed-Loop Permaculture, Polyculture Aquaculture & Biospheric Simulation Game:
- *  - 4 Progressive Arenas starting with the 2,400-Year-Old "Infinite Food" System
- *    (Chinese Mulberry-Dyke Carp Polyculture / Sangji Yutang, 475 BCE).
- *  - Live 60-FPS HTML5 `<canvas>` animated cross-section simulation reacting instantaneously
- *    to every plant, fish, symbiont, and microbe choice across 6 interlocking ecological niches.
- *  - On-Chain Halt-Free Subroutine (`haltfree_ecosystem.wasm`) verifies 12-season closed-loop
- *    stability, awards 1–3 Mastery Stars to the player's `Identity` HFS, and updates the
- *    Subnet 1 Eco-Scholar Hall of Fame at `$0.00` gas.
+ * Turn-Based On-Chain Closed-Loop Permaculture, Polyculture Aquaculture & Biospheric Game:
+ *  - 100% On-Chain Execution: Zero offline/client-only simulation! Every expedition start
+ *    (`startRun`) and seasonal turn (`playRound`, Seasons 1..8) submits a `$0.00`-gas transaction
+ *    to `haltfree_ecosystem.wasm` on Subnet 1.
+ *  - Event-Driven 60-FPS `<canvas>` Rendering: When a Subnet 1 block confirms, the UI extracts
+ *    the emitted `RunStarted` / `RoundResolved` HFS event payload directly from `receipt.logs`,
+ *    then animates new organisms splashing into the ecosystem, seasonal weather hazards, symbiosis
+ *    combos, vital gauge deltas, and Infinite-Loop mastery!
  */
 
 import {
   hexToBytes,
   bytesToHex,
+  keccak256Hex,
   encodeAbi,
   readU16BE,
   readU32BE,
@@ -33,68 +34,70 @@ import { mountHfsRegistryDropdown } from '@superlexicon/sdk/hfs-deployers';
 import { mountSlxGameGuide } from '@superlexicon/sdk/ui/game-guide';
 
 // ---------------------------------------------------------------------------
-// Self-Contained Inline Use-Case Architecture & Field Manual (Zero SDK Redeploy!)
+// Self-Contained Inline Field Guide & Architecture Docs
 // ---------------------------------------------------------------------------
 
 const HALTFREE_MANUAL_SPEC = {
   icon: '🌿',
-  title: 'Haltfree Ecosystem — Closed-Loop Ecology Field Guide',
+  title: 'Haltfree Ecosystem — Turn-Based On-Chain Ecology Guide',
   accent: '#10b981',
   tagline:
-    'Discover how ancient permaculture farmers and future space engineers build "Infinite Food" ecosystems that never run out of nutrients, never choke on waste, and never halt!',
-  welcomePrimaryLabel: '🐟 Explore the 2,400-Year-Old Pond',
+    'Build a living 2,400-year-old "Infinite Food" ecosystem one season at a time on Subnet 1 ($0.00 gas)—each confirmed block emits the next ecological season!',
+  welcomePrimaryLabel: '🚀 Launch Season 1 Expedition',
   quickSteps: [
     {
       num: '1',
-      title: 'Pick an Arena (Start with Level 1: Mulberry-Dyke Pond)',
-      body: 'Start in 475 BCE China with the famous 2,400-year-old "Infinite Food" pond—then unlock the Aztec Chinampa Canal, Solar Aquaponics Dome, and Martian Biosphere!',
+      title: 'Start an 8-Season Expedition on Subnet 1',
+      body: 'Choose an Arena (start with Level 1: 475 BCE Mulberry-Dyke Carp Pond) and launch your live on-chain Sanctuary Expedition with your Identity HFS.',
     },
     {
       num: '2',
-      title: 'Fill All 6 Ecological Niches & Watch the Live Animation',
-      body: 'Every plant, insect, fish depth-layer, and microbe turns another creature’s waste into food! Watch the 60-FPS pond cross-section react immediately as you click.',
+      title: 'Play 1 Tactical Eco-Action Per Season',
+      body: 'Each round (Seasons 1–8), read the Weather Forecast and either stock a species in one of the 6 Ecological Zones OR trigger a Seasonal Steward move (Dredge Silt, Bio-Aerate, or Autonomous Loop).',
     },
     {
       num: '3',
-      title: 'Achieve a Halt-Free 12-Season Loop & Seal Your Badge',
-      body: 'When Oxygen, Clarity, and Fertility stay balanced for 12 seasons with ZERO external feed, click ♾️ Verify & Seal Loop ($0 Gas) to earn 3 Stars on your Identity HFS!',
+      title: 'Watch Confirmed HFS Events Bring Your Pond to Life',
+      body: 'When the block confirms, haltfree_ecosystem.wasm emits RoundResolved—animating new fish, trees, weather shields, Symbiosis Combos, and 2× Hands-Free Infinite-Loop harvests!',
     },
   ],
   tabs: {
     quickstart: `
       <div class="slx-gg-hero">
-        <div class="slx-gg-hero-title">♾️ What Makes an Ecosystem "Halt-Free"?</div>
+        <div class="slx-gg-hero-title">♾️ Turn-by-Turn Closed-Loop Strategy</div>
         <p>
-          In computer science, a <strong>Halt-Free Subroutine</strong> never freezes or crashes because every resource is bounded.
-          In nature, a <strong>Closed-Loop Polyculture Ecosystem</strong> never collapses ("halts") because <strong>every waste product becomes food for the next species</strong>—powered only by sunlight and rain!
+          Every round is a real season stored inside <code>haltfree_ecosystem.wasm</code> on Subnet 1.
+          Build your food web in smart ecological order (Producers &rarr; Symbionts &rarr; Filter Fish &rarr; Benthic Recyclers),
+          avoid chemical shortcut traps, and once all <strong>6/6 Loop Links</strong> are active, play
+          <strong>♾️ Autonomous Hands-Off Season</strong> in Seasons 7 &amp; 8 to prove your ecosystem sustains itself forever!
         </p>
       </div>
       <div class="slx-gg-steps-grid">
         <div class="slx-gg-step-card">
-          <span class="slx-gg-step-num">RULE 1</span>
-          <h4>🌞 Zero External Feed Debt</h4>
-          <p>Dumping diesel fish pellets or chemical fertilizers breaks the closed loop and pollutes the water with toxic ammonia!</p>
+          <span class="slx-gg-step-num">SEASONS 1–6</span>
+          <h4>🌱 Build Trophic Symbiosis</h4>
+          <p>Stock Mulberry Trees before Silkworms, and stock Silver &amp; Bighead Carp before Algae Surges hit to score Symbiosis Combos!</p>
         </div>
         <div class="slx-gg-step-card">
-          <span class="slx-gg-step-num">RULE 2</span>
-          <h4>🐟 Every Water Layer Has a Job</h4>
-          <p>Surface fish eat plants, mid-water filter fish clean up microscopic algae so oxygen stays high, and bottom fish stir nutrient mud!</p>
+          <span class="slx-gg-step-num">WEATHER</span>
+          <h4>🌧️ Read the Forecast</h4>
+          <p>Shoreline tree roots turn Monsoon Downpours into bonus fertility, while Bamboo Bio-Aeration saves low-oxygen ponds in Heatwaves!</p>
         </div>
         <div class="slx-gg-step-card">
-          <span class="slx-gg-step-num">RULE 3</span>
-          <h4>🔄 Close the Nutrient Circle</h4>
-          <p>Returning rich bottom pond silt (or worm compost) back to the shoreline trees completes the perpetual food loop!</p>
+          <span class="slx-gg-step-num">SEASONS 7–8</span>
+          <h4>♾️ Hands-Free 2&times; Harvest</h4>
+          <p>With all 6 Closed-Loop guilds active and zero chemical shortcuts, run Hands-Off Autonomous Seasons for 2&times; Harvest &amp; 3 Stars!</p>
         </div>
       </div>
     `,
     controls: `
       <div class="slx-gg-card">
-        <h4>🎮 Reading the Animated Simulation &amp; 4 Vital Gauges</h4>
+        <h4>📊 Keep All 4 Vitals Above 0% Across All 8 Seasons</h4>
         <ul>
-          <li><strong>🫧 Oxygen (Keep &gt; 36%):</strong> Produced by healthy plants/algae and surface aeration; crashes if overcrowding or runaway algae blooms suffocate the water at night!</li>
-          <li><strong>💎 Water / Air Clarity (Keep &gt; 24%):</strong> Drops into green "pea-soup" eutrophication if plankton grow without filter-feeding animals like <em>Silver Carp</em> or <em>Bighead Carp</em>.</li>
-          <li><strong>🌱 Soil &amp; Silt Fertility (Keep &gt; 26%):</strong> Drops when crops harvest nutrients without decomposers, nitrogen-fixing beans, or pond-mud recycling returning minerals to the roots.</li>
-          <li><strong>🧪 Cleanliness / Toxicity (Keep Ammonia &lt; 55%):</strong> Rises from rotting bottom sludge, pesticides, or un-nitrified fish waste.</li>
+          <li><strong>🫧 Oxygen Balance:</strong> Produced by aquatic plants, microalgae reactors, and splash aeration. Plunges during Heatwaves or fish overcrowding!</li>
+          <li><strong>💎 Water / Air Clarity:</strong> Protected by filter-feeding guilds (<em>Silver Carp</em>, <em>Bighead Carp</em>, <em>Strawberries</em>) and shoreline root banks.</li>
+          <li><strong>🌱 Soil &amp; Silt Fertility:</strong> Replenished by Silkworm frass, nitrogen-fixing <em>Three Sisters</em>/<em>Azolla</em>, mushrooms, and benthic silt cycling.</li>
+          <li><strong>🛡️ Cleanliness (Low Toxin):</strong> Chemical pesticides, diesel feed pellets, bleach, or unwashed Mars perchlorates build persistent <em>Toxin Debt</em> that corrodes Cleanliness every round!</li>
         </ul>
       </div>
     `,
@@ -102,17 +105,16 @@ const HALTFREE_MANUAL_SPEC = {
       <div class="slx-gg-card">
         <h4>📜 The Real 2,400-Year-Old "Infinite Food" System (<em>Sangji Yutang</em>)</h4>
         <ul>
-          <li>Documented since Fan Li&rsquo;s 475 BCE <em>Classic of Fish Culture</em> and perfected in the Pearl River Delta&rsquo;s <strong>Mulberry-Dyke Fish Ponds</strong>, farmers combined <strong>Mulberry Trees + Silkworms + 4 Carp Species</strong> at different water depths.</li>
-          <li>Mulberry leaves fed silkworms; silkworm droppings &amp; grass fed <strong>Grass Carp</strong>; Grass Carp waste grew phytoplankton for <strong>Silver Carp</strong> and zooplankton for <strong>Bighead Carp</strong>; <strong>Black/Common Carp</strong> aerated the bottom mud, which fertilized the Mulberry dyke!</li>
-          <li>Modern industrial monoculture rules and chemical pesticide quotas displaced or prohibited integrated livestock-pond dykes in many regions because pesticides kill silkworms &amp; fish—making monoculture farms dependent on imported synthetic fertilizer and commercial feed!</li>
+          <li>Documented since Fan Li&rsquo;s 475 BCE <em>Classic of Fish Culture</em>, Pearl River Delta farmers combined <strong>Mulberry Trees + Silkworms + 4 Depth-Layered Carp Species</strong>.</li>
+          <li>Mulberry leaves fed silkworms; silkworm frass &amp; dyke grass fed <strong>Grass Carp</strong>; Grass Carp waste grew phytoplankton for <strong>Silver Carp</strong> and zooplankton for <strong>Bighead Carp</strong>; <strong>Black/Common Carp</strong> stirred bottom silt that farmers scooped back onto Mulberry roots!</li>
         </ul>
       </div>
     `,
     onchain: `
       <div class="slx-gg-card">
-        <h4>⛓️ Deterministic 12-Season WASM Ecology Verifier (<code>haltfree_ecosystem.wasm</code>)</h4>
+        <h4>⛓️ 100% On-Chain Turn State Machine (<code>haltfree_ecosystem.wasm</code>)</h4>
         <ul>
-          <li><strong>11.4 KiB Halt-Free Subroutine:</strong> Simulates 12 coupled seasonal cycles on Subnet 1, diagnoses exact ecological halt modes, verifies your sovereign <code>Identity</code> HFS, and records your Eco-Scholar Stars &amp; Yield permanently at <strong>$0.00 gas</strong>.</li>
+          <li><strong>Zero Offline Preview:</strong> Every round calls <code>playRound(identity, actionKind, target, choice)</code> on Subnet 1 and renders directly from the emitted <code>RoundResolved(address,bytes)</code> HFS event log.</li>
         </ul>
       </div>
     `,
@@ -123,34 +125,33 @@ registerSlxUseCaseDocs('haltfree-ecosystem', {
   hasGameGuide: true,
   description: {
     icon: '🌿',
-    title: 'Haltfree Ecosystem — Closed-Loop Ecology & Permaculture Simulator',
+    title: 'Haltfree Ecosystem — Turn-Based On-Chain Closed-Loop Ecology Game',
     href: '/haltfree-ecosystem.html',
     tagline:
-      'Interactive 60-FPS animated science & permaculture simulator teaching children how 2,400-year-old Chinese polyculture ponds, Aztec chinampas, aquaponics, and Martian biodomes achieve perpetual zero-waste food loops.',
+      'Turn-based 60-FPS animated science & permaculture game where every seasonal action executes on Subnet 1 and renders live from emitted HFS events.',
     featurePills: [
-      { label: '11.4 KiB Halt-Free WASM Verifier', tone: 'emerald' },
-      { label: '60-FPS Procedural Canvas Simulation', tone: 'cyan' },
-      { label: '4 Historical-to-Space Arenas', tone: 'amber' },
-      { label: '0x0101 Zero-Redeploy UI + Artwork', tone: 'violet' },
-      { label: 'Verified Identity HFS Passport', tone: 'sky' },
+      { label: '17.5 KiB Turn-Based HFS Engine', tone: 'emerald' },
+      { label: 'Event-Driven 60-FPS Canvas', tone: 'cyan' },
+      { label: '8-Season Weather & Combo Tactics', tone: 'amber' },
+      { label: '0x0101 On-Chain UI + Artwork', tone: 'violet' },
+      { label: 'Identity HFS XP & Badges', tone: 'sky' },
     ],
     tabs: {
       codification: `
         <div class="slx-ucd-hero">
-          <div class="slx-ucd-hero-title">🌿 Biological Halt-Freedom Meets Computational Halt-Freedom</div>
+          <div class="slx-ucd-hero-title">🌿 Every Round Is a Confirmed On-Chain Season</div>
           <p>
-            <strong>Haltfree Ecosystem</strong> teaches systems biology through live cause-and-effect simulation rather than rote quizzes:
-            just as a SuperLexicon Halt-Free Subroutine executes deterministically within bounded resources without deadlocking,
-            a closed-loop polyculture ecosystem runs indefinitely on sunlight and rain without exhausting soil fertility or choking on ammonia waste.
+            <strong>Haltfree Ecosystem v2.0</strong> runs its entire trophic food-web state machine on Subnet 1:
+            players select one ecological action per season, confirm the zero-gas transaction, and watch the living
+            cross-section animate the exact <code>RoundResolved</code> payload emitted by <code>haltfree_ecosystem.wasm</code>.
           </p>
         </div>
       `,
       primitives: `
         <div class="slx-ucd-card">
-          <h4>🔬 Coupled Trophic-Balance State Machine</h4>
+          <h4>🔬 On-Chain Trophic Couplings, Weather Entropy &amp; Symbiosis Combos</h4>
           <ul>
-            <li>Simulates <strong>Oxygen</strong>, <strong>Micro-Algae / Clarity</strong>, <strong>Soil/Silt Fertility</strong>, <strong>Ammonia Toxicity</strong>, and <strong>Seasonal Yield</strong> across 12 seasons across <code>4,096</code> possible niche combinations per arena.</li>
-            <li>Entire animated app + 4 arena illustrations live in <code>UI_BUNDLE_STORE</code> (<code>0x0101</code>) with zero static web-server coupling.</li>
+            <li>Simulates 8 seasonal rounds with block-derived weather forecasts, persistent chemical toxin debt, trophic guilds, and 6 unlockable Eco-Scholar badges.</li>
           </ul>
         </div>
       `,
@@ -158,16 +159,16 @@ registerSlxUseCaseDocs('haltfree-ecosystem', {
         <table class="slx-ucd-table">
           <thead><tr><th>Component</th><th>Role</th></tr></thead>
           <tbody>
-            <tr><td><code>haltfree_ecosystem.wasm</code> (<code>11.4 KiB</code>)</td><td>12-season coupled trophic verifier, Identity HFS gate, and Eco-Scholar Hall of Fame.</td></tr>
-            <tr><td><code>0x0101</code> UI + Media Store</td><td>Serves the 60-FPS Canvas simulator + 4 storybook cross-section illustrations directly from validator nodes.</td></tr>
+            <tr><td><code>haltfree_ecosystem.wasm</code> (<code>17.5 KiB</code>)</td><td>Turn-by-turn ecosystem state machine, <code>RunStarted</code> / <code>RoundResolved</code> event emitter, and Hall of Fame.</td></tr>
+            <tr><td><code>0x0101</code> UI + Media Store</td><td>Serves the 60-FPS Canvas game + 4 custom arena illustrations directly from Subnet 1 validators.</td></tr>
           </tbody>
         </table>
       `,
       verification: `
         <div class="slx-ucd-card">
-          <h4>✅ Verifiable Learning Outcomes</h4>
+          <h4>✅ Verifiable Learning &amp; Autonomous Loop Proof</h4>
           <ul>
-            <li>Every 3-star badge on the Hall of Fame proves the student discovered a self-sustaining closed-loop configuration verified on Layer 1.</li>
+            <li>Players prove true closed-loop self-sufficiency by running hands-off autonomous seasons once all 6 permaculture guilds are active on-chain.</li>
           </ul>
         </div>
       `,
@@ -176,569 +177,382 @@ registerSlxUseCaseDocs('haltfree-ecosystem', {
 });
 
 // ---------------------------------------------------------------------------
-// Exact Ecological Matrix & 4 Arena Definitions (1:1 Match with Rust WASM!)
+// Protocol Constants & Descriptive Catalog (Rules Execute 100% On-Chain!)
 // ---------------------------------------------------------------------------
 
-const HALT_NONE = 0;
-const HALT_EUTROPHICATION = 1;
-const HALT_HYPOXIA = 2;
-const HALT_AMMONIA_TOXICITY = 3;
-const HALT_TROPHIC_PREDATION = 4;
-const HALT_NUTRIENT_STARVATION = 5;
-const HALT_EXTERNAL_DEPENDENCY = 6;
+const STATUS_NONE = 0;
+const STATUS_ACTIVE = 1;
+const STATUS_HALTED = 2;
+const STATUS_VICTORY = 3;
 
-const F_NONE = 0;
-const F_PREDATOR = 1 << 0;
-const F_EXTERNAL = 1 << 1;
-const F_LETHAL = 1 << 2;
+const TOPIC_RUN_STARTED = keccak256Hex(new TextEncoder().encode('RunStarted(address,bytes)')).toLowerCase();
+const TOPIC_ROUND_RESOLVED = keccak256Hex(new TextEncoder().encode('RoundResolved(address,bytes)')).toLowerCase();
 
-const eff = (dO2, dAlg, dFert, dTox, dYield, flags = F_NONE) => ({
-  dO2,
-  dAlg,
-  dFert,
-  dTox,
-  dYield,
-  flags,
-});
+const SEASON_LABELS = [
+  'S1 🌱',
+  'S2 ☀️',
+  'S3 🍂',
+  'S4 ❄️',
+  'S5 🌱',
+  'S6 ☀️',
+  'S7 🍂',
+  'S8 🏆',
+];
 
-const ECOLOGY_MATRIX = [
-  // Arena 0: 2,400-Year-Old Mulberry-Dyke Carp Polyculture ([2, 1, 3, 1, 2, 3])
-  [
-    [eff(-2, 3, -5, 3, 0), eff(1, 0, -4, 4, 2), eff(3, 0, -4, -2, 18), eff(-3, 8, -7, 18, 8, F_LETHAL)],
-    [eff(0, -1, -2, 0, 0), eff(0, 3, 3, 1, 18), eff(-2, 4, -8, 5, 0, F_PREDATOR), eff(-3, 9, 4, 9, 14, F_EXTERNAL)],
-    [eff(-2, 6, -1, 1, 0), eff(-1, 6, -2, 3, 3, F_PREDATOR), eff(-9, 7, 1, 8, 6), eff(1, 5, 3, 2, 18)],
-    [eff(-4, 9, 0, 2, 0), eff(4, -8, 0, -1, 16), eff(-6, -6, -4, 19, 0, F_LETHAL), eff(-4, 5, 0, 3, 4, F_PREDATOR)],
-    [eff(-2, 4, -1, 3, 0), eff(-2, 5, -2, 3, 3, F_PREDATOR), eff(1, -4, 1, -1, 16), eff(-3, 3, 0, 7, 0)],
-    [eff(-5, 4, -6, 10, 0), eff(-1, 2, -8, 5, 2), eff(1, -1, -10, -1, 4, F_EXTERNAL), eff(2, 0, 9, -7, 20)],
-  ],
-  // Arena 1: Aztec Chinampa & Axolotl Floating Canal ([1, 3, 1, 2, 3, 1])
-  [
-    [eff(-3, 5, -6, 4, 0), eff(3, -1, 2, -2, 14), eff(0, 1, -6, 6, 3), eff(-2, 3, -5, 4, 0, F_EXTERNAL)],
-    [eff(1, 1, -8, 1, 8), eff(0, 2, -10, 3, 5), eff(-2, 6, -6, 18, 9, F_LETHAL), eff(2, 0, 4, -1, 24)],
-    [eff(-2, 6, -2, 2, 0), eff(3, -4, 3, -2, 14), eff(-11, 8, 0, 5, 0), eff(-8, 2, -4, 17, 0, F_LETHAL)],
-    [eff(-1, 5, -1, 2, 0), eff(-3, 6, -5, 5, 6), eff(1, -4, 1, -1, 16), eff(-2, 5, -2, 4, 2, F_PREDATOR)],
-    [eff(-1, 2, -2, 3, 0), eff(-2, 3, -3, 6, 0, F_PREDATOR), eff(-4, -5, -6, 18, 0, F_LETHAL), eff(2, -2, 1, -2, 16)],
-    [eff(-5, 5, -7, 9, 0), eff(2, -3, 6, -6, 22), eff(-3, 10, 4, 9, 14, F_EXTERNAL), eff(-5, 2, -6, 8, 2)],
-  ],
-  // Arena 2: Solar Aquaponics & Nitrification Bio-Dome ([2, 1, 3, 1, 2, 2])
-  [
-    [eff(1, -1, -9, -2, 0), eff(-4, 2, -5, 14, 0), eff(-2, 2, 5, 4, 20), eff(-12, 7, 6, 15, 10)],
-    [eff(-6, 5, 1, 11, 2), eff(1, -2, 5, -4, 16), eff(-4, -4, -8, 20, 0, F_LETHAL), eff(0, 0, -9, -1, 0, F_EXTERNAL)],
-    [eff(0, 2, -3, 10, 0), eff(-7, 4, 0, 9, 0), eff(0, -1, -4, 11, 0), eff(2, -3, 4, -9, 16)],
-    [eff(-1, 7, 2, 6, 0), eff(3, -5, -2, -4, 24), eff(1, 3, -7, 3, 2), eff(-1, 6, 0, 7, 0)],
-    [eff(-8, 4, -1, 3, 0), eff(4, 1, 0, 5, 8, F_EXTERNAL), eff(7, -1, 1, -1, 16), eff(-14, 6, 1, 6, 0, F_LETHAL)],
-    [eff(1, 0, -8, 0, 4, F_EXTERNAL), eff(-3, 1, -9, 16, 0, F_LETHAL), eff(2, -1, 4, -2, 18), eff(-4, -2, -7, 15, 0, F_LETHAL)],
-  ],
-  // Arena 3: Sealed Martian Biospheric Habitat BIOS-IV ([3, 1, 2, 2, 2, 1])
-  [
-    [eff(-10, 0, -2, 4, 0), eff(-9, 0, -1, 3, 2), eff(-15, 2, 0, 18, 0, F_LETHAL), eff(7, -3, 2, -3, 18)],
-    [eff(-4, 1, -5, 2, 0), eff(4, -1, -1, -2, 26), eff(2, 0, -8, 0, 2), eff(2, 0, -4, 0, 2)],
-    [eff(-1, 3, -3, 2, 2), eff(-12, 6, 2, 11, 10), eff(2, -3, 3, -2, 18), eff(-5, 2, -6, 5, 0, F_PREDATOR)],
-    [eff(-2, 1, -9, 4, 0), eff(-13, 0, -3, 15, 0, F_LETHAL), eff(-1, -1, 6, -4, 20), eff(-3, 0, -10, 0, 0, F_EXTERNAL)],
-    [eff(-2, 5, -3, 6, 0), eff(-2, 2, -6, 12, 0), eff(2, -2, 2, -4, 14), eff(1, 0, 0, 0, 8, F_EXTERNAL)],
-    [eff(-5, 2, -8, 22, 0, F_LETHAL), eff(1, -1, 5, -3, 16), eff(0, 1, -7, 2, 2), eff(-1, 2, -6, 4, 0)],
-  ],
+const WEATHER_META = [
+  { icon: '☀️', name: 'Gentle Sun', tip: 'Balanced warmth — great season to plant producers or symbionts!' },
+  { icon: '🌿', name: 'Warm Algae Surge', tip: 'Algae blooms fast! Stock Zone 4 Filter Guilds to turn algae into bonus harvest!' },
+  { icon: '🌧️', name: 'Monsoon Downpour', tip: 'Erodes bare mud! Zone 1 Deep Root Trees turn rain into a +30 Harvest Shield!' },
+  { icon: '🌡️', name: 'Mid-Summer Heatwave', tip: 'Warm water holds less O2! Surface plants, Venturi aerators, or Bio-Aerate help!' },
+  { icon: '🍂', name: 'Crisp Harvest Breeze', tip: 'Cool oxygen-rich breeze — boosts harvest yield for every active Loop Guild!' },
+  { icon: '🌪️', name: 'Solar Dust Dimming', tip: 'Reduced sunlight drops O2! Photobioreactors or Bio-Aeration keep oxygen steady!' },
+];
+
+const COMBO_META = {
+  0: null,
+  1: { badge: '⚡ CANOPY SYMBIOSIS!', color: '#fde047', text: 'Shoreline plants & canopy symbionts are feeding each other!' },
+  2: { badge: '🌊 MULTI-DEPTH WATER GUILD!', color: '#38bdf8', text: 'All water layers are filtering algae & plankton in harmony!' },
+  3: { badge: '♻️ BENTHIC SILT-TO-ROOT LOOP!', color: '#34d399', text: 'Bottom nutrients are cycling right back into shoreline roots!' },
+  4: { badge: '🛡️ MONSOON ROOT-SHIELD!', color: '#6ee7b7', text: 'Deep shoreline tree roots blocked erosion and drank up the rain!' },
+  5: { badge: '🐟 ALGAE-BLOOM FEAST!', color: '#2dd4bf', text: 'Filter-feeders turned the warm algae surge into crystal water & fish growth!' },
+  6: { badge: '🌟 ALL 6/6 LOOP LINKS ACTIVE!', color: '#fbbf24', text: 'Complete closed-loop ecosystem! Play ♾️ Autonomous Loop next for 2× Harvest!' },
+  7: { badge: '♾️ AUTONOMOUS INFINITE LOOP ×2!', color: '#fde047', text: 'Zero human input, zero feed, 2× Harvest — true 2,400-year self-sustainability!' },
+  8: { badge: '🚑 EMERGENCY STEWARD RESCUE!', color: '#a5f3fc', text: 'Timely ecological stewardship saved your stressed sanctuary from collapse!' },
+};
+
+const HALT_DIAGNOSES = {
+  0: {
+    badge: '♾️ CLOSED-LOOP EQUILIBRIUM',
+    explain: 'Every waste stream feeds another living guild — powered purely by sunlight and rain!',
+  },
+  1: {
+    badge: '🟢 HALTED: EUTROPHICATION (Algal Chokehold)',
+    explain: 'Unfiltered algae turned the water into murky green soup! Stock Zone 4/5 filter-feeders (Silver & Bighead Carp, Crayfish, or Hydroponic Greens) earlier next run.',
+  },
+  2: {
+    badge: '🫧 HALTED: HYPOXIA (Oxygen Crash)',
+    explain: 'Dissolved O2 hit 0%! Avoid suffocating pests (Water Hyacinth, Mosquito Oil, Overcrowded Koi) and use Duckweed, Spirulina, or Bamboo Bio-Aeration during Heatwaves.',
+  },
+  3: {
+    badge: '🧪 HALTED: TOXIC BUILDUP (Ammonia / Chemicals)',
+    explain: 'Pesticides, diesel feed, bleach, or unwashed Martian perchlorates poisoned the food web! Use living bio-filters, worms, nitrifying microbes, and benthic silt cycling.',
+  },
+  4: {
+    badge: '🦈 HALTED: TROPHIC PREDATION COLLAPSE',
+    explain: 'Apex predators or locust swarms devoured the workers that keep the ecosystem clean! Stick to gentle herbivore & filter-feeding polyculture guilds.',
+  },
+  5: {
+    badge: '🍂 HALTED: NUTRIENT STARVATION',
+    explain: 'Crops drained all fertility because nutrients were flushed away or locked behind concrete instead of recycled back to the roots!',
+  },
+  6: {
+    badge: '⛽ HALTED: EXTERNAL SUPPLY DEPENDENCY',
+    explain: 'You survived Round 8, but relied on imported fuel/chemical shortcuts instead of a self-sustaining Closed-Loop Ecosystem!',
+  },
+};
+
+const BADGE_META = [
+  { bit: 1 << 0, icon: '🐛', name: 'Master Fan Li’s Heir', tip: 'Win Arena 1 with 6/6 Sangji Yutang links' },
+  { bit: 1 << 1, icon: '🦎', name: 'Axolotl Guardian', tip: 'Win Arena 2 with Cleanliness ≥ 75%' },
+  { bit: 1 << 2, icon: '🧬', name: 'Nitrogen Alchemist', tip: 'Win Arena 3 with 0 Toxin Debt' },
+  { bit: 1 << 3, icon: '🚀', name: 'Mars Bio-Pioneer', tip: 'Survive all 8 seasons on Mars BIOS-IV' },
+  { bit: 1 << 4, icon: '♾️', name: 'Hands-Free Master', tip: 'Execute a 6/6 Autonomous Closed-Loop Season' },
+  { bit: 1 << 5, icon: '👑', name: 'Grand Permaculturist', tip: 'Earn all 12 / 12 Mastery Stars' },
+];
+
+const STEWARD_ACTIONS = [
+  {
+    target: 1,
+    icon: '🚣',
+    name: 'Dredge & Cycle Silt to Roots',
+    tag: 'Steward Care',
+    desc: 'Scoop rich benthic pond muck onto shoreline roots (+22% Cleanliness, +22% Fertility, scrubs Toxin Debt & +35 Harvest).',
+  },
+  {
+    target: 2,
+    icon: '🌬️',
+    name: 'Splash-Wheel Bio-Aeration',
+    tag: 'O2 Rescue',
+    desc: 'Churn fresh dissolved oxygen through the water column (+28% O2, +12% Clarity — ideal before or during a Summer Heatwave!).',
+  },
+  {
+    target: 3,
+    icon: '♾️',
+    name: 'Autonomous Hands-Off Season',
+    tag: '2× Loop Bonus!',
+    desc: 'Add ZERO outside inputs! When all 6/6 Closed-Loop Guilds are active with 0 shortcuts, proves Infinite Food & doubles Season Harvest (×2 + 130)!',
+  },
 ];
 
 export const ARENAS = [
   {
     id: 0,
-    levelLabel: 'Level 1 · Beginner ★☆☆☆',
     era: '475 BCE · PEARL RIVER DELTA, CHINA',
     shortName: 'Mulberry-Dyke Pond',
     title: '🐟 The 2,400-Year-Old “Infinite Food” Mulberry-Dyke Pond',
     thumb: '/assets/haltfree-ecosystem/arena_0.jpg',
+    optimalVisualCheck: [2, 1, 3, 1, 2, 3],
     story:
-      '<strong>Historical Discovery:</strong> Engineered over 2,400 years ago (<em>Sangji Yutang</em>), Chinese farmers linked shoreline trees, silk-spinning insects, and <strong>four distinct depth-layered carp species</strong> into a zero-feed, zero-waste food machine—later displaced where modern pesticide &amp; single-crop rules banned integrated dyke ponds! Can you rediscover the exact 6-part loop?',
-    starterSlots: [2, 0, 3, 0, 0, 0], // Starts partially built (Mulberry + Grass Carp, missing filter fish & mud loop!) so kids immediately see an Algae Bloom to solve!
-    slots: [
+      '<strong>Level 1 (Beginner ★☆☆☆):</strong> Engineered over 2,400 years ago (<em>Sangji Yutang</em>), Chinese farmers linked shoreline trees, silk-spinning caterpillars, and <strong>four depth-layered carp species</strong> into a zero-feed food loop. Stock the 6 niches across Seasons 1–6, then run hands-free!',
+    zones: [
       {
-        zone: '1 · Shore Dyke Bank',
-        title: 'Shoreline Plant',
-        question: 'Which tree stabilizes the dyke, feeds silk insects, and drinks pond-mud nutrients?',
-        options: [
-          { icon: '🪨', name: 'Bare Clay Bank', sub: 'Erodes mud into water' },
-          { icon: '🌲', name: 'Pine Conifers', sub: 'Acidic needles, non-edible' },
-          { icon: '🌳', name: 'Mulberry Trees', sub: 'Sweet leaves, berries & deep roots' },
-          { icon: '🌽', name: 'Pesticide Corn', sub: 'High yield, chemical runoff' },
+        short: 'Shore Dyke',
+        question: 'Zone 1 (Shoreline Dyke): Which shoreline plant anchors mud during Monsoons AND feeds canopy insects?',
+        choices: [
+          { val: 1, icon: '🌲', name: 'Pine Conifers', tag: 'Acidic Needles', desc: 'Holds bank soil, but pine needles turn water acidic and feed zero silkworms.' },
+          { val: 2, icon: '🌳', name: 'Mulberry Trees', tag: 'Deep Roots + Leaves', desc: 'Anchors dyke against Monsoons, drops sweet berries, and grows lush leaves for Silkworms!' },
+          { val: 3, icon: '🌽', name: 'Pesticide Cash-Corn', tag: '⚠️ Chemical Trap', desc: 'Big one-season harvest spike (+72), but chemical pesticide runoff builds toxic debt!' },
         ],
       },
       {
-        zone: '2 · Tree Canopy Shed',
-        title: 'Canopy Symbiont',
-        question: 'What turns tree leaves into silk AND gentle organic plankton food?',
-        options: [
-          { icon: '🏚️', name: 'Empty Shed', sub: 'Leaves go unused' },
-          { icon: '🐛', name: 'Silkworm Colony', sub: 'Spins silk + drops rich frass' },
-          { icon: '🦗', name: 'Swarming Locusts', sub: 'Strips canopy bare' },
-          { icon: '⛽', name: 'Diesel Pellet Feeder', sub: 'Imported commercial feed' },
+        short: 'Canopy Shed',
+        question: 'Zone 2 (Tree Canopy): What turns tree leaves into prized silk AND rich organic plankton food?',
+        choices: [
+          { val: 1, icon: '🐛', name: 'Silkworm Colony', tag: 'Silk + Frass Loop', desc: 'Eats Mulberry leaves, spins silk, and drops gentle organic frass that fertilizes pond plankton!' },
+          { val: 2, icon: '🦗', name: 'Locust Swarm', tag: '❌ Defoliator', desc: 'Quick protein harvest, but strips shoreline foliage faster than trees recover!' },
+          { val: 3, icon: '⛽', name: 'Diesel Pellet Feeder', tag: '⚠️ External Feed', desc: 'Dumps imported commercial fish pellets — boosts yield briefly but spikes ammonia debt!' },
         ],
       },
       {
-        zone: '3 · Surface (0–0.5m)',
-        title: 'Top-Water Swimmer',
-        question: 'Who munches dyke grass & duckweed so their droppings fertilize plankton?',
-        options: [
-          { icon: '💧', name: 'Empty Surface', sub: 'Duckweed blocks sunlight' },
-          { icon: '🐍', name: 'Snakehead Predator', sub: 'Hunts smaller pond fish' },
-          { icon: '🎏', name: 'Overcrowded Koi', sub: 'Uses heavy surface oxygen' },
-          { icon: '🐟', name: 'Grass Carp + Duckweed', sub: 'Herbivore surface grazer' },
+        short: 'Surface 0–0.5m',
+        question: 'Zone 3 (Surface Water): Who grazes dyke grass & duckweed so their waste gently feeds mid-water plankton?',
+        choices: [
+          { val: 1, icon: '🐍', name: 'Snakehead Predator', tag: '❌ Fish Hunter', desc: 'High market value, but devours your gentle filter-feeding carp in other depths!' },
+          { val: 2, icon: '🎏', name: 'Overcrowded Prize Koi', tag: 'Heavy O2 Drain', desc: 'Colorful ornamental school that consumes heavy surface oxygen without grazing grass.' },
+          { val: 3, icon: '🐟', name: 'Grass Carp & Duckweed', tag: 'Surface Herbivore', desc: 'Duckweed oxygenates water while Grass Carp munch grass clippings & feed pond plankton!' },
         ],
       },
       {
-        zone: '4 · Upper-Mid (0.5–1.5m)',
-        title: 'Green-Algae Filter',
-        question: 'Who uses ultra-fine gill rakers to filter microscopic green phytoplankton?',
-        options: [
-          { icon: '🟢', name: 'No Filter Fish', sub: 'Algae grows unchecked' },
-          { icon: '🥈', name: 'Silver Carp', sub: 'Living phytoplankton sieve' },
-          { icon: '🧪', name: 'Copper Algicide Drip', sub: 'Poisons algae chemically' },
-          { icon: '🎣', name: 'Carnivorous Trout', sub: 'Needs cold rushing rivers' },
+        short: 'Phyto 0.5–1.5m',
+        question: 'Zone 4 (Upper-Mid Water): Who uses microscopic gill rakers to filter green phytoplankton blooms?',
+        choices: [
+          { val: 1, icon: '🥈', name: 'Silver Carp', tag: 'Phytoplankton Sieve', desc: 'Living microalgae filter that keeps water crystal-clear and feasts on Warm Algae Surges!' },
+          { val: 2, icon: '🧪', name: 'Copper Algicide Drip', tag: '⚠️ Toxin Trap', desc: 'Kills green algae chemically, poisoning pond cleanliness and starving the food web!' },
+          { val: 3, icon: '🎣', name: 'Cold-River Trout', tag: 'Wrong Habitat', desc: 'Needs icy mountain rapids — gasps for oxygen in warm subtropical ponds.' },
         ],
       },
       {
-        zone: '5 · Lower-Mid (1.5–2.5m)',
-        title: 'Zooplankton Filter',
-        question: 'Who cruises mid-deep water filtering tiny golden zooplankton & flocs?',
-        options: [
-          { icon: '🟡', name: 'Empty Mid-Deep', sub: 'Zooplankton wasted' },
-          { icon: '🦈', name: 'Northern Pike', sub: 'Ambush fish predator' },
-          { icon: '🥇', name: 'Bighead Carp', sub: 'Gentle zooplankton filterer' },
-          { icon: '🦐', name: 'Saltwater Krill', sub: 'Cannot survive freshwater' },
+        short: 'Zoopl. 1.5–2.5m',
+        question: 'Zone 5 (Lower-Mid Water): Who cruises deeper water filtering tiny golden zooplankton & suspended flocs?',
+        choices: [
+          { val: 1, icon: '🦈', name: 'Northern Pike', tag: '❌ Ambush Predator', desc: 'Hunts mid-water carp guilds and disrupts trophic balance!' },
+          { val: 2, icon: '🥇', name: 'Bighead Carp', tag: 'Zooplankton Filter', desc: 'Gentle filter-feeder partnering with Silver Carp to polish mid-deep water into food!' },
+          { val: 3, icon: '🦐', name: 'Saltwater Krill', tag: 'Wrong Salinity', desc: 'Marine crustaceans cannot survive freshwater ponds and decay on the floor.' },
         ],
       },
       {
-        zone: '6 · Pond Floor & Loop',
-        title: 'Benthic & Mud Cycle',
-        question: 'How do we clean bottom snails/sludge AND feed the shoreline trees forever?',
-        options: [
-          { icon: '💩', name: 'Leave Bottom Sludge', sub: 'Rots into toxic ammonia' },
-          { icon: '🧱', name: 'Concrete Pond Liner', sub: 'Blocks natural silt cycle' },
-          { icon: '🌊', name: 'Flush to River', sub: 'Wastes all pond nutrients' },
-          { icon: '♻️', name: 'Black/Common Carp + Silt-to-Dyke', sub: 'Cleans floor & fertilizes trees!' },
+        short: 'Benthic Floor',
+        question: 'Zone 6 (Pond Floor & Mud Loop): How do we clean bottom detritus AND fertilize the Mulberry trees forever?',
+        choices: [
+          { val: 1, icon: '🧱', name: 'Concrete Pond Liner', tag: 'Breaks Soil Loop', desc: 'Blocks mud turbidity, but severs natural mineral exchange and traps rotting sludge.' },
+          { val: 2, icon: '🌊', name: 'River Flush Gate', tag: '⚠️ Open-Loop Loss', desc: 'Washes away bottom sludge, but flushes all precious pond nutrients into the river!' },
+          { val: 3, icon: '♻️', name: 'Black Carp + Silt-to-Dyke', tag: 'Closes 2,400-Yr Loop', desc: 'Eats bottom snails/detritus & cycles rich pond silt back onto Mulberry tree roots!' },
         ],
       },
     ],
   },
   {
     id: 1,
-    levelLabel: 'Level 2 · Intermediate ★★☆☆',
     era: '1150 CE · LAKE XOCHIMILCO, MEXICO',
     shortName: 'Aztec Chinampa',
     title: '🦎 Floating Chinampa Island & Axolotl Canal',
     thumb: '/assets/haltfree-ecosystem/arena_1.jpg',
+    optimalVisualCheck: [1, 3, 1, 2, 3, 1],
     story:
-      '<strong>Wetland Agro-Ecology:</strong> Aztec engineers wove floating reed gardens (<em>Chinampas</em>) yielding <strong>7 harvests a year</strong>! Can you combine living willow root-walls, nitrogen-fixing companion crops, and crystal-clean habitat for the endangered <strong>Axolotl</strong>?',
-    starterSlots: [0, 0, 0, 0, 3, 0],
-    slots: [
+      '<strong>Level 2 (Intermediate ★★☆☆):</strong> Aztec agro-engineers wove floating reed islands yielding <strong>7 harvests a year</strong> alongside endangered <strong>Axolotls</strong>! Keep Cleanliness high — amphibians hate chemical runoff!',
+    zones: [
       {
-        zone: '1 · Island Perimeter',
-        title: 'Living Root Wall',
-        question: 'What anchors the floating soil bed without poisoning the canal?',
-        options: [
-          { icon: '🌊', name: 'Unanchored Mud', sub: 'Washes into canal' },
-          { icon: '🌿', name: 'Ahuejote Willow Trees', sub: 'Deep aquatic root basket' },
-          { icon: '🍂', name: 'Eucalyptus Trees', sub: 'Inhibits nearby crops' },
-          { icon: '🔩', name: 'Corroding Sheet Metal', sub: 'External rust & barrier' },
+        short: 'Root Wall',
+        question: 'Zone 1 (Island Perimeter): What anchors the floating garden soil without polluting the canal?',
+        choices: [
+          { val: 1, icon: '🌿', name: 'Ahuejote Willow Trees', tag: 'Living Root Basket', desc: 'Woven aquatic roots anchor the Chinampa against Monsoons and shelter baby fish!' },
+          { val: 2, icon: '🍂', name: 'Eucalyptus Trees', tag: 'Inhibits Crops', desc: 'Oily fallen leaves suppress companion vegetables and lower soil fertility.' },
+          { val: 3, icon: '🔩', name: 'Sheet-Metal Bulkhead', tag: '⚠️ Rust Runoff', desc: 'Corrodes in lake water and blocks natural root bio-filtration.' },
         ],
       },
       {
-        zone: '2 · Island Crop Bed',
-        title: 'Companion Crops',
-        question: 'Which crop guild fixes its own nitrogen from the air and shades the soil?',
-        options: [
-          { icon: '🌾', name: 'Single-Crop Wheat', sub: 'Depletes soil nitrogen' },
-          { icon: '☁️', name: 'Monocrop Cotton', sub: 'Heavy nutrient drain' },
-          { icon: '🍅', name: 'Sprayed Tomatoes', sub: 'Pesticide harms amphibians' },
-          { icon: '🌽', name: 'Three Sisters (Corn+Beans+Squash)', sub: 'Beans fix N2, squash mulches!' },
+        short: 'Crop Bed',
+        question: 'Zone 2 (Island Crop Bed): Which crop guild fixes nitrogen from thin air and mulches moisture?',
+        choices: [
+          { val: 1, icon: '🌾', name: 'Monocrop Wheat', tag: 'Drains Nitrogen', desc: 'Single-grain planting rapidly exhausts Chinampa topsoil.' },
+          { val: 2, icon: '🍅', name: 'Pesticide Tomatoes', tag: '⚠️ Amphibian Poison', desc: 'High short-term harvest, but chemical spray harms sensitive Axolotl gills!' },
+          { val: 3, icon: '🌽', name: 'Three Sisters Polyculture', tag: 'Corn + Beans + Squash', desc: 'Beans fix atmospheric N2 on corn stalks while broad squash leaves shade the soil!' },
         ],
       },
       {
-        zone: '3 · Canal Surface',
-        title: 'Aquatic Plant Mat',
-        question: 'Which gentle water fern fixes nitrogen & shelters baby fish without choking O2?',
-        options: [
-          { icon: '💧', name: 'Bare Canal Water', sub: 'Sun bakes algae blooms' },
-          { icon: '🍀', name: 'Azolla Fern & Duckweed', sub: 'Oxygenates & fixes nitrogen' },
-          { icon: '🌺', name: 'Invasive Water Hyacinth', sub: 'Blankets & suffocates canal' },
-          { icon: '🛢️', name: 'Mosquito Oil Film', sub: 'Blocks surface oxygen!' },
+        short: 'Canal Top',
+        question: 'Zone 3 (Canal Surface): Which native floating fern fixes nitrogen without choking surface oxygen?',
+        choices: [
+          { val: 1, icon: '🍀', name: 'Azolla Fern & Duckweed', tag: 'O2 + Bio-Nitrogen', desc: 'Oxygenates canal water, shades out bad algae, and fixes nitrogen naturally!' },
+          { val: 2, icon: '🌺', name: 'Invasive Water Hyacinth', tag: '❌ O2 Chokehold', desc: 'Dense mat blocks sunlight and drains dissolved oxygen toward 0%!' },
+          { val: 3, icon: '🛢️', name: 'Mosquito Oil Film', tag: '⚠️ Suffocates Canal', desc: 'Seals the water surface so oxygen cannot enter!' },
         ],
       },
       {
-        zone: '4 · Canal Mid-Water',
-        title: 'Native Canal Grazer',
-        question: 'Which native species grazes algae gently without tearing up Chinampa roots?',
-        options: [
-          { icon: '🫧', name: 'Empty Canal', sub: 'Detritus builds up' },
-          { icon: '🐟', name: 'Invasive Bottom Carp', sub: 'Tears up willow & reed roots!' },
-          { icon: '🦞', name: 'Native Acocil Crayfish & Charales', sub: 'Gentle native clean-up crew' },
-          { icon: '🦷', name: 'Piranha Pack', sub: 'Hunts canal wildlife' },
+        short: 'Mid-Canal',
+        question: 'Zone 4 (Mid-Canal): Which native species cleans canal detritus without uprooting Chinampa walls?',
+        choices: [
+          { val: 1, icon: '🐟', name: 'Invasive Bottom Carp', tag: 'Stirs Mud', desc: 'Tears up tender willow roots and clouds the turquoise canal!' },
+          { val: 2, icon: '🦞', name: 'Acocil Crayfish & Charales', tag: 'Native Cleaners', desc: 'Gentle native Xochimilco crustaceans & silversides that polish canal clarity!' },
+          { val: 3, icon: '🦷', name: 'Piranha Pack', tag: '❌ Predator', desc: 'Attacks native canal wildlife and collapses biodiversity!' },
         ],
       },
       {
-        zone: '5 · Bio-Indicator',
-        title: 'Amphibian Guardian',
-        question: 'Which beloved Xochimilco guardian eats insect pests in crystal-clean water?',
-        options: [
-          { icon: '🚫', name: 'No Amphibians', sub: 'Crop pests multiply' },
-          { icon: '🐸', name: 'Invasive Cane Toads', sub: 'Toxic to local wildlife' },
-          { icon: '🧼', name: 'Chlorine Dosing Pump', sub: 'Sterilizes living canal' },
-          { icon: '🦎', name: 'Axolotl & Tree Frogs', sub: 'Thrives in pure bio-filtered water!' },
+        short: 'Bio-Guardian',
+        question: 'Zone 5 (Amphibian Niche): Which beloved Xochimilco guardian eats crop pests in pure water?',
+        choices: [
+          { val: 1, icon: '🐸', name: 'Invasive Cane Toads', tag: '❌ Toxic Glands', desc: 'Poisons local predators and disrupts wetland balance.' },
+          { val: 2, icon: '🧼', name: 'Chlorine Dosing Pump', tag: '⚠️ Sterilizer Trap', desc: 'Kills bacteria and burns sensitive amphibian skin!' },
+          { val: 3, icon: '🦎', name: 'Axolotl & Tree Frogs', tag: 'Pure-Water Guardian', desc: 'Thrives in clean bio-filtered canals and controls insect pests naturally!' },
         ],
       },
       {
-        zone: '6 · Fertility Return',
-        title: 'Canal-to-Soil Loop',
-        question: 'How did Chinampa farmers replenish topsoil before every planting?',
-        options: [
-          { icon: '⏳', name: 'Let Canal Muck Sink', sub: 'Island soil starves' },
-          { icon: '🚣', name: 'Scoop Canal Muck + Tule Reeds', sub: 'Bio-filters water & feeds crops!' },
-          { icon: '🧪', name: 'Synthetic NPK Fertilizer', sub: 'Algae runoff kills Axolotls!' },
-          { icon: '🔥', name: 'Burn Crop Stalks', sub: 'Loses nitrogen into smoke' },
+        short: 'Muck Loop',
+        question: 'Zone 6 (Fertility Return): How did Chinampa farmers renew topsoil before every planting?',
+        choices: [
+          { val: 1, icon: '🚣', name: 'Scoop Canal Muck + Tule Reeds', tag: 'Closes Chinampa Loop', desc: 'Tule reeds scrub toxins while nutrient-rich bottom muck renews Three Sisters soil!' },
+          { val: 2, icon: '🧪', name: 'Synthetic NPK Fertilizer', tag: '⚠️ Runoff Bloom', desc: 'Spikes crop yield once, then leaches ammonia & triggers suffocating blooms!' },
+          { val: 3, icon: '🔥', name: 'Burn Crop Stalks', tag: 'Loses Nitrogen', desc: 'Sends valuable organic nitrogen up in smoke.' },
         ],
       },
     ],
   },
   {
     id: 2,
-    levelLabel: 'Level 3 · Advanced ★★★☆',
-    era: 'MODERN · URBAN CLOSED-LOOP DOME',
+    era: 'MODERN · URBAN SOLAR BIO-DOME',
     shortName: 'Solar Aquaponics',
     title: '🔬 Solar Aquaponics & Microbial Nitrification Bio-Dome',
     thumb: '/assets/haltfree-ecosystem/arena_2.jpg',
+    optimalVisualCheck: [2, 1, 3, 1, 2, 2],
     story:
-      '<strong>Microbial Chemistry Challenge:</strong> Fish breathe out ammonia (<code>NH3</code>), which is toxic! You must engineer the invisible <strong>3-step microbial bridge</strong> that converts fish waste into sweet strawberries &amp; crisp greens using 90% less water than soil farms!',
-    starterSlots: [2, 0, 0, 1, 0, 2],
-    slots: [
+      '<strong>Level 3 (Advanced ★★★☆):</strong> Fish exhale toxic ammonia (<code>NH3</code>)! Engineer the <strong>microbial nitrification bridge</strong> (<code>NH3 &rarr; NO2- &rarr; NO3-</code>) so fish waste grows sweet strawberries using 90% less water!',
+    zones: [
       {
-        zone: '1 · Recirculating Tank',
-        title: 'Aquaculture Stocking',
-        question: 'Choose a freshwater fish & density that generates steady, manageable nutrients:',
-        options: [
-          { icon: '🪣', name: 'Empty Water Tank', sub: 'Zero nutrients for plants!' },
-          { icon: '🐟', name: 'Ocean Bluefin Tuna', sub: 'Wrong salinity & huge O2 need' },
-          { icon: '🐠', name: 'Balanced Nile Tilapia School', sub: 'Hardy freshwater nutrient source' },
-          { icon: '🐡', name: '5x Overcrowded Catfish Jam', sub: 'Massive O2 crash & NH3 spike!' },
+        short: 'Fish Tank',
+        question: 'Zone 1 (Recirculating Tank): Choose a freshwater fish school that generates steady nutrients:',
+        choices: [
+          { val: 1, icon: '🐟', name: 'Ocean Bluefin Tuna', tag: 'Saltwater Mismatch', desc: 'Requires ocean salinity and massive oxygen!' },
+          { val: 2, icon: '🐠', name: 'Balanced Nile Tilapia', tag: 'Freshwater Nutrient Hub', desc: 'Hardy freshwater school providing steady ammonia for your bio-reactor!' },
+          { val: 3, icon: '🐡', name: '5× Overcrowded Catfish', tag: '⚠️ Ammonia Overload', desc: 'Crashes dissolved oxygen and floods the tank with toxic ammonia!' },
         ],
       },
       {
-        zone: '2 · Solids Separator',
-        title: 'Mineralization Bed',
-        question: 'What breaks down solid fish waste before it clogs & rots plant roots?',
-        options: [
-          { icon: '💩', name: 'Pump Raw Sludge to Roots', sub: 'Coats roots & causes root rot!' },
-          { icon: '🪱', name: 'Swirl Clarifier + Red Worms', sub: 'Turns solids into trace minerals!' },
-          { icon: '🧴', name: 'Chlorine Bleach Filter', sub: 'Kills beneficial bacteria & fish!' },
-          { icon: '🚽', name: 'Flush Solids to Sewer', sub: 'Loses minerals & water' },
+        short: 'Solids Bed',
+        question: 'Zone 2 (Solids Separator): What turns solid fish waste into soluble trace minerals?',
+        choices: [
+          { val: 1, icon: '🪱', name: 'Swirl Clarifier + Red Worms', tag: 'Vermi-Mineralizer', desc: 'Keeps plant roots clean while worms unlock iron, calcium & trace minerals!' },
+          { val: 2, icon: '🧴', name: 'Chlorine Bleach Filter', tag: '⚠️ Kills Microbes', desc: 'Wipes out your beneficial nitrifying bacteria and harms fish!' },
+          { val: 3, icon: '🚽', name: 'Open Sewer Flush', tag: '⚠️ Open-Loop Loss', desc: 'Dumps water and minerals down the city drain.' },
         ],
       },
       {
-        zone: '3 · Bio-Reactor Media',
-        title: 'Nitrifying Microbes',
-        question: 'Who converts toxic Ammonia (NH3) -> Nitrite (NO2-) -> Plant-Food Nitrate (NO3-)?',
-        options: [
-          { icon: '🔮', name: 'Sterile Smooth Marbles', sub: 'Too little surface for microbes' },
-          { icon: '🦠', name: 'Stagnant Swamp Mud', sub: 'Zero-oxygen sour gas' },
-          { icon: '🟣', name: 'UV Sterilizer on Media', sub: 'Zaps nitrifying bacteria!' },
-          { icon: '🧬', name: 'Clay Pebbles + Nitrosomonas/Nitrobacter', sub: 'Converts toxic NH3 into safe NO3-!' },
+        short: 'Bio-Reactor',
+        question: 'Zone 3 (Bio-Media): Who converts toxic Ammonia (NH3) into safe Plant-Food Nitrate (NO3-)?',
+        choices: [
+          { val: 1, icon: '🔮', name: 'Stagnant Swamp Mud', tag: 'Anaerobic Sour Gas', desc: 'Clogs water flow and starves oxygen-loving bacteria.' },
+          { val: 2, icon: '🟣', name: 'UV Sterilizer on Media', tag: 'Zaps Good Bacteria', desc: 'Irradiating the bio-bed kills Nitrosomonas & Nitrobacter!' },
+          { val: 3, icon: '🧬', name: 'Clay Pebbles + Nitrifying Microbes', tag: 'NH3 ➔ NO2- ➔ NO3-', desc: 'Porous expanded clay houses billions of Nitrosomonas & Nitrobacter microbes!' },
         ],
       },
       {
-        zone: '4 · Hydroponic Channels',
-        title: 'Nutrient-Uptake Crops',
-        question: 'Which plants drink up Nitrate (NO3-) so purified water returns safely to fish?',
-        options: [
-          { icon: '🛶', name: 'Empty Foam Rafts', sub: 'Nitrates & algae accumulate' },
-          { icon: '🍓', name: 'Basil, Lettuce & Strawberries', sub: 'Fast nitrate uptake + high harvest!' },
-          { icon: '🌳', name: 'Slow Oak Saplings', sub: 'Roots crack rafts, slow uptake' },
-          { icon: '🪴', name: 'Plastic Decor Plants', sub: 'Zero biological filtration!' },
+        short: 'Grow Rafts',
+        question: 'Zone 4 (Hydroponic Channels): Which crops drink up Nitrate so purified water returns to fish?',
+        choices: [
+          { val: 1, icon: '🍓', name: 'Basil, Lettuce & Strawberries', tag: 'Fast Nitrate Sponge', desc: 'Drinks up NO3- rapidly into crisp greens & berries, returning sparkling water!' },
+          { val: 2, icon: '🌳', name: 'Slow Oak Saplings', tag: 'Too Slow', desc: 'Woody roots crack rafts and absorb nitrates far too slowly.' },
+          { val: 3, icon: '🪴', name: 'Plastic Decor Plants', tag: 'Zero Uptake', desc: 'Looks green, filters nothing!' },
         ],
       },
       {
-        zone: '5 · Dissolved O2 & Fruit',
-        title: 'Aeration & Pollination',
-        question: 'Fish roots AND nitrifying bacteria all breathe O2—plus strawberry flowers need help!',
-        options: [
-          { icon: '😴', name: 'Still Un-Aerated Water', sub: 'Fish & bacteria suffocate!' },
-          { icon: '⛽', name: 'Diesel Air Compressor', sub: 'Fumes & external fuel' },
-          { icon: '☀️', name: 'Solar Venturi + Bumblebees', sub: 'Clean O2 bubbles + berry pollination!' },
-          { icon: '🫧', name: 'Pure CO2 Tank Bubbler', sub: 'Carbonic acid suffocates fish!' },
+        short: 'O2 & Bees',
+        question: 'Zone 5 (Aeration & Pollination): Fish, roots, and bacteria all breathe O2 — plus berry blossoms need pollinators!',
+        choices: [
+          { val: 1, icon: '⛽', name: 'Diesel Air Compressor', tag: '⚠️ Soot & Fuel', desc: 'Adds bubbles, but exhaust fumes contaminate the greenhouse.' },
+          { val: 2, icon: '☀️', name: 'Solar Venturi + Bumblebees', tag: 'Clean O2 + Berries', desc: 'Solar micro-bubbles supercharge O2 while gentle bumblebees pollinate strawberries!' },
+          { val: 3, icon: '🫧', name: 'Pure CO2 Tank Bubbler', tag: 'Suffocates Fish', desc: 'Turns water acidic and drives dissolved O2 down!' },
         ],
       },
       {
-        zone: '6 · Sump & pH Loop',
-        title: 'Water & Mineral Buffer',
-        question: 'Nitrification slowly makes water acidic—how do we close the water & mineral loop?',
-        options: [
-          { icon: '🚰', name: 'One-Way City Tap Drain', sub: 'Not closed-loop!' },
-          { icon: '🧂', name: 'Dump Table Salt (NaCl)', sub: 'Wilts strawberries & greens!' },
-          { icon: '🐚', name: 'Recirc Sump + Eggshell/Kelp Buffer', sub: 'Balances pH, Ca & K naturally!' },
-          { icon: '🧪', name: 'Sulfuric Acid Wash', sub: 'Crashes pH!' },
+        short: 'Sump Buffer',
+        question: 'Zone 6 (pH & Mineral Loop): Nitrification slowly acidifies water — how do we buffer pH naturally?',
+        choices: [
+          { val: 1, icon: '🧂', name: 'Table Salt (NaCl) Dump', tag: 'Wilts Crops', desc: 'Sodium chloride dehydrates strawberry & lettuce roots!' },
+          { val: 2, icon: '🐚', name: 'Recirc Sump + Eggshell/Kelp', tag: 'Closes Mineral Loop', desc: 'Crushed shells & kelp gently balance pH, calcium & potassium with zero waste!' },
+          { val: 3, icon: '🧪', name: 'Sulfuric Acid Wash', tag: '⚠️ pH Crash', desc: 'Burns plant roots and bio-filters!' },
         ],
       },
     ],
   },
   {
     id: 3,
-    levelLabel: 'Level 4 · Master ★★★★',
     era: '2084 CE · JEZERO CRATER, MARS',
     shortName: 'Mars Biodome',
     title: '🚀 Sealed Martian Biospheric Habitat (“BIOS-IV”)',
     thumb: '/assets/haltfree-ecosystem/arena_3.jpg',
+    optimalVisualCheck: [3, 1, 2, 2, 2, 1],
     story:
-      '<strong>Ultimate Space-Science Challenge:</strong> Inspired by real <em>Biosphere 2</em> &amp; ESA MELiSSA research! Inside a sealed dome on Mars, <strong>nothing comes in and nothing goes out</strong>. Balance crew <code>O2 / CO2</code>, toxic Martian dust washing, and 100% waste recycling!',
-    starterSlots: [0, 1, 0, 0, 2, 0],
-    slots: [
+      '<strong>Level 4 (Master ★★★★):</strong> 225 million km from Earth inside a sealed dome! Survive Martian Dust Dimming, scrub <code>CO2</code> into <code>O2</code>, digest inedible crop stalks, and detoxify native Mars perchlorate salts!',
+    zones: [
       {
-        zone: '1 · Atmospheric O2 Core',
-        title: 'Primary O2 Generator',
-        question: 'What scrubs crew CO2 fastest while avoiding Biosphere 2’s concrete O2 trap?',
-        options: [
-          { icon: '😮‍💨', name: 'No O2 Bioreactor', sub: 'Crew CO2 rises rapidly!' },
-          { icon: '🧱', name: 'Uncured Bare Concrete', sub: 'Absorbs O2 into CaCO3 (Biosphere 2 bug!)' },
-          { icon: '🔥', name: 'Coal Heater', sub: 'Burns O2 & poisons air!' },
-          { icon: '🧪', name: 'Spirulina Algae Columns', sub: 'Ultra-fast O2 + edible protein!' },
+        short: 'O2 Reactor',
+        question: 'Zone 1 (Atmosphere Core): What scrubs crew CO2 into abundant O2 and complete protein every sol?',
+        choices: [
+          { val: 1, icon: '🕯️', name: 'Chemical O2 Candles', tag: '⚠️ Non-Renewable', desc: 'Burns finite chlorate canisters and leaves chemical residue.' },
+          { val: 2, icon: '🌵', name: 'Slow Desert Cacti', tag: 'Low O2 Output', desc: 'Produces far too little oxygen for a sealed habitat.' },
+          { val: 3, icon: '🧪', name: 'Spirulina Photobioreactor', tag: 'Rapid O2 + Protein', desc: 'Glowing emerald microalgae columns pump out O2 even during Dust Dimming!' },
         ],
       },
       {
-        zone: '2 · Agricultural Terraces',
-        title: 'Calorie & Starch Guild',
-        question: 'Which compact crops feed astronauts best per square meter of sunlight?',
-        options: [
-          { icon: '🪨', name: 'Empty Terraces', sub: 'Starvation!' },
-          { icon: '🍠', name: 'Sweet Potato, Dwarf Wheat & Soy', sub: 'Complete calories + edible leaves!' },
-          { icon: '🌲', name: 'Giant Sequoia Trees', sub: 'Takes 80 years & hits glass roof' },
-          { icon: '⛳', name: ' ornamental Golf Turf', sub: 'Humans cannot digest grass!' },
+        short: 'Aqua-Pod',
+        question: 'Zone 2 (Aquatic Mini-Loop): Which compact water loop fixes nitrogen and purifies greywater?',
+        choices: [
+          { val: 1, icon: '🐟', name: 'Azolla Pond + Medaka/Loach', tag: 'Zero-G Hardy Guild', desc: 'Fast-growing Azolla fixes nitrogen while hardy small fish recycle nutrients!' },
+          { val: 2, icon: '🦈', name: 'Giant Tank Sharks', tag: '❌ O2 Collapse', desc: 'Drains dome oxygen reserves almost immediately!' },
+          { val: 3, icon: '🚱', name: 'Stagnant Greywater Tank', tag: 'Anaerobic Slime', desc: 'Fouls dome air and water clarity.' },
         ],
       },
       {
-        zone: '3 · Pollination & Micro-Pond',
-        title: 'Protein & Flower Guild',
-        question: 'How do we pollinate soy/crops AND grow fast aquatic protein without methane spikes?',
-        options: [
-          { icon: '🚫', name: 'No Pollinators', sub: 'Poor fruiting yield' },
-          { icon: '🐄', name: 'Indoor Cattle Herd', sub: 'Consumes 10x O2 & spikes methane!' },
-          { icon: '🐝', name: 'Docile Mason Bees + Duckweed Pond', sub: 'Pollinates + doubles protein every 48h!' },
-          { icon: '🐜', name: 'Wood-Eating Termites', sub: 'Methane + eats habitat seals' },
+        short: 'Crop Terrace',
+        question: 'Zone 3 (Calorie Terrace): Which crop trio balances carbs, nitrogen-fixing protein, and oxygen?',
+        choices: [
+          { val: 1, icon: '🌴', name: 'Thirsty Almond Orchard', tag: 'Years Too Slow', desc: 'Uses huge water reserves before bearing nuts.' },
+          { val: 2, icon: '🌾', name: 'Dwarf Wheat, Sweet Potato & Soy', tag: 'Complete Space Crops', desc: 'High harvest calories, edible leaves, and nitrogen-fixing soybean roots!' },
+          { val: 3, icon: '🍬', name: 'Sugar Cane Monocrop', tag: 'Depletes Minerals', desc: 'Pure sugar without protein or fats; drains soil fast.' },
         ],
       },
       {
-        zone: '4 · Bioregenerative Waste',
-        title: 'Inedible Stalk Decomposer',
-        question: 'Half of wheat/potato plants are stems & husks—how do we unlock their carbon & nutrients?',
-        options: [
-          { icon: '🗑️', name: 'Seal Stems in Plastic Bags', sub: 'Locks carbon out of the loop!' },
-          { icon: '🔥', name: 'Burn Stems Indoors', sub: 'Consumes O2 & fills dome with smoke!' },
-          { icon: '🍄', name: 'Oyster Mushrooms + Soldier Fly Larvae', sub: 'Turns tough stalks into food & compost!' },
-          { icon: '🚀', name: 'Jettison Out Airlock', sub: 'Permanent nutrient & water loss!' },
+        short: 'Stalk Digest',
+        question: 'Zone 4 (Lignin Recycler): Half of wheat & soy biomass is inedible straw — how do we unlock its nutrients?',
+        choices: [
+          { val: 1, icon: '🔥', name: 'Incinerator Furnace', tag: 'Burns Precious O2!', desc: 'Consumes breathable dome oxygen and fills air with soot!' },
+          { val: 2, icon: '🍄', name: 'Oyster Mushrooms + Worms', tag: 'Straw ➔ Food + Humus', desc: 'Fungi digest tough straw into savory mushrooms & rich living soil!' },
+          { val: 3, icon: '🗑️', name: 'Jettison Out Airlock', tag: '⚠️ Loses Carbon', desc: 'Throws irreplaceable carbon and nitrogen into space forever!' },
         ],
       },
       {
-        zone: '5 · Hydrological Loop',
-        title: 'Water Purification',
-        question: 'How do we recycle 100% of crew greywater and plant humidity into pure drinking water?',
-        options: [
-          { icon: '💨', name: 'Uncollected Humidity', sub: 'Dome fogs & roots dry out' },
-          { icon: '🛢️', name: 'Brine Sump Pit', sub: 'Salts build up in water' },
-          { icon: '💧', name: 'Dome Leaf Condenser + Reed Root-Bed', sub: 'Distills pure transpired water!' },
-          { icon: '🛰️', name: 'Earth Resupply Ice Rockets', sub: 'Breaks closed-loop independence!' },
+        short: 'Water Recovery',
+        question: 'Zone 5 (Moisture & Waste): How do we recover 99% of evaporated plant mist and organic scraps?',
+        choices: [
+          { val: 1, icon: '💩', name: 'Unprocessed Holding Tank', tag: 'Methane & Ammonia', desc: 'Rots into toxic gas inside the sealed habitat.' },
+          { val: 2, icon: '🪰', name: 'Soldier-Fly + Mist Condenser', tag: '99% Pure H2O Loop', desc: 'Condenses pure drinking water from leaf mist while larvae turn scraps into fish feed!' },
+          { val: 3, icon: '☢️', name: 'Caustic Lye Boil', tag: '⚠️ Chemical Vapor', desc: 'Corrosive chemical waste damages dome cleanliness.' },
         ],
       },
       {
-        zone: '6 · Martian Regolith Prep',
-        title: 'Soil Detox & Humus',
-        question: 'Raw Mars dirt contains toxic perchlorate salts (ClO4-)—how do we make living soil?',
-        options: [
-          { icon: '☄️', name: 'Raw Unwashed Mars Dust', sub: 'Toxic perchlorates poison crops!' },
-          { icon: '🌱', name: 'Washed Regolith + Biochar & Worm Humus', sub: 'Clean mineral soil with microbe sponge!' },
-          { icon: '🏖️', name: 'Sterile Quartz Sand', sub: 'Holds zero nutrients or water' },
-          { icon: '🛡️', name: 'Epoxy Floor Only', sub: 'No root microbiome buffer' },
+        short: 'Mars Soil',
+        question: 'Zone 6 (Regolith Detox): Martian dust contains toxic Perchlorate (ClO4-) — how do we make living soil?',
+        choices: [
+          { val: 1, icon: '🦠', name: 'Perchlorate Bacteria + Mycorrhizae', tag: 'ClO4- ➔ Cl- + O2!', desc: 'Specialized microbes eat toxic perchlorate into harmless salt + extra oxygen!' },
+          { val: 2, icon: '🪨', name: 'Raw Unwashed Mars Dust', tag: 'Perchlorate Poison', desc: 'Poisons crop roots and crashes dome Cleanliness!' },
+          { val: 3, icon: '🚀', name: 'Wait for Earth Resupply', tag: '⚠️ Not Closed-Loop', desc: 'Depends on cargo rockets instead of Martian self-sufficiency!' },
         ],
       },
     ],
   },
 ];
 
-const HALT_DIAGNOSES = {
-  [HALT_NONE]: {
-    badge: '♾️ HALT-FREE INFINITE LOOP!',
-    tone: 'win',
-    explain:
-      'Bravo, Eco-Engineer! Every waste stream feeds another organism—your ecosystem ran all <strong>12 seasons</strong> with sparkling clarity, rich fertility, abundant oxygen, and <strong>zero external feed</strong>! Click <strong>♾️ Verify &amp; Seal Loop</strong> to mint your Stars on Subnet 1!',
-  },
-  [HALT_EUTROPHICATION]: {
-    badge: '🟢 HALTED: ALGAE BLOOM (Eutrophication)',
-    tone: 'warn',
-    explain:
-      '<strong>Science Clue:</strong> Microscopic green algae multiplied faster than anything could eat them, turning the water into pea-soup and crashing nighttime oxygen! <em>Tip:</em> Add a filter-feeding species (or nutrient-absorbing plants) to polish the water column.',
-  },
-  [HALT_HYPOXIA]: {
-    badge: '🫧 HALTED: LOW OXYGEN (Hypoxia)',
-    tone: 'warn',
-    explain:
-      '<strong>Science Clue:</strong> Oxygen dropped below 36%! Either the tank/pond is overcrowded, surface weeds are blocking gas exchange, or you need photosynthetic oxygen producers / solar aeration.',
-  },
-  [HALT_AMMONIA_TOXICITY]: {
-    badge: '🧪 HALTED: TOXIC BUILDUP (Ammonia / Chemicals)',
-    tone: 'warn',
-    explain:
-      '<strong>Science Clue:</strong> Toxic waste or harsh chemicals (pesticides, raw un-cycled sludge, bleach, or unwashed Martian perchlorates) poisoned the food web! Use living bio-filters, worms, nitrifying microbes, or benthic silt recycling instead.',
-  },
-  [HALT_TROPHIC_PREDATION]: {
-    badge: '🦈 HALTED: FOOD-WEB COLLAPSE (Predator / Pest)',
-    tone: 'warn',
-    explain:
-      '<strong>Science Clue:</strong> A top predator or destructive pest (like Snakehead, Pike, Locusts, or Termites) wiped out the peaceful herbivores &amp; filter-feeders keeping your loop balanced!',
-  },
-  [HALT_NUTRIENT_STARVATION]: {
-    badge: '🍂 HALTED: NUTRIENT LOOP BROKEN (Starvation)',
-    tone: 'warn',
-    explain:
-      '<strong>Science Clue:</strong> Nutrients leaked out or stayed trapped at the bottom instead of cycling back to plant roots! Make sure decomposers or pond-silt dredging return minerals to your crops.',
-  },
-  [HALT_EXTERNAL_DEPENDENCY]: {
-    badge: '⛽ NOT CLOSED-LOOP: EXTERNAL SUPPLY DEBT',
-    tone: 'warn',
-    explain:
-      '<strong>Science Clue:</strong> Your system survived, automatic halt avoided—<em>but</em> it relied on imported diesel feed, chemical NPK, one-way tap drains, or resupply rockets! Replace external inputs with biological symbionts to achieve true Infinite Food!',
-  },
-};
-
 // ---------------------------------------------------------------------------
-// Local 12-Season Simulator (Exact 1:1 Mirror of `haltfree_ecosystem.wasm`)
-// ---------------------------------------------------------------------------
-
-function clamp(v, lo, hi) {
-  return Math.max(lo, Math.min(hi, v));
-}
-
-function simulateLocal12Seasons(arenaId, slots) {
-  let oxygen = 74;
-  let algae = 24;
-  let fertility = 68;
-  let toxicity = 12;
-  let totalYield = 0;
-
-  let sumO2 = -4;
-  let sumAlg = 4;
-  let sumFert = -6;
-  let sumTox = 5;
-  let baseYield = 0;
-  let allFlags = 0;
-
-  for (let s = 0; s < 6; s++) {
-    const opt = clamp(slots[s] || 0, 0, 3);
-    const ef = ECOLOGY_MATRIX[arenaId][s][opt];
-    sumO2 += ef.dO2;
-    sumAlg += ef.dAlg;
-    sumFert += ef.dFert;
-    sumTox += ef.dTox;
-    baseYield += ef.dYield;
-    allFlags |= ef.flags;
-  }
-
-  if (arenaId === 0 && slots[1] === 1 && slots[0] !== 2) {
-    sumFert -= 5;
-    baseYield = Math.max(0, baseYield - 16);
-  }
-
-  const timeline = [
-    { season: 0, oxygen, clarity: 100 - algae, fertility, toxicity, totalYield: 0, haltReason: HALT_NONE },
-  ];
-
-  let season = 0;
-  let haltReason = HALT_NONE;
-
-  while (season < 12) {
-    season += 1;
-    oxygen = clamp(oxygen + sumO2, 0, 100);
-    algae = clamp(algae + sumAlg, 5, 100);
-    fertility = clamp(fertility + sumFert, 0, 100);
-    toxicity = clamp(toxicity + sumTox, 0, 100);
-
-    if (algae > 62) {
-      oxygen = clamp(oxygen - Math.trunc((algae - 58) / 2), 0, 100);
-    }
-    if ((allFlags & F_PREDATOR) !== 0 && season >= 3) {
-      fertility = clamp(fertility - 5, 0, 100);
-      toxicity = clamp(toxicity + 5, 0, 100);
-    }
-
-    if ((allFlags & F_LETHAL) !== 0 && toxicity >= 45) {
-      haltReason = HALT_AMMONIA_TOXICITY;
-    } else if (toxicity >= 55) {
-      haltReason = HALT_AMMONIA_TOXICITY;
-    } else if ((allFlags & F_PREDATOR) !== 0 && season >= 5) {
-      haltReason = HALT_TROPHIC_PREDATION;
-    } else if (algae >= 76) {
-      haltReason = HALT_EUTROPHICATION;
-    } else if (oxygen <= 36) {
-      haltReason = HALT_HYPOXIA;
-    } else if (fertility <= 26) {
-      haltReason = HALT_NUTRIENT_STARVATION;
-    }
-
-    if (haltReason !== HALT_NONE) {
-      timeline.push({
-        season,
-        oxygen,
-        clarity: 100 - algae,
-        fertility,
-        toxicity,
-        totalYield,
-        haltReason,
-      });
-      break;
-    }
-
-    const clarityNow = Math.max(0, 100 - algae);
-    const healthMult = clamp(Math.trunc((oxygen + clarityNow + fertility) / 3), 40, 110);
-    const harvest = Math.trunc((baseYield * healthMult) / 100);
-    totalYield += harvest;
-    timeline.push({
-      season,
-      oxygen,
-      clarity: clarityNow,
-      fertility,
-      toxicity,
-      totalYield,
-      haltReason: HALT_NONE,
-    });
-  }
-
-  if (haltReason === HALT_NONE && (allFlags & F_EXTERNAL) !== 0) {
-    haltReason = HALT_EXTERNAL_DEPENDENCY;
-  }
-  if (haltReason === HALT_NONE && totalYield < 700) {
-    haltReason = HALT_NUTRIENT_STARVATION;
-  }
-
-  const finalClarity = clamp(100 - algae, 0, 100);
-  const isHaltFree = haltReason === HALT_NONE && season === 12;
-  const stars = !isHaltFree
-    ? 0
-    : totalYield >= 1080 && oxygen >= 82 && finalClarity >= 72 && toxicity <= 15
-    ? 3
-    : totalYield >= 880
-    ? 2
-    : 1;
-
-  return {
-    isHaltFree,
-    haltReason,
-    seasonsSurvived: season,
-    stars,
-    oxygen,
-    clarity: finalClarity,
-    fertility,
-    toxicity,
-    totalYield,
-    timeline,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Live Runtime State & On-Chain Sync
+// Live Runtime State (Strictly Driven by Subnet 1 HFS Storage & Events!)
 // ---------------------------------------------------------------------------
 
 const rpcUrl = getDefaultNodeWsUrl();
@@ -746,18 +560,49 @@ const wallet = new SlxWalletManager();
 const slxClient = new SlxClient(rpcUrl);
 
 let contractAddr = '';
-let currentArena = 0;
-let arenaChoices = ARENAS.map((a) => [...a.starterSlots]);
+let selectedArena = 0;
+let focusedTab = 0; // 0..5 = Ecological Zones 1..6; 6 = Tactical Steward Actions
+let pendingAction = { actionKind: 0, target: 0, choice: 2 }; // Highlighted card before committing tx
+
 let onChainOverview = null;
+let liveRun = null; // Decoded 64-byte RoundSnapshot from HFS event / storage
 let txBusy = false;
+let txPhaseLabel = '';
 let stopWatcher = null;
 let heGuide = null;
 const nickCache = new Map();
+const sessionEventFeed = []; // Confirmed receipt logs from this session
 
-// 12-Season Animated Playback Scrubber State
-let playbackActive = false;
-let playbackStartMs = 0;
-let playbackStepIdx = -1;
+// Canvas visual FX triggered when an HFS event resolves
+const swimmers = [];
+const particles = [];
+const floatingPopups = [];
+const splashRings = [];
+let eventCelebrationUntil = 0;
+
+for (let i = 0; i < 28; i++) {
+  swimmers.push({
+    id: i,
+    x: 280 + ((i * 73) % 640),
+    y: 170 + ((i * 47) % 200),
+    vx: (i % 2 === 0 ? 1 : -1) * (24 + (i % 5) * 7),
+    phase: i * 1.1,
+    band: i % 4,
+  });
+}
+for (let i = 0; i < 64; i++) {
+  particles.push({
+    x: (i * 97) % 960,
+    y: (i * 53) % 380,
+    s: 1.5 + (i % 4),
+    t: (i * 0.17) % 1,
+    kind: i % 4,
+  });
+}
+
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
 
 function showToast(msg) {
   const el = document.getElementById('heToast');
@@ -765,7 +610,7 @@ function showToast(msg) {
   el.textContent = msg;
   el.classList.add('is-visible');
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => el.classList.remove('is-visible'), 3600);
+  showToast._t = setTimeout(() => el.classList.remove('is-visible'), 4000);
 }
 
 function escapeHtml(s) {
@@ -776,39 +621,107 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
+function pushCanvasPopup(text, color = '#fde047', x = 520, y = 185) {
+  floatingPopups.push({
+    text,
+    color,
+    x,
+    y,
+    bornMs: performance.now(),
+    ttlMs: 3200,
+  });
+}
+
+function pushSplashRing(x = 520, y = 165, color = '#67e8f9') {
+  splashRings.push({
+    x,
+    y,
+    color,
+    bornMs: performance.now(),
+    ttlMs: 1400,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Wire Decoders (`RoundSnapshot` 64B & `getOverview` v2)
+// ---------------------------------------------------------------------------
+
+function decodeRunSnapshotBytes(b) {
+  if (!b || b.length < 64 || b[0] !== 2) return null;
+  return {
+    status: b[1],
+    arenaId: b[2],
+    round: b[3],
+    lastRoundPlayed: b[4],
+    maxRounds: b[5] || 8,
+    slots: [b[6], b[7], b[8], b[9], b[10], b[11]],
+    o2: b[12],
+    clarity: b[13],
+    fertility: b[14],
+    cleanliness: b[15],
+    prevO2: b[16],
+    prevClarity: b[17],
+    prevFertility: b[18],
+    prevCleanliness: b[19],
+    weatherApplied: b[20],
+    upcomingWeather: b[21],
+    lastActionKind: b[22],
+    lastActionTarget: b[23],
+    lastActionChoice: b[24],
+    comboId: b[25],
+    haltReason: b[26],
+    loopLinks: b[27],
+    starsEarned: b[28],
+    comboStreak: b[29],
+    autonomousCycles: b[30],
+    toxinDebt: b[31],
+    lastYield: readU32BE(b, 32),
+    totalHarvest: readU32BE(b, 36),
+    xpGained: readU32BE(b, 40),
+    runNumber: readU32BE(b, 44),
+    badgesUnlockedNow: b[48],
+    shortcutCount: b[49],
+  };
+}
+
 function decodeOverviewHex(hexStr) {
   const b = hexToBytes(hexStr);
-  if (!b || b.length < 82 || b[0] !== 1) return null;
+  if (!b || b.length < 120 || b[0] !== 2) return null;
+
   const leaderCnt = b[1];
   const logCnt = b[2];
   const blockNumber = Number(readU64BE(b, 4));
+  const globalRuns = readU32BE(b, 12);
 
-  const pb = b.subarray(12, 82);
+  const pb = b.subarray(16, 56);
   const viewer = {
     identity: bytesToHex(pb.subarray(0, 20)).toLowerCase(),
-    solvedMask: pb[20],
-    lastArena: pb[21],
-    lastHaltReason: pb[22],
-    lastSeasons: pb[23],
-    attempts: readU16BE(pb, 24),
-    bestStars: [pb[26], pb[27], pb[28], pb[29]],
+    bestStars: [pb[20], pb[21], pb[22], pb[23]],
     bestYield: [
+      readU16BE(pb, 24),
+      readU16BE(pb, 26),
+      readU16BE(pb, 28),
       readU16BE(pb, 30),
-      readU16BE(pb, 32),
-      readU16BE(pb, 34),
-      readU16BE(pb, 36),
     ],
+    totalXp: readU32BE(pb, 32),
+    runsStarted: readU16BE(pb, 36),
+    badges: pb[38],
+    solvedMask: pb[39] & 0x0f,
+    bestStreak: (pb[39] >> 4) & 0x0f,
   };
 
-  let pos = 82;
+  const runSnap = decodeRunSnapshotBytes(b.subarray(56, 120));
+
+  let pos = 120;
   const leaders = [];
   for (let i = 0; i < leaderCnt && pos + 28 <= b.length; i++) {
     leaders.push({
       identity: bytesToHex(b.subarray(pos, pos + 20)).toLowerCase(),
-      solvedMask: b[pos + 20],
-      totalStars: b[pos + 21],
-      totalYield: readU32BE(b, pos + 22),
-      attempts: readU16BE(b, pos + 26),
+      totalStars: b[pos + 20],
+      solvedMask: b[pos + 21],
+      badges: b[pos + 22],
+      bestStreak: b[pos + 23],
+      totalYield: readU32BE(b, pos + 24),
     });
     pos += 28;
   }
@@ -818,16 +731,73 @@ function decodeOverviewHex(hexStr) {
     logs.push({
       identity: bytesToHex(b.subarray(pos, pos + 20)).toLowerCase(),
       arenaId: b[pos + 20],
-      haltReason: b[pos + 21],
-      stars: b[pos + 22],
-      seasons: b[pos + 23],
-      yieldAmt: readU16BE(b, pos + 24),
+      status: b[pos + 21],
+      haltReason: b[pos + 22],
+      stars: b[pos + 23],
+      round: b[pos + 24],
+      loopLinks: b[pos + 25],
+      harvest: readU16BE(b, pos + 26),
     });
     pos += 28;
   }
 
-  return { blockNumber, viewer, leaders, logs };
+  return { blockNumber, globalRuns, viewer, runSnap, leaders, logs };
 }
+
+function extractEmittedSnapshotFromReceipt(receipt) {
+  if (!receipt || !Array.isArray(receipt.logs)) return null;
+  for (const lg of receipt.logs) {
+    const t0 = String(lg.topics?.[0] || '').toLowerCase();
+    if (t0 === TOPIC_RUN_STARTED || t0 === TOPIC_ROUND_RESOLVED) {
+      const raw = hexToBytes(lg.data || '0x');
+      const snap = decodeRunSnapshotBytes(raw);
+      if (snap) {
+        return {
+          eventName: t0 === TOPIC_RUN_STARTED ? 'RunStarted' : 'RoundResolved',
+          snap,
+        };
+      }
+    }
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Smart Selection Helpers (Auto-Focus Next Unstocked Niche After Each Round!)
+// ---------------------------------------------------------------------------
+
+function syncDefaultPendingActionForTab() {
+  if (focusedTab >= 0 && focusedTab < 6) {
+    const curInstalled = isRunMatchingSelectedArena() ? liveRun.slots[focusedTab] : 0;
+    const choices = ARENAS[selectedArena].zones[focusedTab].choices;
+    // Default highlight first non-installed option so clicking Execute makes progress
+    const pick = choices.find((c) => c.val !== curInstalled) || choices[0];
+    pendingAction = { actionKind: 0, target: focusedTab, choice: pick.val };
+  } else {
+    // Steward tab: if 6/6 loop complete, highlight Autonomous Loop (3); else Dredge Silt (1)
+    const isFullLoop = isRunMatchingSelectedArena() && liveRun.loopLinks === 6 && liveRun.shortcutCount === 0;
+    pendingAction = { actionKind: 1, target: isFullLoop ? 3 : 1, choice: 0 };
+  }
+}
+
+function autoAdvanceTabFromConfirmedRun(snap) {
+  if (!snap || snap.status !== STATUS_ACTIVE) return;
+  const firstEmpty = snap.slots.findIndex((v) => v === 0);
+  if (firstEmpty >= 0) {
+    focusedTab = firstEmpty;
+  } else {
+    focusedTab = 6; // All 6 zones stocked -> focus Steward & Autonomous Loop tab!
+  }
+  syncDefaultPendingActionForTab();
+}
+
+function isRunMatchingSelectedArena() {
+  return Boolean(liveRun && liveRun.status !== STATUS_NONE && liveRun.arenaId === selectedArena);
+}
+
+// ---------------------------------------------------------------------------
+// On-Chain Read & Write Actions (100% HFS Transaction Driven!)
+// ---------------------------------------------------------------------------
 
 function formatScholarName(identityAddr) {
   if (!identityAddr || identityAddr === ZERO_ADDR) return 'Explorer';
@@ -851,7 +821,7 @@ function hydrateScholarNicks(addrs) {
   }
 }
 
-async function refreshOnChainState() {
+async function refreshOnChainState(adoptActiveArena = false) {
   if (!contractAddr) {
     renderAllUI();
     return;
@@ -866,125 +836,243 @@ async function refreshOnChainState() {
       'latest',
     ]);
     if (hex && hex !== '0x') {
-      onChainOverview = decodeOverviewHex(hex);
-      if (onChainOverview) {
-        const addrs = [
-          ...onChainOverview.leaders.map((x) => x.identity),
-          ...onChainOverview.logs.map((x) => x.identity),
-        ];
-        hydrateScholarNicks(addrs);
+      const parsed = decodeOverviewHex(hex);
+      if (parsed) {
+        onChainOverview = parsed;
+        if (parsed.runSnap && parsed.runSnap.status !== STATUS_NONE) {
+          const hadNoRun = !liveRun || liveRun.status === STATUS_NONE;
+          liveRun = parsed.runSnap;
+          if (adoptActiveArena || (hadNoRun && liveRun.status === STATUS_ACTIVE)) {
+            selectedArena = liveRun.arenaId;
+            autoAdvanceTabFromConfirmedRun(liveRun);
+          }
+        }
+        hydrateScholarNicks([
+          ...parsed.leaders.map((x) => x.identity),
+          ...parsed.logs.map((x) => x.identity),
+        ]);
       }
     }
   } catch (_) {}
   renderAllUI();
 }
 
-async function sealEcosystemOnChain() {
+async function ensurePlayerIdentity() {
+  const idRec = await wallet.ensureIdentityWithPrompt({
+    rpcUrl,
+    appName: 'Haltfree Ecosystem',
+  });
+  if (!idRec?.identityAddr || idRec.identityAddr === ZERO_ADDR) {
+    throw new Error('Deploy your Identity HFS first to play on Subnet 1!');
+  }
+  return idRec.identityAddr.toLowerCase();
+}
+
+async function startExpeditionOnChain(arenaId = selectedArena) {
   if (txBusy) return;
   if (!contractAddr) {
-    showToast('⚠ Sanctuary HFS contract not configured yet.');
+    showToast('⚠ Sanctuary HFS contract not connected yet.');
     return;
   }
 
-  // Trigger animated 12-season time-lapse while sealing!
-  start12SeasonPlayback();
-
-  let idRec;
+  let identityAddr;
   try {
-    idRec = await wallet.ensureIdentityWithPrompt({
-      rpcUrl,
-      appName: 'Haltfree Ecosystem',
-    });
+    identityAddr = await ensurePlayerIdentity();
   } catch (err) {
     showToast(`⚠ Identity HFS required: ${err?.message || err}`);
     return;
   }
-  if (!idRec?.identityAddr || idRec.identityAddr === ZERO_ADDR) {
-    showToast('⚠ Deploy your Identity HFS first to earn Eco-Scholar Stars!');
-    return;
-  }
 
   txBusy = true;
+  txPhaseLabel = `Launching Arena ${arenaId + 1} Expedition on Subnet 1…`;
   renderAllUI();
+
   try {
-    const slotBytes = new Uint8Array(arenaChoices[currentArena]);
-    const uniqTargets = Array.from(
-      new Set([contractAddr, idRec.identityAddr].map((x) => x.toLowerCase()))
-    );
-    await slxClient.sendAndConfirm({
+    const uniqTargets = Array.from(new Set([contractAddr, identityAddr]));
+    const { txHash, receipt } = await slxClient.sendAndConfirm({
       privateKey: wallet.keypair.privateKey,
       to: contractAddr,
-      data: encodeAbi('submitEcosystem(uint64,address,bytes)', [
-        ['uint64', BigInt(currentArena)],
-        ['address', idRec.identityAddr],
-        ['bytes', slotBytes],
+      data: encodeAbi('startRun(uint64,address)', [
+        ['uint64', BigInt(arenaId)],
+        ['address', identityAddr],
       ]),
       gasLimit: 4_500_000n,
       extraTargets: uniqTargets,
-      label: `submitEcosystem(Arena #${currentArena + 1})`,
+      label: `startRun(Arena #${arenaId + 1})`,
     });
-    await refreshOnChainState();
-    const sim = simulateLocal12Seasons(currentArena, arenaChoices[currentArena]);
-    if (sim.isHaltFree) {
-      showToast(`🎉 ♾️ HALT-FREE INFINITE LOOP VERIFIED! Earned ${'⭐'.repeat(sim.stars)} (${sim.totalYield} Harvest)!`);
-    } else {
-      showToast(`🔬 Experiment logged on Subnet 1 — check the Diagnostic Clue to close the loop!`);
+
+    const emitted = extractEmittedSnapshotFromReceipt(receipt);
+    if (emitted?.snap) {
+      liveRun = emitted.snap;
+      selectedArena = liveRun.arenaId;
+      focusedTab = 0;
+      syncDefaultPendingActionForTab();
+      const blk = Number(BigInt(receipt.blockNumber || 0));
+      sessionEventFeed.unshift({
+        blk,
+        txHash,
+        eventName: emitted.eventName,
+        summary: `Expedition #${liveRun.runNumber} started (${ARENAS[selectedArena].shortName})`,
+        tone: 'cyan',
+      });
+      pushSplashRing(480, 165, '#34d399');
+      pushCanvasPopup(`🌱 SEASON 1 READY · ${WEATHER_META[liveRun.upcomingWeather]?.name || 'Sunny'}!`, '#6ee7b7', 480, 175);
+      showToast(`🚀 Expedition #${liveRun.runNumber} live at Blk #${blk}! Pick your Season 1 Action!`);
     }
+    await refreshOnChainState(false);
   } catch (err) {
     showToast(`⚠ ${err?.message || err}`);
   } finally {
     txBusy = false;
+    txPhaseLabel = '';
+    renderAllUI();
+  }
+}
+
+async function playRoundActionOnChain() {
+  if (txBusy) return;
+  if (!contractAddr) {
+    showToast('⚠ Sanctuary HFS contract not connected yet.');
+    return;
+  }
+
+  // If no active run in this arena (or previous run ended), start a fresh expedition!
+  if (!isRunMatchingSelectedArena() || liveRun.status !== STATUS_ACTIVE) {
+    await startExpeditionOnChain(selectedArena);
+    return;
+  }
+
+  let identityAddr;
+  try {
+    identityAddr = await ensurePlayerIdentity();
+  } catch (err) {
+    showToast(`⚠ Identity HFS required: ${err?.message || err}`);
+    return;
+  }
+
+  const playingSeason = liveRun.round;
+  const { actionKind, target, choice } = pendingAction;
+
+  txBusy = true;
+  txPhaseLabel = `Sealing Season ${playingSeason}/8 Action on Subnet 1…`;
+  renderAllUI();
+
+  try {
+    const uniqTargets = Array.from(new Set([contractAddr, identityAddr]));
+    const { txHash, receipt } = await slxClient.sendAndConfirm({
+      privateKey: wallet.keypair.privateKey,
+      to: contractAddr,
+      data: encodeAbi('playRound(address,uint64,uint64,uint64)', [
+        ['address', identityAddr],
+        ['uint64', BigInt(actionKind)],
+        ['uint64', BigInt(target)],
+        ['uint64', BigInt(choice)],
+      ]),
+      gasLimit: 5_000_000n,
+      extraTargets: uniqTargets,
+      label: `playRound(S${playingSeason})`,
+    });
+
+    const emitted = extractEmittedSnapshotFromReceipt(receipt);
+    if (emitted?.snap) {
+      const snap = emitted.snap;
+      liveRun = snap;
+      const blk = Number(BigInt(receipt.blockNumber || 0));
+
+      // Trigger rich visual celebration on `<canvas>` strictly from the emitted HFS payload!
+      const splashX = actionKind === 0 ? 180 + target * 125 : 520;
+      const splashY = actionKind === 0 && target === 0 ? 125 : 185 + ((target % 3) * 45);
+      pushSplashRing(splashX, splashY, snap.status === STATUS_HALTED ? '#fb7185' : '#38bdf8');
+
+      if (snap.status === STATUS_HALTED) {
+        const diag = HALT_DIAGNOSES[snap.haltReason] || HALT_DIAGNOSES[5];
+        pushCanvasPopup(diag.badge, '#fda4af', 480, 175);
+        sessionEventFeed.unshift({
+          blk,
+          txHash,
+          eventName: 'RoundResolved',
+          summary: `S${snap.lastRoundPlayed} HALTED (${diag.badge.replace(/^[^\s]+\s/, '')})`,
+          tone: 'rose',
+        });
+        showToast(`${diag.badge} — Read the Science Clue & launch a new expedition!`);
+      } else {
+        pushCanvasPopup(`+${snap.lastYield} 🧺 Season ${snap.lastRoundPlayed} Harvest!`, '#fde047', 490, 195);
+        const comboInfo = COMBO_META[snap.comboId];
+        if (comboInfo) {
+          eventCelebrationUntil = performance.now() + 2800;
+          pushCanvasPopup(comboInfo.badge, comboInfo.color, 490, 148);
+        }
+        if (snap.status === STATUS_VICTORY) {
+          eventCelebrationUntil = performance.now() + 5000;
+          pushCanvasPopup(
+            `🏆 VICTORY · ${'⭐'.repeat(snap.starsEarned)} (${snap.totalHarvest} Harvest · +${snap.xpGained} XP)!`,
+            '#6ee7b7',
+            480,
+            112
+          );
+          showToast(
+            `🎉 8-Season Expedition Complete! Earned ${'⭐'.repeat(snap.starsEarned)} & ${snap.totalHarvest} Harvest!`
+          );
+        } else {
+          autoAdvanceTabFromConfirmedRun(snap);
+        }
+
+        sessionEventFeed.unshift({
+          blk,
+          txHash,
+          eventName: 'RoundResolved',
+          summary:
+            snap.status === STATUS_VICTORY
+              ? `S8 VICTORY ${'⭐'.repeat(snap.starsEarned)} · 🧺${snap.totalHarvest}`
+              : `S${snap.lastRoundPlayed} ${WEATHER_META[snap.weatherApplied]?.icon || ''} +${snap.lastYield} 🧺 (Loop ${snap.loopLinks}/6)`,
+          tone: 'emerald',
+        });
+      }
+    }
+
+    await refreshOnChainState(false);
+  } catch (err) {
+    showToast(`⚠ ${err?.message || err}`);
+  } finally {
+    txBusy = false;
+    txPhaseLabel = '';
     renderAllUI();
   }
 }
 
 // ---------------------------------------------------------------------------
-// 60-FPS Procedural HTML5 `<canvas>` Living Ecosystem Simulation Engine
+// 60-FPS Procedural `<canvas>` Living Cross-Section (Driven 100% by `liveRun`!)
 // ---------------------------------------------------------------------------
 
-const swimmers = [];
-const particles = [];
-for (let i = 0; i < 28; i++) {
-  swimmers.push({
-    id: i,
-    x: 280 + ((i * 73) % 640),
-    y: 180 + ((i * 47) % 270),
-    vx: (i % 2 === 0 ? 1 : -1) * (24 + (i % 5) * 7),
-    phase: i * 1.1,
-    band: i % 4,
-  });
-}
-for (let i = 0; i < 55; i++) {
-  particles.push({
-    x: (i * 97) % 960,
-    y: (i * 53) % 500,
-    s: 1.5 + (i % 4),
-    t: (i * 0.17) % 1,
-    kind: i % 4,
-  });
-}
-
-function start12SeasonPlayback() {
-  playbackActive = true;
-  playbackStartMs = performance.now();
-  playbackStepIdx = 0;
-}
-
-function getDisplayedSimSnapshot(nowMs) {
-  const full = simulateLocal12Seasons(currentArena, arenaChoices[currentArena]);
-  if (!playbackActive) {
-    return { full, cur: full.timeline[full.timeline.length - 1], stepSeason: full.seasonsSurvived };
+function getDisplayedStateForCanvas() {
+  if (isRunMatchingSelectedArena()) {
+    return liveRun;
   }
-  const elapsed = Math.max(0, nowMs - playbackStartMs);
-  const idx = Math.max(0, Math.min(full.timeline.length - 1, Math.floor(elapsed / 320)));
-  if (idx >= full.timeline.length - 1 && elapsed > (full.timeline.length + 1) * 320) {
-    playbackActive = false;
-  }
-  if (idx !== playbackStepIdx) {
-    playbackStepIdx = idx;
-    renderVitalsAndDiagnosis(full, full.timeline[idx]);
-  }
-  return { full, cur: full.timeline[idx], stepSeason: full.timeline[idx].season };
+  // Unstarted wild degraded baseline preview of the selected Arena (zero simulation!)
+  const baseVitals = [
+    [68, 62, 52, 70],
+    [62, 58, 48, 64],
+    [58, 62, 44, 58],
+    [54, 58, 42, 52],
+  ][selectedArena];
+  return {
+    status: STATUS_NONE,
+    arenaId: selectedArena,
+    round: 0,
+    lastRoundPlayed: 0,
+    slots: [0, 0, 0, 0, 0, 0],
+    o2: baseVitals[0],
+    clarity: baseVitals[1],
+    fertility: baseVitals[2],
+    cleanliness: baseVitals[3],
+    weatherApplied: 0,
+    upcomingWeather: 0,
+    loopLinks: 0,
+    shortcutCount: 0,
+    starsEarned: 0,
+    totalHarvest: 0,
+    haltReason: 0,
+  };
 }
 
 function drawFish(ctx, x, y, dir, scale, bodyColor, finColor, t, gasping = false, isAxolotl = false) {
@@ -995,30 +1083,25 @@ function drawFish(ctx, x, y, dir, scale, bodyColor, finColor, t, gasping = false
   ctx.scale(scale, scale);
 
   const wag = Math.sin(t * 7.5) * 4.5;
-
-  // Tail fin
   ctx.fillStyle = finColor;
   ctx.beginPath();
   ctx.moveTo(-14, 0);
   ctx.lineTo(-25, -8 + wag);
-  ctx.lineTo(-22, 0 + wag * 0.4);
+  ctx.lineTo(-22, wag * 0.4);
   ctx.lineTo(-25, 8 + wag);
   ctx.closePath();
   ctx.fill();
 
-  // Dorsal & Pectoral fins
   ctx.beginPath();
   ctx.moveTo(-4, -7);
   ctx.quadraticCurveTo(2, -14, 7, -6);
   ctx.fill();
 
-  // Body ellipse
   ctx.fillStyle = bodyColor;
   ctx.beginPath();
   ctx.ellipse(0, 0, 16, 7.5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Axolotl feathery external gills!
   if (isAxolotl) {
     ctx.strokeStyle = '#f43f5e';
     ctx.lineWidth = 2;
@@ -1030,7 +1113,6 @@ function drawFish(ctx, x, y, dir, scale, bodyColor, finColor, t, gasping = false
     }
   }
 
-  // Eye
   ctx.fillStyle = '#ffffff';
   ctx.beginPath();
   ctx.arc(10, -2, 2.5, 0, Math.PI * 2);
@@ -1039,7 +1121,6 @@ function drawFish(ctx, x, y, dir, scale, bodyColor, finColor, t, gasping = false
   ctx.beginPath();
   ctx.arc(10.7, -2, 1.3, 0, Math.PI * 2);
   ctx.fill();
-
   ctx.restore();
 }
 
@@ -1050,14 +1131,14 @@ function drawTree(ctx, x, y, canopyColor, trunkColor, t, hasBerries = false, has
   ctx.lineCap = 'round';
   ctx.beginPath();
   ctx.moveTo(x, y);
-  ctx.quadraticCurveTo(x + sway * 0.4, y - 38, x + sway, y - 72);
+  ctx.quadraticCurveTo(x + sway * 0.4, y - 36, x + sway, y - 68);
   ctx.stroke();
 
   const blobs = [
-    [x - 24 + sway, y - 76, 24],
-    [x + 22 + sway, y - 74, 23],
-    [x + sway, y - 94, 28],
-    [x - 8 + sway, y - 64, 22],
+    [x - 22 + sway, y - 72, 22],
+    [x + 20 + sway, y - 70, 21],
+    [x + sway, y - 88, 26],
+    [x - 7 + sway, y - 60, 20],
   ];
   ctx.fillStyle = canopyColor;
   for (const [bx, by, br] of blobs) {
@@ -1068,9 +1149,9 @@ function drawTree(ctx, x, y, canopyColor, trunkColor, t, hasBerries = false, has
 
   if (hasBerries) {
     ctx.fillStyle = '#a855f7';
-    for (const [dx, dy] of [[-18, -74], [12, -84], [-4, -98], [20, -68]]) {
+    for (const [dx, dy] of [[-16, -70], [11, -80], [-4, -92], [18, -65]]) {
       ctx.beginPath();
-      ctx.arc(x + dx + sway, y + dy, 3.2, 0, Math.PI * 2);
+      ctx.arc(x + dx + sway, y + dy, 3.1, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -1079,23 +1160,25 @@ function drawTree(ctx, x, y, canopyColor, trunkColor, t, hasBerries = false, has
     ctx.fillStyle = '#fefce8';
     ctx.strokeStyle = '#fde047';
     ctx.lineWidth = 1;
-    for (const [dx, dy] of [[-12, -66], [8, -72], [-2, -86], [16, -80]]) {
+    for (const [dx, dy] of [[-11, -62], [8, -68], [-2, -82], [15, -76]]) {
       ctx.beginPath();
-      ctx.ellipse(x + dx + sway, y + dy, 4.5, 3, 0.3, 0, Math.PI * 2);
+      ctx.ellipse(x + dx + sway, y + dy, 4.3, 2.8, 0.3, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
     }
   }
 }
 
-function drawWaterColor(clarity, toxicity) {
-  // High clarity -> sparkling turquoise-cyan; low clarity -> murky pea-soup green; high toxicity -> brown-red!
-  const algaeFactor = clamp((75 - clarity) / 55, 0, 1);
-  const toxFactor = clamp((toxicity - 25) / 45, 0, 1);
+function drawWaterColor(clarity, cleanliness) {
+  const algaeFactor = clamp((72 - clarity) / 55, 0, 1);
+  const toxFactor = clamp((65 - cleanliness) / 55, 0, 1);
   const r = Math.round(12 + algaeFactor * 38 + toxFactor * 95);
-  const g = Math.round(118 + algaeFactor * 52 - toxFactor * 45);
-  const b = Math.round(148 - algaeFactor * 95 - toxFactor * 70);
-  return { top: `rgba(${r}, ${g}, ${b}, 0.84)`, deep: `rgba(${Math.max(4, r - 8)}, ${Math.max(24, g - 58)}, ${Math.max(18, b - 62)}, 0.96)` };
+  const g = Math.round(122 + algaeFactor * 52 - toxFactor * 48);
+  const b = Math.round(154 - algaeFactor * 95 - toxFactor * 74);
+  return {
+    top: `rgba(${r}, ${g}, ${b}, 0.85)`,
+    deep: `rgba(${Math.max(4, r - 8)}, ${Math.max(22, g - 58)}, ${Math.max(18, b - 62)}, 0.96)`,
+  };
 }
 
 let lastFrameMs = performance.now();
@@ -1106,7 +1189,7 @@ function renderCanvasLoop(nowMs) {
     requestAnimationFrame(renderCanvasLoop);
     return;
   }
-  const dt = Math.min(0.05, (nowMs - lastFrameMs) / 1000);
+  const dt = Math.min(0.05, Math.max(0.001, (nowMs - lastFrameMs) / 1000));
   lastFrameMs = nowMs;
   const t = nowMs / 1000;
 
@@ -1114,34 +1197,41 @@ function renderCanvasLoop(nowMs) {
   const W = canvas.width;
   const H = canvas.height;
 
-  const { full, cur, stepSeason } = getDisplayedSimSnapshot(nowMs);
-  const slots = arenaChoices[currentArena];
-  const wc = drawWaterColor(cur.clarity, cur.toxicity);
+  const snap = getDisplayedStateForCanvas();
+  const slots = snap.slots;
+  const wc = drawWaterColor(snap.clarity, snap.cleanliness);
+  const activeWeather = snap.lastRoundPlayed > 0 ? snap.weatherApplied : snap.upcomingWeather;
 
-  // Update Season Clock Pill & Status Overlay
-  const clk = document.getElementById('lblSeasonClock');
-  if (clk) {
-    clk.textContent = playbackActive
-      ? `🎬 Simulating Season ${stepSeason} / 12…`
-      : `🌱 12-Season Equilibrium (${full.isHaltFree ? '♾️ Halt-Free!' : `Halts S${full.seasonsSurvived}`})`;
-  }
+  // Update top-right Canvas Status Pill
   const banner = document.getElementById('canvasStatusBanner');
   if (banner) {
-    if (full.isHaltFree) {
+    if (snap.status === STATUS_NONE) {
+      banner.className = 'he-canvas-banner is-active';
+      banner.textContent = '🌱 Wild Unmanaged Sanctuary · Launch Expedition to Play';
+    } else if (snap.status === STATUS_VICTORY) {
       banner.className = 'he-canvas-banner is-infinite';
-      banner.textContent = `♾️ INFINITE FOOD LOOP ACTIVE · ${'⭐'.repeat(full.stars)} (${full.totalYield} Harvest)`;
-    } else {
+      banner.textContent = `🏆 VICTORY · ${'⭐'.repeat(snap.starsEarned)} · 🧺 ${snap.totalHarvest} Harvest`;
+    } else if (snap.status === STATUS_HALTED) {
       banner.className = 'he-canvas-banner is-halted';
-      banner.textContent = HALT_DIAGNOSES[full.haltReason]?.badge || '⚠ Ecosystem Halted';
+      banner.textContent = HALT_DIAGNOSES[snap.haltReason]?.badge || '⚠ Ecosystem Halted';
+    } else if (snap.loopLinks === 6 && snap.shortcutCount === 0) {
+      banner.className = 'he-canvas-banner is-infinite';
+      banner.textContent = `♾️ 6/6 INFINITE LOOP ACTIVE · Season ${snap.round}/8`;
+    } else {
+      banner.className = 'he-canvas-banner is-active';
+      banner.textContent = `⛓️ Season ${snap.round}/8 · Loop ${snap.loopLinks}/6 · 🧺 ${snap.totalHarvest}`;
     }
   }
 
-  // 1. Sky Backdrop by Arena
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.42);
-  if (currentArena === 3) {
-    skyGrad.addColorStop(0, '#7c2d12');
-    skyGrad.addColorStop(1, '#fdba74');
-  } else if (currentArena === 2) {
+  // 1. Sky Backdrop (reacts to Arena & Weather!)
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.44);
+  if (selectedArena === 3) {
+    skyGrad.addColorStop(0, activeWeather === 5 ? '#451a03' : '#7c2d12');
+    skyGrad.addColorStop(1, activeWeather === 5 ? '#b45309' : '#fdba74');
+  } else if (activeWeather === 2) {
+    skyGrad.addColorStop(0, '#1e293b');
+    skyGrad.addColorStop(1, '#64748b');
+  } else if (selectedArena === 2) {
     skyGrad.addColorStop(0, '#0c4a6e');
     skyGrad.addColorStop(1, '#bae6fd');
   } else {
@@ -1151,155 +1241,156 @@ function renderCanvasLoop(nowMs) {
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // Glowing Sun
-  const sunX = currentArena === 3 ? 810 : 720;
-  const sunGrad = ctx.createRadialGradient(sunX, 62, 6, sunX, 62, 68);
-  sunGrad.addColorStop(0, '#fef08a');
+  // Sun / Heatwave Glow
+  const sunX = selectedArena === 3 ? 810 : 720;
+  const sunRadius = activeWeather === 3 ? 86 : 64;
+  const sunGrad = ctx.createRadialGradient(sunX, 58, 6, sunX, 58, sunRadius);
+  sunGrad.addColorStop(0, activeWeather === 3 ? '#fde047' : '#fef08a');
   sunGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
   ctx.fillStyle = sunGrad;
   ctx.beginPath();
-  ctx.arc(sunX, 62, 68, 0, Math.PI * 2);
+  ctx.arc(sunX, 58, sunRadius, 0, Math.PI * 2);
   ctx.fill();
 
-  // =========================================================================
-  // ARENA-SPECIFIC CROSS-SECTION GEOMETRY & ORGANISMS
-  // =========================================================================
-  if (currentArena === 0) {
-    // Distant Pearl River Misty Hills
+  // 2. Arena-Specific Living Cross-Section
+  if (selectedArena === 0) {
+    // Distant Pearl River Hills
     ctx.fillStyle = 'rgba(21, 128, 61, 0.28)';
     ctx.beginPath();
-    ctx.moveTo(220, 165);
-    ctx.quadraticCurveTo(450, 95, 660, 155);
-    ctx.quadraticCurveTo(820, 105, 960, 148);
-    ctx.lineTo(960, 180);
-    ctx.lineTo(220, 180);
+    ctx.moveTo(220, 138);
+    ctx.quadraticCurveTo(450, 78, 660, 132);
+    ctx.quadraticCurveTo(820, 88, 960, 126);
+    ctx.lineTo(960, 152);
+    ctx.lineTo(220, 152);
     ctx.fill();
 
-    // Pond Water Column (`x: 240..960, y: 140..380`)
-    const wGrad = ctx.createLinearGradient(0, 140, 0, 385);
+    // Pond Water Column (`x: 235..960, y: 122..330`)
+    const wGrad = ctx.createLinearGradient(0, 122, 0, 320);
     wGrad.addColorStop(0, wc.top);
     wGrad.addColorStop(1, wc.deep);
     ctx.fillStyle = wGrad;
     ctx.beginPath();
-    ctx.moveTo(235, 142);
+    ctx.moveTo(235, 124);
     for (let wx = 235; wx <= W; wx += 24) {
-      ctx.lineTo(wx, 141 + Math.sin(wx * 0.03 + t * 2.6) * 3.0);
+      ctx.lineTo(wx, 123 + Math.sin(wx * 0.03 + t * 2.6) * 2.8);
     }
     ctx.lineTo(W, H);
     ctx.lineTo(235, H);
     ctx.closePath();
     ctx.fill();
 
-    // Volumetric Sunbeams in Clear Water
-    if (cur.clarity > 45) {
+    if (snap.clarity > 45) {
       ctx.save();
-      ctx.globalAlpha = ((cur.clarity - 40) / 60) * 0.16;
+      ctx.globalAlpha = ((snap.clarity - 40) / 60) * 0.16;
       ctx.fillStyle = '#fef9c3';
       for (const bx of [380, 560, 740]) {
         ctx.beginPath();
-        ctx.moveTo(bx, 142);
-        ctx.lineTo(bx + 55, 142);
-        ctx.lineTo(bx - 20 + Math.sin(t + bx) * 12, 372);
-        ctx.lineTo(bx - 85 + Math.sin(t + bx) * 12, 372);
+        ctx.moveTo(bx, 124);
+        ctx.lineTo(bx + 50, 124);
+        ctx.lineTo(bx - 16 + Math.sin(t + bx) * 10, 312);
+        ctx.lineTo(bx - 74 + Math.sin(t + bx) * 10, 312);
         ctx.closePath();
         ctx.fill();
       }
       ctx.restore();
     }
 
-    // Left Earthen Dyke & Pond Floor Cross-Section
-    const soilHealthy = cur.fertility > 55;
+    // Left Earthen Dyke & Pond Floor
+    const soilHealthy = snap.fertility > 52;
     ctx.fillStyle = soilHealthy ? '#5c3a21' : '#78716c';
     ctx.beginPath();
-    ctx.moveTo(0, 122);
-    ctx.lineTo(242, 134);
-    ctx.quadraticCurveTo(285, 260, 315, 368);
-    ctx.lineTo(960, 374);
+    ctx.moveTo(0, 108);
+    ctx.lineTo(242, 118);
+    ctx.quadraticCurveTo(285, 222, 315, 310);
+    ctx.lineTo(960, 315);
     ctx.lineTo(960, H);
     ctx.lineTo(0, H);
     ctx.closePath();
     ctx.fill();
 
-    // Lush Grass Cap on Dyke
     ctx.fillStyle = soilHealthy ? '#22c55e' : '#a3a380';
-    ctx.fillRect(0, 116, 244, 13);
+    ctx.fillRect(0, 102, 244, 11);
 
-    // Slot 0: Shore Dyke Plant
+    // Zone 0: Shoreline Dyke Plant
     if (slots[0] === 2) {
-      drawTree(ctx, 75, 120, soilHealthy ? '#16a34a' : '#84cc16', '#713f12', t, true, slots[1] === 1);
-      drawTree(ctx, 172, 124, soilHealthy ? '#15803d' : '#65a30d', '#713f12', t + 1.2, true, slots[1] === 1);
+      drawTree(ctx, 74, 106, soilHealthy ? '#16a34a' : '#84cc16', '#713f12', t, true, slots[1] === 1);
+      drawTree(ctx, 170, 110, soilHealthy ? '#15803d' : '#65a30d', '#713f12', t + 1.2, true, slots[1] === 1);
     } else if (slots[0] === 1) {
-      drawTree(ctx, 118, 122, '#064e3b', '#451a03', t, false, false);
+      drawTree(ctx, 118, 108, '#064e3b', '#451a03', t, false, false);
     } else if (slots[0] === 3) {
       ctx.fillStyle = '#eab308';
-      for (let cx = 30; cx < 210; cx += 28) ctx.fillRect(cx, 78, 6, 42);
+      for (let cx = 28; cx < 210; cx += 28) ctx.fillRect(cx, 66, 6, 40);
       ctx.fillStyle = 'rgba(239, 68, 68, 0.55)';
-      ctx.fillRect(225, 132, 45, 18);
+      ctx.fillRect(225, 116, 45, 15);
     }
 
-    // Slot 2: Duckweed Pads on Surface when Grass Carp + Duckweed active
-    if (slots[2] === 3 || slots[2] === 0) {
+    // Zone 2: Duckweed Pads on Surface when Grass Carp & Duckweed stocked
+    if (slots[2] === 3) {
       ctx.fillStyle = '#4ade80';
-      const padCnt = slots[2] === 0 ? 18 : 7;
-      for (let p = 0; p < padCnt; p++) {
-        const px = 275 + p * 36 + Math.sin(t * 1.5 + p) * 4;
+      for (let p = 0; p < 8; p++) {
+        const px = 278 + p * 44 + Math.sin(t * 1.5 + p) * 4;
         ctx.beginPath();
-        ctx.ellipse(px, 142, 11, 3.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(px, 124, 11, 3.5, 0, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    // Depth Zone Labels on Right Edge
+    // 4 Water Depth Labels
     ctx.font = 'bold 11px JetBrains Mono, monospace';
     ctx.fillStyle = 'rgba(226, 232, 240, 0.78)';
-    ctx.fillText('0.0–0.5m Surface', 828, 168);
-    ctx.fillText('0.5–1.5m Phyto', 828, 226);
-    ctx.fillText('1.5–2.5m Zoopl.', 828, 286);
-    ctx.fillText('2.5–3.5m Benthic', 828, 348);
+    ctx.fillText('Z3 · 0–0.5m Surface', 808, 148);
+    ctx.fillText('Z4 · 0.5–1.5m Phyto', 808, 194);
+    ctx.fillText('Z5 · 1.5–2.5m Zoopl.', 808, 242);
+    ctx.fillText('Z6 · 2.5–3.5m Benthic', 808, 290);
 
-    // Swim 4 Depth-Stratified Guilds!
-    const gasping = cur.oxygen <= 42;
+    const gasping = snap.o2 <= 32;
     for (const sw of swimmers) {
       sw.x += sw.vx * dt;
-      if (sw.x < 305) { sw.x = 305; sw.vx = Math.abs(sw.vx); }
-      if (sw.x > 915) { sw.x = 915; sw.vx = -Math.abs(sw.vx); }
+      if (sw.x < 305) {
+        sw.x = 305;
+        sw.vx = Math.abs(sw.vx);
+      }
+      if (sw.x > 795) {
+        sw.x = 795;
+        sw.vx = -Math.abs(sw.vx);
+      }
 
       if (sw.band === 0 && slots[2] > 0) {
         const col = slots[2] === 3 ? '#86efac' : slots[2] === 1 ? '#f43f5e' : '#fb923c';
-        drawFish(ctx, sw.x, 168 + Math.sin(t * 2 + sw.phase) * 7, sw.vx, 0.92, col, '#fef08a', t + sw.phase, gasping);
-      } else if (sw.band === 1 && slots[3] === 1) {
-        drawFish(ctx, sw.x, 226 + Math.sin(t * 1.8 + sw.phase) * 9, sw.vx, 0.88, '#e2e8f0', '#94a3b8', t + sw.phase, gasping);
+        drawFish(ctx, sw.x, 146 + Math.sin(t * 2 + sw.phase) * 5, sw.vx, 0.88, col, '#fef08a', t + sw.phase, gasping);
+      } else if (sw.band === 1 && (slots[3] === 1 || slots[3] === 3)) {
+        const col = slots[3] === 1 ? '#e2e8f0' : '#93c5fd';
+        drawFish(ctx, sw.x, 192 + Math.sin(t * 1.8 + sw.phase) * 7, sw.vx, 0.86, col, '#94a3b8', t + sw.phase, gasping);
       } else if (sw.band === 2 && (slots[4] === 2 || slots[4] === 1)) {
         const col = slots[4] === 2 ? '#fbbf24' : '#ef4444';
-        drawFish(ctx, sw.x, 286 + Math.sin(t * 1.6 + sw.phase) * 9, sw.vx, 1.0, col, '#d97706', t + sw.phase, gasping);
+        drawFish(ctx, sw.x, 240 + Math.sin(t * 1.6 + sw.phase) * 7, sw.vx, 0.94, col, '#d97706', t + sw.phase, gasping);
       } else if (sw.band === 3 && slots[5] === 3) {
-        drawFish(ctx, sw.x, 344 + Math.sin(t * 1.4 + sw.phase) * 5, sw.vx, 0.96, '#78716c', '#a8a29e', t + sw.phase, gasping);
+        drawFish(ctx, sw.x, 288 + Math.sin(t * 1.4 + sw.phase) * 4, sw.vx, 0.92, '#a8a29e', '#d6d3d1', t + sw.phase, gasping);
       }
     }
-  } else if (currentArena === 1) {
-    // Arena 1: Aztec Chinampa Floating Island (`x: 270..690`) + Turquoise Canal
-    const wGrad = ctx.createLinearGradient(0, 155, 0, H);
+  } else if (selectedArena === 1) {
+    const wGrad = ctx.createLinearGradient(0, 134, 0, H);
     wGrad.addColorStop(0, wc.top);
     wGrad.addColorStop(1, wc.deep);
     ctx.fillStyle = wGrad;
-    ctx.fillRect(0, 155, W, H - 155);
+    ctx.fillRect(0, 134, W, H - 134);
 
     ctx.fillStyle = '#5c3a21';
     ctx.beginPath();
-    ctx.roundRect(275, 138, 410, 78, 18);
+    ctx.roundRect(275, 120, 410, 68, 16);
     ctx.fill();
-    ctx.fillStyle = cur.fertility > 55 ? '#22c55e' : '#a3a380';
-    ctx.fillRect(282, 132, 396, 12);
+    ctx.fillStyle = snap.fertility > 52 ? '#22c55e' : '#a3a380';
+    ctx.fillRect(282, 114, 396, 10);
 
     if (slots[0] === 1) {
-      drawTree(ctx, 298, 136, '#4ade80', '#78350f', t);
-      drawTree(ctx, 662, 136, '#4ade80', '#78350f', t + 1.5);
+      drawTree(ctx, 298, 118, '#4ade80', '#78350f', t);
+      drawTree(ctx, 662, 118, '#4ade80', '#78350f', t + 1.5);
       ctx.strokeStyle = 'rgba(180, 83, 9, 0.55)';
       ctx.lineWidth = 2;
       for (let rx = 290; rx <= 670; rx += 22) {
         ctx.beginPath();
-        ctx.moveTo(rx, 214);
-        ctx.quadraticCurveTo(rx + Math.sin(t * 2 + rx) * 6, 260, rx, 298);
+        ctx.moveTo(rx, 186);
+        ctx.quadraticCurveTo(rx + Math.sin(t * 2 + rx) * 6, 224, rx, 255);
         ctx.stroke();
       }
     }
@@ -1309,91 +1400,102 @@ function renderCanvasLoop(nowMs) {
         ctx.strokeStyle = '#16a34a';
         ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.moveTo(cx, 134);
-        ctx.lineTo(cx + Math.sin(t * 2 + cx) * 3, 72);
+        ctx.moveTo(cx, 116);
+        ctx.lineTo(cx + Math.sin(t * 2 + cx) * 3, 60);
         ctx.stroke();
         ctx.fillStyle = '#facc15';
         ctx.beginPath();
-        ctx.ellipse(cx + 5, 100, 4, 9, 0.25, 0, Math.PI * 2);
+        ctx.ellipse(cx + 5, 86, 4, 8, 0.25, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#f97316';
         ctx.beginPath();
-        ctx.arc(cx + 18, 130, 7, 0, Math.PI * 2);
+        ctx.arc(cx + 18, 112, 6.5, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    const gasping = cur.oxygen <= 42;
+    if (slots[2] === 1 || slots[2] === 2) {
+      ctx.fillStyle = slots[2] === 1 ? '#4ade80' : '#15803d';
+      const cnt = slots[2] === 2 ? 20 : 8;
+      for (let i = 0; i < cnt; i++) {
+        ctx.beginPath();
+        ctx.ellipse(45 + i * 44, 136, 14, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    const gasping = snap.o2 <= 32;
     for (const sw of swimmers) {
       sw.x = ((sw.x + sw.vx * dt + W) % (W - 80)) + 40;
       if (sw.band <= 1 && slots[4] === 3) {
-        drawFish(ctx, sw.x, 315 + (sw.id % 3) * 20 + Math.sin(t * 2 + sw.phase) * 5, sw.vx, 1.0, '#fbcfe8', '#f472b6', t + sw.phase, gasping, true);
-      } else if (sw.band >= 2 && slots[3] === 2) {
-        drawFish(ctx, sw.x, 245 + Math.sin(t * 2.5 + sw.phase) * 8, sw.vx, 0.72, '#bae6fd', '#38bdf8', t + sw.phase, gasping);
+        drawFish(ctx, sw.x, 268 + (sw.id % 3) * 14 + Math.sin(t * 2 + sw.phase) * 4, sw.vx, 0.96, '#fbcfe8', '#f472b6', t + sw.phase, gasping, true);
+      } else if (sw.band >= 2 && (slots[3] === 2 || slots[3] === 1)) {
+        const col = slots[3] === 2 ? '#bae6fd' : '#ca8a04';
+        drawFish(ctx, sw.x, 212 + Math.sin(t * 2.5 + sw.phase) * 7, sw.vx, 0.72, col, '#38bdf8', t + sw.phase, gasping);
       }
     }
-  } else if (currentArena === 2) {
+  } else if (selectedArena === 2) {
     ctx.strokeStyle = 'rgba(186, 230, 253, 0.35)';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(W / 2, H + 110, 540, Math.PI * 1.08, Math.PI * 1.92);
+    ctx.arc(W / 2, H + 130, 540, Math.PI * 1.08, Math.PI * 1.92);
     ctx.stroke();
 
     ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 345, W, 55);
+    ctx.fillRect(0, 292, W, 38);
 
     ctx.fillStyle = wc.top;
-    ctx.fillRect(55, 145, 250, 200);
+    ctx.fillRect(55, 124, 250, 168);
     ctx.strokeStyle = '#67e8f9';
     ctx.lineWidth = 3;
-    ctx.strokeRect(55, 138, 250, 207);
+    ctx.strokeRect(55, 118, 250, 174);
 
     ctx.fillStyle = slots[2] === 3 ? '#78350f' : '#475569';
-    ctx.fillRect(350, 195, 195, 100);
+    ctx.fillRect(350, 168, 195, 84);
     ctx.strokeStyle = '#38bdf8';
-    ctx.strokeRect(350, 195, 195, 100);
+    ctx.strokeRect(350, 168, 195, 84);
     ctx.font = 'bold 11px JetBrains Mono, monospace';
     ctx.fillStyle = '#fef08a';
-    ctx.fillText(slots[2] === 3 ? '🦠 NH3 ➔ NO2- ➔ NO3-' : '⚠ Bio-Filter Uncycled', 368, 186);
+    ctx.fillText(slots[2] === 3 ? '🧬 NH3 ➔ NO2- ➔ NO3-' : '⚠ Bio-Media Uncycled', 368, 158);
 
     ctx.fillStyle = wc.top;
-    ctx.fillRect(585, 230, 330, 115);
+    ctx.fillRect(585, 196, 330, 96);
     ctx.strokeStyle = '#34d399';
-    ctx.strokeRect(585, 230, 330, 115);
+    ctx.strokeRect(585, 196, 330, 96);
     ctx.fillStyle = '#e2e8f0';
-    ctx.fillRect(595, 222, 310, 10);
+    ctx.fillRect(595, 188, 310, 8);
 
     if (slots[3] === 1) {
       for (let lx = 618; lx <= 885; lx += 38) {
         ctx.fillStyle = '#22c55e';
         ctx.beginPath();
-        ctx.arc(lx, 212 + Math.sin(t * 2 + lx) * 2, 13, 0, Math.PI * 2);
+        ctx.arc(lx, 178 + Math.sin(t * 2 + lx) * 2, 12, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        ctx.arc(lx + 7, 217, 4, 0, Math.PI * 2);
+        ctx.arc(lx + 7, 183, 3.8, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    if (slots[0] === 2 || slots[0] === 3) {
-      const cnt = slots[0] === 3 ? 18 : 8;
+    if (slots[0] > 0) {
+      const cnt = slots[0] === 3 ? 16 : 8;
       for (let i = 0; i < cnt; i++) {
         const sw = swimmers[i];
         const fx = 85 + ((sw.x + i * 29) % 190);
-        const fy = 172 + (i % 5) * 30 + Math.sin(t * 2.5 + i) * 5;
-        drawFish(ctx, fx, fy, sw.vx, 0.82, '#93c5fd', '#38bdf8', t + i, cur.oxygen <= 42);
+        const fy = 145 + (i % 5) * 24 + Math.sin(t * 2.5 + i) * 4;
+        drawFish(ctx, fx, fy, sw.vx, 0.8, '#93c5fd', '#38bdf8', t + i, snap.o2 <= 32);
       }
     }
   } else {
     ctx.fillStyle = '#9a3412';
-    ctx.fillRect(0, 320, W, 80);
+    ctx.fillRect(0, 272, W, 58);
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(W / 2, 355, 355, Math.PI, 0);
+    ctx.arc(W / 2, 302, 300, Math.PI, 0);
     ctx.closePath();
-    ctx.fillStyle = cur.oxygen > 55 ? 'rgba(14, 165, 233, 0.22)' : 'rgba(127, 29, 29, 0.34)';
+    ctx.fillStyle = snap.o2 > 45 ? 'rgba(14, 165, 233, 0.22)' : 'rgba(127, 29, 29, 0.34)';
     ctx.fill();
     ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 4;
@@ -1402,73 +1504,126 @@ function renderCanvasLoop(nowMs) {
 
     if (slots[0] === 3) {
       for (const cx of [255, 305, 355]) {
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.82)';
-        ctx.fillRect(cx, 145, 28, 180);
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.84)';
+        ctx.fillRect(cx, 126, 28, 150);
         ctx.strokeStyle = '#a7f3d0';
-        ctx.strokeRect(cx, 145, 28, 180);
+        ctx.strokeRect(cx, 126, 28, 150);
       }
     }
 
     ctx.fillStyle = slots[5] === 1 ? '#422006' : '#b45309';
-    ctx.fillRect(420, 275, 280, 50);
-    if (slots[1] === 1) {
+    ctx.fillRect(420, 232, 280, 44);
+    if (slots[2] === 2) {
       for (let wx = 435; wx <= 685; wx += 18) {
         ctx.fillStyle = '#facc15';
-        ctx.fillRect(wx, 240 + Math.sin(t * 2 + wx) * 2, 4, 35);
+        ctx.fillRect(wx, 200 + Math.sin(t * 2 + wx) * 2, 4, 32);
         ctx.fillStyle = '#22c55e';
         ctx.beginPath();
-        ctx.arc(wx + 2, 272, 6.5, 0, Math.PI * 2);
+        ctx.arc(wx + 2, 230, 6, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
     if (slots[3] === 2) {
       ctx.fillStyle = '#fef3c7';
-      for (const mx of [175, 198, 220]) {
+      for (const mx of [185, 208, 230]) {
         ctx.beginPath();
-        ctx.arc(mx, 312, 9, Math.PI, 0);
+        ctx.arc(mx, 268, 8.5, Math.PI, 0);
         ctx.fill();
       }
     }
-    if (slots[2] === 2) {
+    if (slots[1] === 1) {
       ctx.fillStyle = '#06b6d4';
       ctx.beginPath();
-      ctx.ellipse(755, 320, 62, 18, 0, 0, Math.PI * 2);
+      ctx.ellipse(740, 274, 55, 14, 0, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
+  // 3. Weather & Oxygen Bubble Particles
   for (const p of particles) {
-    p.t = (p.t + dt * 0.24) % 1;
-    if (cur.oxygen > 45 && p.kind <= 1) {
+    p.t = (p.t + dt * (activeWeather === 2 ? 0.95 : 0.25)) % 1;
+    if (activeWeather === 2 && selectedArena <= 1) {
+      ctx.strokeStyle = 'rgba(186, 230, 253, 0.55)';
+      ctx.lineWidth = 1.4;
+      const rx = (p.x + p.t * 90) % W;
+      const ry = p.t * H;
+      ctx.beginPath();
+      ctx.moveTo(rx, ry);
+      ctx.lineTo(rx - 6, ry + 14);
+      ctx.stroke();
+    } else if (snap.o2 > 42 && p.kind <= 1) {
       ctx.fillStyle = 'rgba(186, 230, 253, 0.55)';
-      const bx = 280 + (p.x % 620);
-      const by = 355 - p.t * 205;
+      const bx = 270 + (p.x % 630);
+      const by = 302 - p.t * 168;
       ctx.beginPath();
       ctx.arc(bx, by, p.s, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  if (full.isHaltFree) {
+  // 4. Glowing 6/6 Closed-Loop Nutrient Arc!
+  if ((snap.loopLinks === 6 && snap.shortcutCount === 0) || nowMs < eventCelebrationUntil) {
     ctx.save();
-    ctx.strokeStyle = 'rgba(52, 211, 153, 0.58)';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = snap.loopLinks === 6 ? 'rgba(52, 211, 153, 0.65)' : 'rgba(250, 204, 21, 0.45)';
+    ctx.lineWidth = 3.2;
     ctx.setLineDash([10, 8]);
-    ctx.lineDashOffset = -t * 42;
+    ctx.lineDashOffset = -t * 46;
     ctx.beginPath();
-    ctx.ellipse(W * 0.5, H * 0.54, 320, 125, 0, 0, Math.PI * 2);
+    ctx.ellipse(W * 0.5, H * 0.54, 315, 102, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     for (let k = 0; k < 8; k++) {
-      const ang = t * 1.4 + (k * Math.PI) / 4;
-      const ox = W * 0.5 + Math.cos(ang) * 320;
-      const oy = H * 0.54 + Math.sin(ang) * 125;
+      const ang = t * 1.5 + (k * Math.PI) / 4;
+      const ox = W * 0.5 + Math.cos(ang) * 315;
+      const oy = H * 0.54 + Math.sin(ang) * 102;
       ctx.fillStyle = k % 2 === 0 ? '#fde047' : '#34d399';
       ctx.beginPath();
-      ctx.arc(ox, oy, 5.2, 0, Math.PI * 2);
+      ctx.arc(ox, oy, 5.0, 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.restore();
+  }
+
+  // 5. Splash Rings & Floating HFS Event Result Popups
+  for (let i = splashRings.length - 1; i >= 0; i--) {
+    const sr = splashRings[i];
+    const age = (nowMs - sr.bornMs) / sr.ttlMs;
+    if (age >= 1) {
+      splashRings.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha = 1 - age;
+    ctx.strokeStyle = sr.color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(sr.x, sr.y, 12 + age * 75, 5 + age * 26, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  for (let i = floatingPopups.length - 1; i >= 0; i--) {
+    const fp = floatingPopups[i];
+    const age = (nowMs - fp.bornMs) / fp.ttlMs;
+    if (age >= 1) {
+      floatingPopups.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha = age < 0.75 ? 1 : (1 - age) / 0.25;
+    const py = fp.y - age * 46;
+    ctx.font = '900 15px Inter, system-ui, sans-serif';
+    const tw = ctx.measureText(fp.text).width;
+    ctx.fillStyle = 'rgba(4, 18, 30, 0.86)';
+    ctx.strokeStyle = fp.color;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.roundRect(fp.x - tw / 2 - 13, py - 16, tw + 26, 26, 999);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = fp.color;
+    ctx.fillText(fp.text, fp.x - tw / 2, py + 2);
     ctx.restore();
   }
 
@@ -1476,7 +1631,7 @@ function renderCanvasLoop(nowMs) {
 }
 
 // ---------------------------------------------------------------------------
-// DOM Rendering: Arena Cards, 6 Niche Builders, Vitals, Passport & Hall of Fame
+// DOM Rendering: Arena Strip, 8-Season Track, Turn Deck, Vitals & Passport
 // ---------------------------------------------------------------------------
 
 function renderArenaSelector() {
@@ -1487,12 +1642,13 @@ function renderArenaSelector() {
   mount.innerHTML = ARENAS.map((a) => {
     const stars = bestStars[a.id] || 0;
     const starBadge = stars > 0 ? '⭐'.repeat(stars) : '☆☆☆';
+    const hasLiveHere = liveRun && liveRun.status === STATUS_ACTIVE && liveRun.arenaId === a.id;
     return `
-      <button type="button" class="he-arena-card ${currentArena === a.id ? 'is-active' : ''}" data-arena-id="${a.id}">
+      <button type="button" class="he-arena-card ${selectedArena === a.id ? 'is-active' : ''}" data-arena-id="${a.id}">
         <img src="${a.thumb}" alt="${escapeHtml(a.shortName)}" class="he-arena-thumb" />
         <div class="he-arena-meta">
           <div class="he-arena-lvl">
-            <span>Lv.${a.id + 1}</span>
+            <span>Lv.${a.id + 1}${hasLiveHere ? ' · LIVE' : ''}</span>
             <span>${starBadge}</span>
           </div>
           <div class="he-arena-name">${escapeHtml(a.shortName)}</div>
@@ -1502,7 +1658,7 @@ function renderArenaSelector() {
     `;
   }).join('');
 
-  const active = ARENAS[currentArena];
+  const active = ARENAS[selectedArena];
   document.getElementById('lblArenaEra').textContent = active.era;
   document.getElementById('lblArenaTitle').textContent = active.title;
   document.getElementById('arenaStoryMount').innerHTML = `
@@ -1511,126 +1667,322 @@ function renderArenaSelector() {
   `;
 }
 
-function renderNicheSlots() {
-  const mount = document.getElementById('slotsGridMount');
-  if (!mount) return;
-  const active = ARENAS[currentArena];
-  const picks = arenaChoices[currentArena];
+function renderTimelineAndHud() {
+  const inArena = isRunMatchingSelectedArena();
+  const snap = inArena ? liveRun : null;
 
-  mount.innerHTML = active.slots
-    .map(
-      (sl, sIdx) => `
-      <div class="he-slot-card">
-        <div class="he-slot-hdr">
-          <span class="he-slot-zone mono">${escapeHtml(sl.zone)}</span>
-        </div>
-        <div class="he-slot-title">${escapeHtml(sl.title)}</div>
-        <div class="he-slot-question">${escapeHtml(sl.question)}</div>
-        <div class="he-opt-list">
-          ${sl.options
-            .map(
-              (opt, oIdx) => `
-            <button type="button"
-              class="he-opt-btn ${picks[sIdx] === oIdx ? 'is-selected' : ''}"
-              data-slot-idx="${sIdx}"
-              data-opt-idx="${oIdx}">
-              <div>
-                <span>${opt.icon} ${escapeHtml(opt.name)}</span>
-                <span class="he-opt-sub">${escapeHtml(opt.sub)}</span>
-              </div>
-              <span class="mono" style="font-size:0.75rem;">${picks[sIdx] === oIdx ? '✓' : '○'}</span>
-            </button>
-          `
-            )
-            .join('')}
-        </div>
-      </div>
-    `
-    )
-    .join('');
+  const loopEl = document.getElementById('lblLoopRing');
+  const streakEl = document.getElementById('lblStreakChip');
+  const startBtn = document.getElementById('btnStartOrResetRun');
+  const txOv = document.getElementById('canvasTxOverlay');
+
+  if (txOv) {
+    txOv.style.display = txBusy ? 'flex' : 'none';
+    if (txBusy) {
+      document.getElementById('lblTxPhaseTitle').textContent = `⛓️ ${txPhaseLabel}`;
+    }
+  }
+
+  const loopLinks = snap ? snap.loopLinks : 0;
+  if (loopEl) {
+    loopEl.textContent = `♾️ Loop ${loopLinks}/6`;
+    loopEl.className = `he-hud-chip he-chip-loop mono ${loopLinks === 6 && snap?.shortcutCount === 0 ? 'is-full' : ''}`;
+  }
+  if (streakEl) {
+    streakEl.textContent = `🔥 Streak ${snap ? snap.comboStreak : 0}`;
+  }
+  if (startBtn) {
+    startBtn.disabled = txBusy;
+    startBtn.textContent =
+      snap && snap.status === STATUS_ACTIVE ? '↺ Restart Expedition ($0 Gas)' : '🚀 New Expedition ($0 Gas)';
+  }
+
+  // 8-Season Track
+  const stepsMount = document.getElementById('seasonStepsMount');
+  if (stepsMount) {
+    stepsMount.innerHTML = SEASON_LABELS.map((lbl, idx) => {
+      const sNum = idx + 1;
+      let cls = '';
+      let icon = '○';
+      if (snap) {
+        if (snap.status === STATUS_VICTORY || sNum <= snap.lastRoundPlayed) {
+          if (snap.status === STATUS_HALTED && sNum === snap.lastRoundPlayed) {
+            cls = 'is-halted';
+            icon = '✖';
+          } else {
+            cls = 'is-done';
+            icon = '✓';
+          }
+        } else if (snap.status === STATUS_ACTIVE && sNum === snap.round) {
+          cls = 'is-current';
+          icon = '▶';
+        }
+      }
+      return `<span class="he-s-node mono ${cls}">${icon} ${escapeHtml(lbl)}</span>`;
+    }).join('');
+  }
+
+  // Forecast Pill
+  const fcMount = document.getElementById('forecastBannerMount');
+  if (fcMount) {
+    if (!snap || snap.status === STATUS_NONE) {
+      fcMount.innerHTML = `☀️ Click <strong>Start Season 1 Expedition</strong> to begin your live 8-season run on Subnet 1!`;
+    } else if (snap.status === STATUS_VICTORY) {
+      fcMount.innerHTML = `🏆 All 8 Seasons Balanced (${'⭐'.repeat(snap.starsEarned)} · 🧺 ${snap.totalHarvest} Harvest)! Try the next Arena or beat your high score!`;
+    } else if (snap.status === STATUS_HALTED) {
+      fcMount.innerHTML = `🔬 Expedition halted on Season ${snap.lastRoundPlayed} — click <strong>New Expedition</strong> to apply what you learned!`;
+    } else {
+      const wm = WEATHER_META[snap.upcomingWeather] || WEATHER_META[0];
+      fcMount.innerHTML = `${wm.icon} <strong>Season ${snap.round} Forecast — ${escapeHtml(wm.name)}:</strong> ${escapeHtml(wm.tip)}`;
+    }
+  }
 }
 
-function renderVitalsAndDiagnosis(fullSim, curSnap) {
-  const vMount = document.getElementById('vitalsMount');
-  const dMount = document.getElementById('diagnosisBox');
-  const yLbl = document.getElementById('lblTotalYield');
-  if (!vMount || !dMount) return;
+function renderCommandDeck() {
+  const inArena = isRunMatchingSelectedArena();
+  const snap = inArena ? liveRun : null;
+  const activeArena = ARENAS[selectedArena];
 
-  const snap = curSnap || fullSim;
-  if (yLbl) yLbl.textContent = `🧺 ${snap.totalYield} Harvest`;
+  const badgeEl = document.getElementById('lblDeckRoundBadge');
+  const promptEl = document.getElementById('lblDeckPrompt');
+  const execBtn = document.getElementById('btnExecuteRoundAction');
+  const tabsMount = document.getElementById('zoneTabsMount');
+  const qMount = document.getElementById('zoneQuestionMount');
+  const cardsMount = document.getElementById('actionCardsMount');
+
+  const isActiveRun = Boolean(snap && snap.status === STATUS_ACTIVE);
+
+  if (!isActiveRun) {
+    badgeEl.textContent = snap?.status === STATUS_VICTORY ? 'VICTORY ACHIEVED' : snap?.status === STATUS_HALTED ? 'ECOSYSTEM HALTED' : 'EXPEDITION STANDBY';
+    promptEl.textContent =
+      snap?.status === STATUS_VICTORY
+        ? `Bravo! You earned ${'⭐'.repeat(snap.starsEarned)} (${snap.totalHarvest} Harvest). Launch a new expedition or advance to Level ${Math.min(4, selectedArena + 2)}!`
+        : snap?.status === STATUS_HALTED
+        ? `Halted at Season ${snap.lastRoundPlayed} — launch a fresh 8-season expedition on Subnet 1 to test a better food web!`
+        : `Start your 8-Season Expedition in ${activeArena.shortName} — each round confirms on Subnet 1!`;
+    execBtn.disabled = txBusy;
+    execBtn.textContent = txBusy ? '⛓️ Confirming on Subnet 1…' : `🚀 Start Season 1 Expedition ($0 Gas)`;
+  } else {
+    badgeEl.textContent = `SEASON ${snap.round} OF 8`;
+    let chosenLabel = '';
+    if (pendingAction.actionKind === 0) {
+      const ch = activeArena.zones[pendingAction.target]?.choices.find((c) => c.val === pendingAction.choice);
+      chosenLabel = ch ? `${ch.icon} ${ch.name}` : 'Select an Action';
+    } else {
+      const st = STEWARD_ACTIONS.find((s) => s.target === pendingAction.target);
+      chosenLabel = st ? `${st.icon} ${st.name}` : 'Steward Action';
+    }
+    promptEl.textContent = `Selected Move: ${chosenLabel}`;
+    execBtn.disabled = txBusy;
+    execBtn.textContent = txBusy
+      ? '⛓️ Sealing Season on Subnet 1…'
+      : `⚡ Commit Season ${snap.round} Action ($0 Gas)`;
+  }
+
+  // Render 6 Zone Tabs + 1 Steward Tab
+  const zoneTabsHtml = activeArena.zones
+    .map((z, idx) => {
+      const curChoiceVal = snap ? snap.slots[idx] : 0;
+      const curChoice = z.choices.find((c) => c.val === curChoiceVal);
+      const statusSym = curChoice ? curChoice.icon : '○';
+      return `
+        <button type="button"
+          class="he-zone-tab ${focusedTab === idx ? 'is-focused' : ''} ${curChoice ? 'is-stocked' : ''}"
+          data-focus-tab="${idx}">
+          <span class="he-zone-tab-top mono"><span>Z${idx + 1}</span><span>${statusSym}</span></span>
+          <span class="he-zone-tab-name">${escapeHtml(z.short)}</span>
+        </button>
+      `;
+    })
+    .join('');
+
+  const stewardTabHtml = `
+    <button type="button"
+      class="he-zone-tab ${focusedTab === 6 ? 'is-focused' : ''} ${snap?.loopLinks === 6 ? 'is-stocked' : ''}"
+      data-focus-tab="6">
+      <span class="he-zone-tab-top mono"><span>CARE</span><span>${snap?.loopLinks === 6 ? '♾️' : '🛠️'}</span></span>
+      <span class="he-zone-tab-name">Steward &amp; Loop</span>
+    </button>
+  `;
+  tabsMount.innerHTML = zoneTabsHtml + stewardTabHtml;
+
+  // Render 3 Action Cards for Focused Tab
+  if (focusedTab >= 0 && focusedTab < 6) {
+    const z = activeArena.zones[focusedTab];
+    const installedVal = snap ? snap.slots[focusedTab] : 0;
+    qMount.innerHTML = `🔬 <strong>${escapeHtml(z.question)}</strong>`;
+    cardsMount.innerHTML = z.choices
+      .map((c) => {
+        const isPicked = pendingAction.actionKind === 0 && pendingAction.target === focusedTab && pendingAction.choice === c.val;
+        const isInstalled = installedVal === c.val;
+        return `
+          <button type="button"
+            class="he-act-card ${isPicked ? 'is-picked' : ''} ${isInstalled ? 'is-installed' : ''}"
+            data-act-kind="0"
+            data-act-target="${focusedTab}"
+            data-act-choice="${c.val}">
+            <div>
+              <div class="he-act-top">
+                <span class="he-act-icon">${c.icon}</span>
+                <span class="he-act-tag mono ${isInstalled ? 'installed' : ''}">
+                  ${isInstalled ? '✓ Active in Pond' : escapeHtml(c.tag)}
+                </span>
+              </div>
+              <div class="he-act-title" style="margin-top:6px;">${escapeHtml(c.name)}</div>
+              <div class="he-act-desc" style="margin-top:4px;">${escapeHtml(c.desc)}</div>
+            </div>
+            <div class="mono" style="font-size:0.71rem;color:${isPicked ? '#6ee7b7' : '#94a3b8'};">
+              ${isPicked ? '▶ Selected for This Season' : 'Click to Select'}
+            </div>
+          </button>
+        `;
+      })
+      .join('');
+  } else {
+    qMount.innerHTML = `🛠️ <strong>Seasonal Stewardship &amp; Autonomous Loop Verification:</strong> Clean silt, boost O2 during Heatwaves, or prove your 6/6 Closed Loop runs hands-free for 2&times; Harvest!`;
+    cardsMount.innerHTML = STEWARD_ACTIONS.map((s) => {
+      const isPicked = pendingAction.actionKind === 1 && pendingAction.target === s.target;
+      return `
+        <button type="button"
+          class="he-act-card ${isPicked ? 'is-picked' : ''}"
+          data-act-kind="1"
+          data-act-target="${s.target}"
+          data-act-choice="0">
+          <div>
+            <div class="he-act-top">
+              <span class="he-act-icon">${s.icon}</span>
+              <span class="he-act-tag mono">${escapeHtml(s.tag)}</span>
+            </div>
+            <div class="he-act-title" style="margin-top:6px;">${escapeHtml(s.name)}</div>
+            <div class="he-act-desc" style="margin-top:4px;">${escapeHtml(s.desc)}</div>
+          </div>
+          <div class="mono" style="font-size:0.71rem;color:${isPicked ? '#6ee7b7' : '#94a3b8'};">
+            ${isPicked ? '▶ Selected for This Season' : 'Click to Select'}
+          </div>
+        </button>
+      `;
+    }).join('');
+  }
+}
+
+function formatDeltaBadge(cur, prev, showDelta) {
+  if (!showDelta) return '';
+  const d = cur - prev;
+  if (d === 0) return '';
+  return d > 0
+    ? `<span class="he-delta-pos mono">+${d}%</span>`
+    : `<span class="he-delta-neg mono">${d}%</span>`;
+}
+
+function renderSidebar() {
+  const snap = getDisplayedStateForCanvas();
+  const hasPlayedRound = isRunMatchingSelectedArena() && snap.lastRoundPlayed > 0;
+
+  document.getElementById('lblTotalYield').textContent = `🧺 ${snap.totalHarvest} Harvest`;
 
   const bars = [
-    { label: '🫧 Oxygen Balance', val: snap.oxygen, color: 'linear-gradient(90deg,#0ea5e9,#38bdf8)', ok: snap.oxygen > 36 },
-    { label: '💎 Water / Air Clarity', val: snap.clarity, color: 'linear-gradient(90deg,#06b6d4,#2dd4bf)', ok: snap.clarity > 24 },
-    { label: '🌱 Soil & Silt Fertility', val: snap.fertility, color: 'linear-gradient(90deg,#22c55e,#84cc16)', ok: snap.fertility > 26 },
-    { label: '🛡️ Cleanliness (Low Toxin)', val: Math.max(0, 100 - snap.toxicity), color: 'linear-gradient(90deg,#a855f7,#ec4899)', ok: snap.toxicity < 55 },
+    { label: '🫧 Oxygen Balance', val: snap.o2, prev: snap.prevO2 ?? snap.o2, color: 'linear-gradient(90deg,#0ea5e9,#38bdf8)', ok: snap.o2 > 32 },
+    { label: '💎 Water / Air Clarity', val: snap.clarity, prev: snap.prevClarity ?? snap.clarity, color: 'linear-gradient(90deg,#06b6d4,#2dd4bf)', ok: snap.clarity > 26 },
+    { label: '🌱 Soil & Silt Fertility', val: snap.fertility, prev: snap.prevFertility ?? snap.fertility, color: 'linear-gradient(90deg,#22c55e,#84cc16)', ok: snap.fertility > 26 },
+    { label: '🛡️ Cleanliness (Low Toxin)', val: snap.cleanliness, prev: snap.prevCleanliness ?? snap.cleanliness, color: 'linear-gradient(90deg,#a855f7,#ec4899)', ok: snap.cleanliness > 32 },
   ];
 
-  vMount.innerHTML = bars
-    .map(
-      (b) => `
+  document.getElementById('vitalsMount').innerHTML =
+    bars
+      .map(
+        (b) => `
       <div class="he-vital-row">
         <div class="he-vital-top">
           <span>${b.label}</span>
-          <span class="mono" style="color:${b.ok ? '#6ee7b7' : '#fda4af'};">${b.val}%</span>
+          <span class="mono" style="color:${b.ok ? '#6ee7b7' : '#fda4af'};">
+            ${b.val}%${formatDeltaBadge(b.val, b.prev, hasPlayedRound)}
+          </span>
         </div>
         <div class="he-vital-track">
           <div class="he-vital-fill" style="width:${b.val}%;background:${b.color};"></div>
         </div>
       </div>
     `
-    )
-    .join('');
+      )
+      .join('') +
+    (snap.toxinDebt > 0
+      ? `<div class="mono" style="font-size:0.71rem;color:#fda4af;margin-top:2px;">⚠ Latent Chemical/Toxin Debt: ${snap.toxinDebt}% (scrub with Benthic Silt/Bio-Filters!)</div>`
+      : '');
 
-  const diag = HALT_DIAGNOSES[fullSim.haltReason] || HALT_DIAGNOSES[HALT_NUTRIENT_STARVATION];
-  dMount.className = `he-diagnosis-box ${diag.tone === 'win' ? 'is-win' : 'is-warn'}`;
-  dMount.innerHTML = `
-    <div style="font-weight:800;margin-bottom:4px;">${diag.badge}</div>
-    <div>${diag.explain}</div>
-  `;
+  // Last Emitted HFS Event & Science Clue Box
+  const evBox = document.getElementById('lastEventBox');
+  if (snap.status === STATUS_HALTED) {
+    const diag = HALT_DIAGNOSES[snap.haltReason] || HALT_DIAGNOSES[5];
+    evBox.className = 'he-diagnosis-box is-halt';
+    evBox.innerHTML = `<div style="font-weight:800;margin-bottom:4px;">${diag.badge}</div><div><strong>Science Clue:</strong> ${diag.explain}</div>`;
+  } else if (snap.status === STATUS_VICTORY) {
+    evBox.className = 'he-diagnosis-box is-win';
+    evBox.innerHTML = `<div style="font-weight:800;margin-bottom:4px;">🏆 EXPEDITION VICTORY · ${'⭐'.repeat(snap.starsEarned)}</div><div>Confirmed by <code>haltfree_ecosystem.wasm</code>! Total Harvest: <strong>${snap.totalHarvest}</strong> (+${snap.xpGained} Eco-XP).</div>`;
+  } else if (hasPlayedRound) {
+    const combo = COMBO_META[snap.comboId];
+    const wm = WEATHER_META[snap.weatherApplied] || WEATHER_META[0];
+    evBox.className = `he-diagnosis-box ${combo ? 'is-win' : ''}`;
+    evBox.innerHTML = `
+      <div style="font-weight:800;margin-bottom:3px;">
+        ⛓️ Season ${snap.lastRoundPlayed} Emitted (${wm.icon} ${escapeHtml(wm.name)}) · +${snap.lastYield} 🧺
+      </div>
+      <div>${combo ? `<strong>${combo.badge}</strong> ${escapeHtml(combo.text)}` : 'Vitals updated on Subnet 1 — check the forecast and pick your next move!'}</div>
+    `;
+  } else {
+    evBox.className = 'he-diagnosis-box';
+    evBox.innerHTML = `<strong>⛓️ Pure On-Chain Gameplay:</strong> Each season submits your chosen move to Subnet 1 and renders the emitted <code>RoundResolved</code> event once confirmed!`;
+  }
 
-  if (fullSim.isHaltFree) {
+  // Coach Banner
+  if (snap.status === STATUS_ACTIVE && snap.loopLinks === 6 && snap.shortcutCount === 0) {
     heGuide?.updateCoach({
-      pill: '♾️ LOOP COMPLETE!',
+      pill: '♾️ 6/6 LOOP READY!',
       tone: 'action',
-      html: `All 12 seasons balanced at <strong>${fullSim.totalYield} Harvest</strong>! Click <strong>♾️ Verify &amp; Seal Loop</strong> to record your ${'⭐'.repeat(fullSim.stars)} badge on Subnet 1!`,
-      actionLabel: '♾️ Seal on Subnet 1',
-      onAction: () => sealEcosystemOnChain(),
+      html: `All 6 Closed-Loop Guilds are active! Play <strong>♾️ Autonomous Hands-Off Season</strong> in the <em>Steward &amp; Loop</em> tab for a <strong>2&times; Harvest Multiplier</strong>!`,
+      actionLabel: '♾️ Run Hands-Off Season',
+      onAction: () => {
+        focusedTab = 6;
+        pendingAction = { actionKind: 1, target: 3, choice: 0 };
+        playRoundActionOnChain();
+      },
+    });
+  } else if (!isRunMatchingSelectedArena() || snap.status !== STATUS_ACTIVE) {
+    heGuide?.updateCoach({
+      pill: `🌿 ARENA ${selectedArena + 1}`,
+      tone: 'action',
+      html: `Ready to engineer <strong>${escapeHtml(ARENAS[selectedArena].shortName)}</strong>? Launch an 8-season on-chain expedition at <strong>$0.00 gas</strong>!`,
+      actionLabel: '🚀 Start Season 1',
+      onAction: () => startExpeditionOnChain(selectedArena),
     });
   } else {
     heGuide?.updateCoach({
-      pill: `🔬 ARENA ${currentArena + 1}`,
+      pill: `⛓️ SEASON ${snap.round}/8`,
       tone: 'info',
-      html: `Experiment with the <strong>6 ecological niches</strong> below until all 12 seasons run without halting!`,
+      html: `Choose 1 species or stewardship move below, then click <strong>Commit Season ${snap.round} Action</strong> to advance on Subnet 1!`,
     });
   }
-}
 
-function renderSidebar() {
-  const fullSim = simulateLocal12Seasons(currentArena, arenaChoices[currentArena]);
-  renderVitalsAndDiagnosis(fullSim, fullSim);
-
-  const sealBtn = document.getElementById('btnSealOnChain');
-  if (sealBtn) {
-    sealBtn.disabled = txBusy;
-    sealBtn.textContent = txBusy ? '⛓️ Sealing on Subnet 1…' : '♾️ Verify & Seal Loop ($0 Gas)';
-  }
-
+  // Eco-Scholar Passport & Unlockable Badges
   const vw = onChainOverview?.viewer;
   const totalStars = vw ? vw.bestStars.reduce((a, b) => a + b, 0) : 0;
-  document.getElementById('lblTotalStars').textContent = `⭐ ${totalStars} / 12`;
+  const totalXp = vw ? vw.totalXp : 0;
+  const badgesMask = vw ? vw.badges : 0;
+  document.getElementById('lblTotalStars').textContent = `⭐ ${totalStars} / 12 · ${totalXp} XP`;
 
   const rankTitle =
     totalStars >= 12
-      ? '🌟 Grand Halt-Free Ecologist'
+      ? '👑 Grand Halt-Free Permaculturist'
       : totalStars >= 6
       ? '🔬 Closed-Loop Bio-Engineer'
       : totalStars >= 3
       ? '🐟 Master of Sangji Yutang'
-      : '🌱 Permaculture Explorer';
+      : '🌱 Permaculture Apprentice';
 
   document.getElementById('passportMount').innerHTML = `
-    <div style="font-weight:800;color:#fde68a;">${rankTitle}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:800;color:#fde68a;font-size:0.8rem;">${rankTitle}</span>
+      <span class="mono he-muted">Best Streak: 🔥${vw ? vw.bestStreak : 0}</span>
+    </div>
     <div class="he-badge-grid">
       ${ARENAS.map((a) => {
         const solved = vw && (vw.solvedMask & (1 << a.id)) !== 0;
@@ -1639,14 +1991,21 @@ function renderSidebar() {
           <div class="he-mini-badge ${solved ? 'solved' : ''}">
             <div style="font-weight:800;">${escapeHtml(a.shortName)}</div>
             <div class="mono" style="color:${solved ? '#6ee7b7' : '#94a3b8'};">
-              ${solved ? `${'⭐'.repeat(st)} · ${vw.bestYield[a.id]} Yield` : 'Unsolved'}
+              ${solved ? `${'⭐'.repeat(st)} · 🧺${vw.bestYield[a.id]}` : 'Unsolved'}
             </div>
           </div>
         `;
       }).join('')}
     </div>
+    <div class="he-ach-strip">
+      ${BADGE_META.map((bm) => {
+        const has = (badgesMask & bm.bit) !== 0;
+        return `<span class="he-ach-pill ${has ? 'unlocked' : ''}" title="${escapeHtml(bm.tip)}">${bm.icon} ${escapeHtml(bm.name)}</span>`;
+      }).join('')}
+    </div>
   `;
 
+  // Hall of Fame
   const leaders = onChainOverview?.leaders || [];
   document.getElementById('leaderboardMount').innerHTML = leaders.length
     ? leaders
@@ -1659,29 +2018,41 @@ function renderSidebar() {
       `
         )
         .join('')
-    : `<div class="he-muted">Seal your first Halt-Free pond loop to appear on the Hall of Fame!</div>`;
+    : `<div class="he-muted">Complete an 8-season expedition on Subnet 1 to claim #1!</div>`;
 
-  const logs = onChainOverview?.logs || [];
-  document.getElementById('logsMount').innerHTML = logs.length
-    ? [...logs]
-        .reverse()
-        .map((lg) => {
-          const aName = ARENAS[lg.arenaId]?.shortName || 'Arena';
-          const badge = lg.haltReason === 0 ? `♾️ ${'⭐'.repeat(lg.stars)}` : `S${lg.seasons} Halt`;
-          return `
-            <div class="he-row-item">
-              <span>${escapeHtml(formatScholarName(lg.identity))} · ${escapeHtml(aName)}</span>
-              <span class="mono" style="color:${lg.haltReason === 0 ? '#6ee7b7' : '#fda4af'};">${badge}</span>
-            </div>
-          `;
-        })
-        .join('')
-    : `<div class="he-muted">Recent field experiments will stream here live.</div>`;
+  // Live HFS Event Feed (Session Receipt Events + Global Completed Logs)
+  const feedRows = [
+    ...sessionEventFeed.slice(0, 6).map(
+      (ev) => `
+      <div class="he-row-item">
+        <span><strong class="mono" style="color:#67e8f9;">#${ev.blk}</strong> ${escapeHtml(ev.summary)}</span>
+        <span class="mono" style="color:#6ee7b7;">${escapeHtml(ev.eventName)}</span>
+      </div>
+    `
+    ),
+    ...(onChainOverview?.logs || [])
+      .slice()
+      .reverse()
+      .map((lg) => {
+        const aName = ARENAS[lg.arenaId]?.shortName || 'Arena';
+        const outcome = lg.status === STATUS_VICTORY ? `${'⭐'.repeat(lg.stars)} 🧺${lg.harvest}` : `S${lg.round} Halt`;
+        return `
+          <div class="he-row-item">
+            <span>${escapeHtml(formatScholarName(lg.identity))} · ${escapeHtml(aName)}</span>
+            <span class="mono" style="color:${lg.status === STATUS_VICTORY ? '#6ee7b7' : '#fda4af'};">${outcome}</span>
+          </div>
+        `;
+      }),
+  ];
+  document.getElementById('logsMount').innerHTML = feedRows.length
+    ? feedRows.slice(0, 12).join('')
+    : `<div class="he-muted">Confirmed RunStarted &amp; RoundResolved HFS events stream here live.</div>`;
 }
 
 function renderAllUI() {
   renderArenaSelector();
-  renderNicheSlots();
+  renderTimelineAndHud();
+  renderCommandDeck();
   renderSidebar();
 }
 
@@ -1690,36 +2061,44 @@ function renderAllUI() {
 // ---------------------------------------------------------------------------
 
 function bindEvents() {
-  document.getElementById('btnClearSlots')?.addEventListener('click', () => {
-    arenaChoices[currentArena] = [0, 0, 0, 0, 0, 0];
-    playbackActive = false;
-    renderAllUI();
+  document.getElementById('btnStartOrResetRun')?.addEventListener('click', () => {
+    startExpeditionOnChain(selectedArena);
   });
 
-  document.getElementById('btnReplayAnim')?.addEventListener('click', () => {
-    start12SeasonPlayback();
-  });
-
-  document.getElementById('btnSealOnChain')?.addEventListener('click', () => {
-    sealEcosystemOnChain();
+  document.getElementById('btnExecuteRoundAction')?.addEventListener('click', () => {
+    playRoundActionOnChain();
   });
 
   document.addEventListener('click', (ev) => {
     const arenaBtn = ev.target.closest('[data-arena-id]');
-    if (arenaBtn) {
-      currentArena = Number(arenaBtn.getAttribute('data-arena-id'));
-      playbackActive = false;
+    if (arenaBtn && !txBusy) {
+      selectedArena = Number(arenaBtn.getAttribute('data-arena-id'));
+      if (isRunMatchingSelectedArena() && liveRun.status === STATUS_ACTIVE) {
+        autoAdvanceTabFromConfirmedRun(liveRun);
+      } else {
+        focusedTab = 0;
+        syncDefaultPendingActionForTab();
+      }
       renderAllUI();
       return;
     }
 
-    const optBtn = ev.target.closest('[data-slot-idx]');
-    if (optBtn) {
-      const sIdx = Number(optBtn.getAttribute('data-slot-idx'));
-      const oIdx = Number(optBtn.getAttribute('data-opt-idx'));
-      arenaChoices[currentArena][sIdx] = oIdx;
-      playbackActive = false;
-      renderAllUI();
+    const tabBtn = ev.target.closest('[data-focus-tab]');
+    if (tabBtn && !txBusy) {
+      focusedTab = Number(tabBtn.getAttribute('data-focus-tab'));
+      syncDefaultPendingActionForTab();
+      renderCommandDeck();
+      return;
+    }
+
+    const actCard = ev.target.closest('[data-act-kind]');
+    if (actCard && !txBusy) {
+      pendingAction = {
+        actionKind: Number(actCard.getAttribute('data-act-kind')),
+        target: Number(actCard.getAttribute('data-act-target')),
+        choice: Number(actCard.getAttribute('data-act-choice')),
+      };
+      renderCommandDeck();
     }
   });
 }
@@ -1730,12 +2109,12 @@ async function selectSanctuaryInstance(addr) {
     stopWatcher = null;
   }
   contractAddr = (addr || '').toLowerCase();
-  await refreshOnChainState();
+  await refreshOnChainState(true);
   if (contractAddr) {
     stopWatcher = slxWatchChainApp({
       rpcUrl,
       contractAddresses: [contractAddr],
-      onRefresh: () => refreshOnChainState(),
+      onRefresh: () => refreshOnChainState(false),
     });
   }
 }
@@ -1746,14 +2125,15 @@ async function boot() {
     wallet,
     activeAppId: 'haltfree-ecosystem',
     title: 'Haltfree Ecosystem',
-    subtitle: '2,400-Year-Old Closed-Loop Aquaculture, Aztec Chinampas, Aquaponics & Mars Biodome • $0.00 Gas',
+    subtitle: 'Turn-Based On-Chain Closed-Loop Permaculture & Biospherics • $0.00 Gas',
     rpcUrlFn: () => rpcUrl,
     getContractAddr: () => contractAddr || '',
     getContractLabel: () => 'HaltfreeEcosystem',
-    onWalletSwitch: () => refreshOnChainState(),
+    onWalletSwitch: () => refreshOnChainState(true),
     extraElements: [document.getElementById('btnHowToPlay')],
   });
 
+  syncDefaultPendingActionForTab();
   bindEvents();
 
   heGuide = mountSlxGameGuide({
@@ -1762,7 +2142,7 @@ async function boot() {
     headerBtnEl: document.getElementById('btnHowToPlay'),
     welcomeMountEl: document.getElementById('heWelcomeMount'),
     coachMountEl: document.getElementById('heCoachMount'),
-    onWelcomePrimaryAction: () => start12SeasonPlayback(),
+    onWelcomePrimaryAction: () => startExpeditionOnChain(selectedArena),
   });
 
   renderAllUI();
