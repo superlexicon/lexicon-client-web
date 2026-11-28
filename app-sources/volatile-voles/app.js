@@ -617,7 +617,17 @@ async function sendVolesTx(label, calldataHex) {
 }
 
 async function quickMatchTx(botCount = 3, targetVoles = 7) {
-  const idAddr = wallet.getIdentityRecord()?.identityAddr || ZERO_ADDR;
+  let idRec;
+  try {
+    idRec = await wallet.ensureIdentityWithPrompt({
+      rpcUrl: getDefaultNodeWsUrl(),
+      appName: 'Volatile Voles',
+    });
+  } catch (err) {
+    showToast(`⚠ Identity HFS required: ${err?.message || err}`);
+    return;
+  }
+  const idAddr = idRec?.identityAddr || ZERO_ADDR;
   // Use a player-scoped quick-match table ID if the shared default table is mid-match with other humans!
   if (
     tableState &&
@@ -930,9 +940,22 @@ function renderCenterStage() {
         }
       </div>
     `;
-    document.getElementById('btnLobbyJoin')?.addEventListener('click', () => {
-      const idAddr = wallet.getIdentityRecord()?.identityAddr || ZERO_ADDR;
-      sendVolesTx('joinTable', encodeAbi('joinTable(bytes32,address)', [['bytes32', activeTableId], ['address', idAddr]]));
+    document.getElementById('btnLobbyJoin')?.addEventListener('click', async () => {
+      try {
+        const idRec = await wallet.ensureIdentityWithPrompt({
+          rpcUrl: getDefaultNodeWsUrl(),
+          appName: 'Volatile Voles',
+        });
+        sendVolesTx(
+          'joinTable',
+          encodeAbi('joinTable(bytes32,address)', [
+            ['bytes32', activeTableId],
+            ['address', idRec?.identityAddr || ZERO_ADDR],
+          ])
+        );
+      } catch (err) {
+        showToast(`⚠ Identity HFS required: ${err?.message || err}`);
+      }
     });
     document.getElementById('btnLobbyStartPvp')?.addEventListener('click', () => {
       sendVolesTx('startMatch', encodeAbi('startMatch(bytes32,uint64)', [['bytes32', activeTableId], ['uint64', 0n]]));
@@ -1554,10 +1577,20 @@ async function openPvpLobbyModal() {
   `;
 
   document.getElementById('btnModalNewTable')?.addEventListener('click', async () => {
+    let idRec;
+    try {
+      idRec = await wallet.ensureIdentityWithPrompt({
+        rpcUrl: getDefaultNodeWsUrl(),
+        appName: 'Volatile Voles',
+      });
+    } catch (err) {
+      showToast(`⚠ Identity HFS required: ${err?.message || err}`);
+      return;
+    }
     const newTid = bytesToHex(concatBytes(utf8ToBytes('VV_PVP_'), randomBytes(25)));
     activeTableId = newTid;
     closeVvModal();
-    const idAddr = wallet.getIdentityRecord()?.identityAddr || ZERO_ADDR;
+    const idAddr = idRec?.identityAddr || ZERO_ADDR;
     await sendVolesTx(
       'createTable',
       encodeAbi('createTable(bytes32,address,uint64)', [

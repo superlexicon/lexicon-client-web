@@ -1,0 +1,22 @@
+{
+  "artifact": "dist/ride_exchange.wasm",
+  "code_hash": "0xd92f9b0e1577d5fbe1d79970de65850d8e09911c0f0830d54c3786ad949f0ebc",
+  "exports": [
+    "memory",
+    "main"
+  ],
+  "hps": "ride-exchange",
+  "imports": [
+    "env::host_state_set",
+    "env::get_calldata",
+    "env::host_call_contract",
+    "env::host_emit_event",
+    "env::get_msg_sender",
+    "env::get_block_number",
+    "env::host_state_get"
+  ],
+  "initial_memory_pages": 32,
+  "max_memory_pages": 64,
+  "optimized_wasm_bytes": 53141,
+  "raw_wasm_bytes": 53197
+}

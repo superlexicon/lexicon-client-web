@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚖 TransitDEX — Multi-Regime Ride Service Futures Exchange (SuperLexicon HFS)</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/rides.css" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+</head>
+<body>
+  <div class="rx-shell">
+    <div id="slxUnifiedHeaderMount"></div>
+
+    <main class="rx-main">
+      <!-- Top Status Banner -->
+      <div id="rxBanner" class="rx-banner" style="display:none;"></div>
+
+      <!-- KPI & Margin Bar -->
+      <section class="rx-kpi-row">
+        <div class="rx-kpi-card">
+          <div class="rx-kpi-lbl">METRO EXCHANGE HFS</div>
+          <div class="rx-kpi-val" id="kpiMetroName">Singapore Metro</div>
+          <div class="rx-kpi-sub mono" id="kpiExchAddr">Resolving RIDE_EXCHANGE…</div>
+        </div>
+        <div class="rx-kpi-card">
+          <div class="rx-kpi-lbl">YOUR VERIFIED IDENTITY MARGIN</div>
+          <div class="rx-kpi-val mono" id="kpiMyBalance">$0.00 SGD</div>
+          <div class="rx-kpi-sub" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span id="kpiMyIdentity" class="mono">Deploy Identity on 1st Order</span>
+            <button type="button" id="btnClaimMargin" class="rx-btn rx-btn-xs rx-btn-cyan">💧 +$250 Demo Margin</button>
+          </div>
+        </div>
+        <div class="rx-kpi-card">
+          <div class="rx-kpi-lbl">SEGREGATED FUTURES ESCROW</div>
+          <div class="rx-kpi-val mono rx-amber" id="kpiLockedEscrow">$0.00 SGD</div>
+          <div class="rx-kpi-sub mono" id="kpiBookCounts">0 Active Bids • 0 Active Cars</div>
+        </div>
+        <div class="rx-kpi-card">
+          <div class="rx-kpi-lbl">DELIVERED SERVICE FUTURES</div>
+          <div class="rx-kpi-val mono rx-emerald" id="kpiSettledVol">$0.00 SGD</div>
+          <div class="rx-kpi-sub" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <span id="kpiFuturesStats" class="mono">0 Settled / 0 Matched</span>
+            <button type="button" id="btnMatchBlock" class="rx-btn rx-btn-xs rx-btn-amber" title="Execute discrete-time MEV-proof batch matching across all 6 Singapore Price Regimes">
+              ⚡ Clear Batch (matchBlock)
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6-Regime Live Ticker Strip -->
+      <section class="rx-regime-strip" id="regimeTickerStrip"></section>
+
+      <!-- Active Position / Matched Ride Service Futures Settlement Banner -->
+      <section id="myActiveFuturesWrap" style="display:none;"></section>
+
+      <!-- Workspace Grid: Interactive Singapore Radar Map (Left) + Dual-Mode Exchange Ticket (Right) -->
+      <section class="rx-workspace">
+        <!-- Left: Interactive Singapore 6-Regime Radar & Orderbook Map -->
+        <div class="rx-panel rx-map-panel">
+          <div class="rx-panel-hdr">
+            <div>
+              <h2>🗺️ Live 6-Regime Singapore Spatial Orderbook &amp; Futures Radar</h2>
+              <p class="rx-sub">Meter starts at pickup (<code>Q_billed = L_trip</code>) • Click landmarks or map to set coordinates</p>
+            </div>
+            <div class="rx-map-mode-pills">
+              <span class="mono" style="font-size:11px;color:#94a3b8;">Map Click:</span>
+              <button type="button" class="rx-pill active" data-map-click-mode="from">📍 Pickup</button>
+              <button type="button" class="rx-pill" data-map-click-mode="to">🏁 Dropoff</button>
+              <button type="button" class="rx-pill" data-map-click-mode="driver">🚖 Car GPS</button>
+            </div>
+          </div>
+
+          <div class="rx-map-canvas-wrap">
+            <svg id="sgRadarSvg" viewBox="0 0 920 500" preserveAspectRatio="xMidYMid meet"></svg>
+            <div id="mapHoverTooltip" class="rx-map-tooltip" style="display:none;"></div>
+          </div>
+
+          <div class="rx-map-legend">
+            <span><i class="rx-dot" style="background:#34d399;"></i> Idle Driver Ask (<code>$/km ASC</code>)</span>
+            <span><i class="rx-dot" style="background:#38bdf8;"></i> Open Customer Bid (<code>From &rarr; To</code>)</span>
+            <span><i class="rx-dot" style="background:#fbbf24;"></i> Matched Ride Futures (Escrowed)</span>
+            <span><i class="rx-dot" style="background:#a855f7;"></i> Selected Ticket Route</span>
+          </div>
+        </div>
+
+        <!-- Right: Exchange Order Entry Ticket (Rider Bid | Driver Ask) -->
+        <div class="rx-panel rx-ticket-panel">
+          <div class="rx-ticket-tabs">
+            <button type="button" id="tabRiderMode" class="rx-ticket-tab active">
+              🙋 Request Ride (Bid)
+            </button>
+            <button type="button" id="tabDriverMode" class="rx-ticket-tab">
+              🚖 List / Update Car (Ask)
+            </button>
+          </div>
+
+          <!-- RIDER BID FORM -->
+          <form id="formRiderBid" class="rx-form">
+            <div class="rx-field-row">
+              <div class="rx-field">
+                <label>📍 Pickup Location (Origin)</label>
+                <select id="selRiderFrom"></select>
+                <div class="rx-coord-readout mono" id="lblRiderFromMeta"></div>
+              </div>
+              <button type="button" id="btnSwapRoute" class="rx-swap-btn" title="Swap Pickup &amp; Dropoff">⇄</button>
+              <div class="rx-field">
+                <label>🏁 Destination (Dropoff)</label>
+                <select id="selRiderTo"></select>
+                <div class="rx-coord-readout mono" id="lblRiderToMeta"></div>
+              </div>
+            </div>
+
+            <div class="rx-route-metrics" id="riderRouteMetrics"></div>
+
+            <div class="rx-field-grid2">
+              <div class="rx-field">
+                <label>Offer Rate ($ SGD / Trip km)</label>
+                <input type="number" id="inpBidPerKm" step="0.05" min="0.50" max="25.00" value="1.80" required />
+                <div class="rx-quick-btns">
+                  <button type="button" id="btnBidCrossBest" class="rx-chip-btn">Cross Best Ask</button>
+                  <button type="button" id="btnBidPlus15" class="rx-chip-btn">+15% Priority</button>
+                </div>
+              </div>
+              <div class="rx-field">
+                <label>Max Pickup Radius (km)</label>
+                <input type="number" id="inpRiderMaxPickupKm" step="0.5" min="0.5" max="15.0" value="4.5" required />
+                <span class="rx-hint">Bounds wait time; unbilled</span>
+              </div>
+            </div>
+
+            <div class="rx-invoice-box" id="riderInvoiceBox"></div>
+
+            <label class="rx-check-line">
+              <input type="checkbox" id="chkAutoTopUp" checked />
+              <span>Auto-claim +$250 Demo Margin if Identity balance is insufficient</span>
+            </label>
+
+            <div class="rx-submit-stack">
+              <button type="submit" id="btnSubmitBid" class="rx-btn rx-btn-emerald rx-btn-lg">
+                🔒 Escrow Margin &amp; Post Ride Bid
+              </button>
+            </div>
+          </form>
+
+          <!-- DRIVER ASK FORM -->
+          <form id="formDriverAsk" class="rx-form" style="display:none;">
+            <div class="rx-field">
+              <label>🚖 Current Vehicle Location</label>
+              <div style="display:flex;gap:8px;">
+                <select id="selDriverLoc" style="flex:1;"></select>
+                <button type="button" id="btnDriverGpsPing" class="rx-btn rx-btn-cyan" title="Send O(1) updateDriverLocation() keeping existing price &amp; block seniority!">
+                  📡 Update GPS Only
+                </button>
+              </div>
+              <div class="rx-coord-readout mono" id="lblDriverLocMeta"></div>
+            </div>
+
+            <div class="rx-field-grid3">
+              <div class="rx-field">
+                <label>Clean Ask ($/km)</label>
+                <input type="number" id="inpAskPerKm" step="0.05" min="0.50" max="25.00" value="1.35" required />
+              </div>
+              <div class="rx-field">
+                <label>AON Max Range (km)</label>
+                <input type="number" id="inpDriverMaxDistKm" step="1" min="2" max="80" value="28" required />
+                <span class="rx-hint">Pickup + Trip cap</span>
+              </div>
+              <div class="rx-field">
+                <label>Max Approach (km)</label>
+                <input type="number" id="inpDriverMaxPickupKm" step="0.5" min="0.5" max="15" value="4.5" required />
+                <span class="rx-hint">Max unpaid pickup</span>
+              </div>
+            </div>
+
+            <div class="rx-field">
+              <label>Accepted Destination Regimes (Prevent Dead-End Lemon-Picking)</label>
+              <div id="driverDestMaskGroup" class="rx-dest-mask-grid"></div>
+            </div>
+
+            <div class="rx-field-grid2">
+              <div class="rx-field">
+                <label>Remote Dropoff Basis (+$/km)</label>
+                <input type="number" id="inpRemoteBasis" step="0.05" min="0.00" max="10.00" value="0.45" required />
+                <span class="rx-hint">Added when Dest = Tuas/Sentosa</span>
+              </div>
+              <div class="rx-field" style="justify-content:center;">
+                <label class="rx-check-line" style="margin-top:16px;">
+                  <input type="checkbox" id="chkCrossBorder" checked />
+                  <span>Match adjacent regimes within Max Approach</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="rx-submit-stack">
+              <button type="submit" id="btnSubmitAsk" class="rx-btn rx-btn-amber rx-btn-lg">
+                🚖 Post / Update Driver Ask Order
+              </button>
+              <button type="button" id="btnCancelMyAsk" class="rx-btn rx-btn-ghost" style="display:none;">
+                ✕ Cancel My Active Driver Ask
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Bottom: 2-Column Price-Sorted Order Book Ladder + Service Futures Tape -->
+      <section class="rx-bottom-grid">
+        <div class="rx-panel">
+          <div class="rx-panel-hdr">
+            <div>
+              <h2 id="lblOrderbookTitle">📊 Multi-Regime Order Book Ladder (Clean $/km)</h2>
+              <p class="rx-sub">Bids sorted <code>$/trip_km DESC</code> • Asks sorted <code>$/km ASC</code> • All-Or-Nothing (AON) matching</p>
+            </div>
+            <span class="mono rx-badge-cyan" id="lblSelectedRegimeBadge">ALL 6 REGIMES</span>
+          </div>
+
+          <div class="rx-books-split">
+            <div>
+              <div class="rx-book-col-hdr rx-emerald">🙋 RIDER BIDS (HIGHEST $/KM TOP)</div>
+              <div class="rx-table-scroll">
+                <table class="rx-table">
+                  <thead>
+                    <tr>
+                      <th>Bid $/km</th>
+                      <th>Route &amp; Trip</th>
+                      <th>Escrow</th>
+                      <th>Rider</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyBids"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <div class="rx-book-col-hdr rx-rose">🚖 DRIVER ASKS (LOWEST $/KM TOP)</div>
+              <div class="rx-table-scroll">
+                <table class="rx-table">
+                  <thead>
+                    <tr>
+                      <th>Ask $/km</th>
+                      <th>Regime &amp; Range</th>
+                      <th>Pickup Cap</th>
+                      <th>Driver</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyAsks"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rx-panel">
+          <div class="rx-panel-hdr">
+            <div>
+              <h2>📜 Physically-Settled Ride Service Futures Tape</h2>
+              <p class="rx-sub">Escrow releases to Driver Identity only when Customer signs <code>completeRide</code></p>
+            </div>
+            <span class="mono rx-badge-amber" id="lblFuturesCountBadge">0 Contracts</span>
+          </div>
+
+          <div class="rx-table-scroll">
+            <table class="rx-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Route &amp; Parties</th>
+                  <th>Maker Rate</th>
+                  <th>Clean + Toll</th>
+                  <th>Status / Action</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyFutures"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/src/rides.js"></script>
+</body>
+</html>
