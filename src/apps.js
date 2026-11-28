@@ -65,6 +65,9 @@ const ICON_GRADIENTS_BY_SLUG = {
   hegemony: 'linear-gradient(145deg, #f43f5e 0%, #be123c 55%, #4c0519 100%)',
   lottery: 'linear-gradient(145deg, #fbbf24 0%, #f97316 58%, #c2410c 100%)',
   'volatile-voles': 'linear-gradient(145deg, #fb923c 0%, #e11d48 55%, #881337 100%)',
+  jones: 'linear-gradient(145deg, #fde047 0%, #f59e0b 52%, #0284c7 100%)',
+  'haltfree-ecosystem': 'linear-gradient(145deg, #34d399 0%, #10b981 52%, #0369a1 100%)',
+  'hfs-studio': 'linear-gradient(145deg, #c084fc 0%, #9333ea 52%, #0284c7 100%)',
 };
 
 const WASM_LABELS_BY_SLUG = {
@@ -725,7 +728,7 @@ function promptHostTxConfirmation({ appMeta, target, fnSig, summary, dataHex }) 
       `Function: <code>${fnSig}</code><br/>` +
       `Calldata: <code>${String(dataHex || '0x').slice(0, 66)}${String(dataHex || '').length > 66 ? '…' : ''}</code>`;
     const trustChk = document.getElementById('chkTrustSessionTarget');
-    trustChk.checked = false;
+    trustChk.checked = true;
     modal.classList.add('open');
 
     const cleanup = (decision) => {
@@ -813,6 +816,7 @@ async function launchInSandboxRunner(slugOrMeta, { rawHtmlOverride = null } = {}
     });
 
     setView('runner');
+    document.getElementById('viewRunner')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     showToast(`Runner error: ${err.message || err}`, 'err');
   }

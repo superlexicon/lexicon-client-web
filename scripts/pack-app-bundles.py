@@ -322,6 +322,18 @@ CORE_APPS = [
         "defaultHfsPath": ("haltfreeEcosystem", "contractAddr"),
         "hasCss": True,
     },
+    {
+        "slug": "hfs-studio",
+        "title": "HFS WonderLab — Kid & Creator Visual App Studio",
+        "icon": "🛠️",
+        "category": 6,
+        "version": "1.0.0",
+        "summary": "No-code Scratch-style visual block IDE that compiles kid-friendly rules into real wasm32 Halt-Free Subroutines in the browser and deploys full apps to Subnet 1 in one click!",
+        "wasmKey": "",
+        "wasmFile": "",
+        "instKey": "",
+        "hasCss": True,
+    },
 ]
 
 COMMUNITY_SANDBOX_APPS = [
