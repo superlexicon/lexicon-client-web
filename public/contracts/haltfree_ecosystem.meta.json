@@ -1,0 +1,23 @@
+{
+  "artifact": "dist/haltfree_ecosystem.wasm",
+  "code_hash": "0x1dac7fd5b6db276f75127d7d9c82f633ae92a5b6a029202ba44c12ddc0deedda",
+  "exports": [
+    "memory",
+    "main"
+  ],
+  "hps": "haltfree-ecosystem",
+  "imports": [
+    "env::get_calldata",
+    "env::host_state_set",
+    "env::get_msg_sender",
+    "env::host_get_code_hash",
+    "env::get_block_number",
+    "env::host_emit_event",
+    "env::host_call_contract",
+    "env::host_state_get"
+  ],
+  "initial_memory_pages": 32,
+  "max_memory_pages": 64,
+  "optimized_wasm_bytes": 11665,
+  "raw_wasm_bytes": 11753
+}

@@ -309,6 +309,19 @@ CORE_APPS = [
         "defaultHfsPath": ("jonesBlockchain", "contractAddr"),
         "hasCss": True,
     },
+    {
+        "slug": "haltfree-ecosystem",
+        "title": "Haltfree Ecosystem — Closed-Loop Permaculture Sim",
+        "icon": "🌿",
+        "category": 5,
+        "version": "1.0.0",
+        "summary": "60-FPS animated educational ecosystem simulator: master the 2,400-year-old Chinese Mulberry-Dyke Carp Polyculture pond, Aztec Chinampas, Aquaponics & Mars Biodome!",
+        "wasmKey": "haltfree_ecosystem",
+        "wasmFile": "haltfree_ecosystem.wasm",
+        "instKey": "",
+        "defaultHfsPath": ("haltfreeEcosystem", "contractAddr"),
+        "hasCss": True,
+    },
 ]
 
 COMMUNITY_SANDBOX_APPS = [

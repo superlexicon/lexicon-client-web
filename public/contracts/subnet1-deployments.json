@@ -28,7 +28,8 @@
     "volatile_voles": "0x89110333caf31c9b2aa5f41d2d54b8b855cf7f4950887ba9a92ad68b96546bcb",
     "app_store": "0xeb4814dda67ae256ea63bf3d7b2154d24352368f8538faa250e7fbc380c2a07a",
     "ride_exchange": "0xd92f9b0e1577d5fbe1d79970de65850d8e09911c0f0830d54c3786ad949f0ebc",
-    "jones_blockchain": "0x00cdcbfe6f094d77487ec418907918ba069145269780574b531bf2811c3c11e8"
+    "jones_blockchain": "0x00cdcbfe6f094d77487ec418907918ba069145269780574b531bf2811c3c11e8",
+    "haltfree_ecosystem": "0x1dac7fd5b6db276f75127d7d9c82f633ae92a5b6a029202ba44c12ddc0deedda"
   },
   "battleship": {
     "contractAddr": "0xabb7f6c0ea97ed6f946a51b5d0a944f98226cab1",
@@ -737,5 +738,9 @@
     "defaultGameId": "0x4a4f4e45535f53554e4e5956414c455f424f4152445f30310000000000000000",
     "openLobbyId": "0x4a4f4e45535f46414d494c595f4c4f4242595f30310000000000000000000000",
     "label": "Neo-Sector #1 — Keeping Up With Jones"
+  },
+  "haltfreeEcosystem": {
+    "contractAddr": "0x0aec7c174554af8aec3680bb58431f6618311510",
+    "label": "Pearl River & Biosphere Sanctuary #1"
   }
 }

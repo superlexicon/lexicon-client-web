@@ -698,6 +698,53 @@
     },
     {
       "appId": 17,
+      "slug": "haltfree-ecosystem",
+      "slugId": "0xced194776502ff3b9e9d511fa6f38d58ca7e4ee28ce05f5c545ea825b0ceb1c4",
+      "title": "Haltfree Ecosystem \u2014 Closed-Loop Permaculture Sim",
+      "summary": "60-FPS animated educational ecosystem simulator: master the 2,400-year-old Chinese Mulberry-Dyke Carp Polyculture pond, Aztec Chinampas, Aquaponics & Mars Biodome!",
+      "icon": "\ud83c\udf3f",
+      "category": 5,
+      "version": "1.0.0",
+      "execMode": 1,
+      "uiHash": "0x0f0fa109bc42891a95608ef5d384a99e1c7180e5a1832f3ffd360bfcc86f570f",
+      "uncompressedLen": 88520,
+      "compressedLen": 26986,
+      "chunkCount": 1,
+      "bundleUrl": "/app-bundles/haltfree-ecosystem.html.gz",
+      "route": "/haltfree-ecosystem.html",
+      "wasmCodeHash": "0x1dac7fd5b6db276f75127d7d9c82f633ae92a5b6a029202ba44c12ddc0deedda",
+      "defaultHfsAddr": "0x0aec7c174554af8aec3680bb58431f6618311510",
+      "assets": [
+        {
+          "path": "/assets/haltfree-ecosystem/arena_0.jpg",
+          "hash": "0xc422db659816d862071afd92dcbb7e8a9041a9981d5e09fdb1215b2721f220ab",
+          "mime": "image/jpeg",
+          "size": 96405
+        },
+        {
+          "path": "/assets/haltfree-ecosystem/arena_1.jpg",
+          "hash": "0x7b57a11d5604d4b2712c38d565b11136f19820ba2997cfae47de53d1b7863e6e",
+          "mime": "image/jpeg",
+          "size": 148723
+        },
+        {
+          "path": "/assets/haltfree-ecosystem/arena_2.jpg",
+          "hash": "0x967db372c2abefd35a55b00105e01f5b976dea0b2e6ecf19d9bb53aaf8ba8a80",
+          "mime": "image/jpeg",
+          "size": 127672
+        },
+        {
+          "path": "/assets/haltfree-ecosystem/arena_3.jpg",
+          "hash": "0x9e9a93c7b478ed1cef25827d3a74094c794bd4fa409783d04d186d19edb701a4",
+          "mime": "image/jpeg",
+          "size": 142517
+        }
+      ],
+      "publisherLabel": "SuperLexicon Core \u00b7 HFS",
+      "isSystemCore": true
+    },
+    {
+      "appId": 18,
       "slug": "rf-micro-poll",
       "slugId": "0xfa8eeed1a96e5d1ffdc381328b4e9f0fb2db02208200ea5f529afad1c7507e88",
       "title": "RF Mesh Pulse Poll",
@@ -718,7 +765,7 @@
       "isSystemCore": false
     },
     {
-      "appId": 18,
+      "appId": 19,
       "slug": "mesh-repeater-wall",
       "slugId": "0x54c6cac78e2192d72345ce431721089bdc888fa03efa3df855035ac5323215f6",
       "title": "Mesh Repeater Beacon Wall",
@@ -739,7 +786,7 @@
       "isSystemCore": false
     },
     {
-      "appId": 19,
+      "appId": 20,
       "slug": "hfs-bounty-splits",
       "slugId": "0xc090a02e57ee16c295823c28b4135199600cdc46dd086b1b05b422389215926e",
       "title": "HFS R&D Bounty Splits",
