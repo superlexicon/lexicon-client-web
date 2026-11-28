@@ -1,12 +1,13 @@
 /**
- * JONES IN THE BLOCKCHAIN (`app-sources/jones/app.js` — SuperLexicon HFS #24)
+ * JONES IN THE BLOCKCHAIN (`app-sources/jones/app.js` — SuperLexicon HFS #24 v2.0)
  *
- * Cozy, slow-paced, family-friendly 1–4 player life-simulation & career/education strategy
- * inspired by the classic early-PC game *Jones in the Fast Lane*:
- *  - 12-Building Sunnyvale Perimeter Ring Board + Illustrated Shopkeeper Stage.
- *  - 4 Simultaneous Victory Pillars (100% Wealth, Happiness, Education & Career).
- *  - Zero-Fatigue 60-Hour Weekly Pocket-Watch Planner (`submitWeekPlan` commits up to 32 steps in 1 block at $0.00 gas).
- *  - Solo vs. Rival "Jones" (+ Penny Hodl & Sunny Wheeler) OR multi-session Family/Friends PvP boards.
+ * Cyberpunk 1–4 player life-simulation & career/education strategy game
+ * inspired by the classic *Jones in the Fast Lane*, suitable for all ages:
+ *  - Full 16:9 Illustrated Cyberpunk City Map (`/assets/jones/town_center.jpg`)
+ *    with 12 overlaid interactive neon venue hitboxes + central Holo-Terminal.
+ *  - 4 Simultaneous Victory Pillars (100% Wealth, Vibe/Happiness, Neural Education & Career).
+ *  - Zero-Fatigue 60-Hour Weekly Chrono-Planner (`submitWeekPlan` commits up to 32 ops in 1 block at $0.00 gas).
+ *  - On-Chain Identity HFS required & verified (`is_authorized_for_identity`) for Solo & Crew/Family PvP boards.
  */
 
 import {
@@ -67,186 +68,211 @@ const DEFAULT_GAME_ID =
   '0x4a4f4e45535f53554e4e5956414c455f424f4152445f30310000000000000000';
 
 const BOT_PROFILES = {
-  1: { name: 'Jones', title: 'Cool All-Rounder Rival', icon: '🕶️', art: '/assets/jones/rival_jones.jpg' },
-  2: { name: 'Penny Hodl', title: 'Thrifty Investor Bot', icon: '🐷', art: '/assets/jones/keeper_bank.jpg' },
-  3: { name: 'Sunny Wheeler', title: 'Scooter & Diner Enthusiast', icon: '🛴', art: '/assets/jones/keeper_burgers.jpg' },
+  1: { name: 'Jones', title: 'Cyber-Rival All-Rounder', icon: '🕶️', art: '/assets/jones/rival_jones.jpg' },
+  2: { name: 'Penny Hodl', title: 'Cryo-Vault Quant Bot', icon: '🐷', art: '/assets/jones/keeper_bank.jpg' },
+  3: { name: 'Sunny Wheeler', title: 'Hover-Scooter & Diner Runner', icon: '🛴', art: '/assets/jones/keeper_burgers.jpg' },
 };
 
+// Exact measured percentage bounding boxes overlaid onto `/assets/jones/town_center.jpg` (1536x864, 16:9)
 export const BUILDINGS = [
   {
     id: 0,
-    icon: '🏠',
-    name: 'Apartments',
-    sub: 'Shady Acres & LeSecurity Condo',
-    awning: 'linear-gradient(90deg, #38bdf8, #818cf8)',
-    art: '/assets/jones/town_center.jpg',
-    keeperName: 'Home Sweet Home',
-    quote: '“Kick off your shoes! Take a cozy 6-hour nap or watch Stereo TV to recharge your Happiness.”',
+    icon: '🏙️',
+    name: 'Pod-Hab Towers',
+    sub: 'Neon Pods & LeSecurity Spire',
+    neon: '#22d3ee',
+    glow: 'rgba(34, 211, 238, 0.34)',
+    box: { left: 4.3, top: 2.2, width: 25.0, height: 27.2 },
+    art: '/assets/jones/rival_jones.jpg',
+    keeperName: 'Pod-Hab Concierge AI',
+    quote: '“Welcome back to your capsule! Catch a 6-hour cryo-nap or stream Holo-Stereo TV to recharge your Vibe!”',
   },
   {
     id: 1,
     icon: '🍔',
-    name: 'Burger Bytes',
-    sub: 'Fast Meals, Shakes & Entry Jobs',
-    awning: 'linear-gradient(90deg, #ef4444, #f59e0b)',
+    name: 'Byte-Burgers',
+    sub: 'Synth-Burgers, Shakes & Diner Shifts',
+    neon: '#fb7185',
+    glow: 'rgba(251, 113, 133, 0.34)',
+    box: { left: 31.8, top: 2.2, width: 17.6, height: 27.2 },
     art: '/assets/jones/keeper_burgers.jpg',
-    keeperName: 'Chef Mel @ Burger Bytes',
-    quote: '“Welcome to Burger Bytes! Hot double-cheeseburgers, frosty shakes, and zero Fridge required!”',
+    keeperName: 'Synth-Chef Mel @ Byte-Burgers',
+    quote: '“Four robo-arms, zero waiting! Sizzling neon double-burgers and pink synth-shakes—no Cryo-Fridge required!”',
   },
   {
     id: 2,
-    icon: '🏷️',
-    name: 'Z-Mart Depot',
-    sub: '15%-Off Appliances & Raffle',
-    awning: 'linear-gradient(90deg, #f59e0b, #eab308)',
+    icon: '⚡',
+    name: 'Z-Mart Bazaar',
+    sub: '15%-Off Refurb Tech & Cyber-Lotto',
+    neon: '#fbbf24',
+    glow: 'rgba(251, 191, 36, 0.34)',
+    box: { left: 51.8, top: 2.2, width: 19.2, height: 27.2 },
     art: '/assets/jones/keeper_tech.jpg',
-    keeperName: 'Bargain Counter @ Z-Mart',
-    quote: '“Blue-light specials every day! Refurbished Fridges, Microwaves & TVs at 15% off, plus Town Raffle tickets!”',
+    keeperName: 'Flash-Sale Drone @ Z-Mart',
+    quote: '“Neon beacon specials! Refurbished Cryo-Fridges, Pulse-Ovens & Holo-TVs at 15% off, plus Sector Jackpot tickets!”',
   },
   {
     id: 3,
-    icon: '👔',
-    name: 'CryptoThreads',
-    sub: 'Casual, Smart & Executive Suits',
-    awning: 'linear-gradient(90deg, #ec4899, #a855f7)',
+    icon: '🧥',
+    name: 'ChromaThreads',
+    sub: 'LED Hoodies, Blazers & Exec Chrome',
+    neon: '#e879f9',
+    glow: 'rgba(232, 121, 249, 0.36)',
+    box: { left: 73.6, top: 2.2, width: 22.0, height: 27.2 },
     art: '/assets/jones/keeper_clothing.jpg',
-    keeperName: 'Tailor Leo @ CryptoThreads',
-    quote: '“Dress for the career you want! Smart Blazers unlock Bank & Engineering roles, and Executive Suits open the C-Suite.”',
+    keeperName: 'Stylist Nova @ ChromaThreads',
+    quote: '“Upgrade your silhouette! Smart LED Blazers unlock Cryo-Bank & Foundry engineering, and Exec Chrome opens the C-Suite.”',
   },
   {
     id: 4,
     icon: '🤖',
-    name: 'Socket City Tech',
-    sub: 'Fridge, PC, Scooter & Microwave',
-    awning: 'linear-gradient(90deg, #06b6d4, #3b82f6)',
+    name: 'Socket City Lab',
+    sub: 'Cyberdeck, Hover-Scooter & Cryo-Gear',
+    neon: '#38bdf8',
+    glow: 'rgba(56, 189, 248, 0.34)',
+    box: { left: 74.8, top: 30.2, width: 20.8, height: 19.2 },
     art: '/assets/jones/keeper_tech.jpg',
-    keeperName: 'Gizmo Gus @ Socket City',
-    quote: '“A Home Computer doubles your University study speed AND earns $25/wk! An E-Scooter cuts walking time in half!”',
+    keeperName: 'Tinkerer Gus @ Socket City',
+    quote: '“A Neural Cyberdeck PC doubles University study speed AND mines $25/wk! A Hover-Scooter cuts street travel in half!”',
   },
   {
     id: 5,
     icon: '🎓',
-    name: 'Haltproof Univ.',
-    sub: '4 Degrees (10 Credits Each)',
-    awning: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+    name: 'Haltproof Cyber-U.',
+    sub: '4 Neural Degrees (10 Credits Each)',
+    neon: '#a855f7',
+    glow: 'rgba(168, 85, 247, 0.36)',
+    box: { left: 75.2, top: 50.2, width: 20.6, height: 19.2 },
     art: '/assets/jones/keeper_university.jpg',
-    keeperName: 'Professor Ada @ Haltproof U.',
-    quote: '“Knowledge compounds forever! Complete 10 credits per degree—or just 5 lectures if you study with a Home Computer!”',
+    keeperName: 'Dean Ada-9 @ Haltproof Cyber-U.',
+    quote: '“Data-crystals never depreciate! Earn 10 credits per degree—or graduate in just 5 sessions with a Cyberdeck PC!”',
   },
   {
     id: 6,
     icon: '💼',
-    name: 'Employment Office',
-    sub: '12 Town Careers & Raises',
-    awning: 'linear-gradient(90deg, #10b981, #14b8a6)',
+    name: 'Job Guild Tower',
+    sub: '12 Cyber-Careers & Pay Raises',
+    neon: '#10b981',
+    glow: 'rgba(16, 185, 129, 0.36)',
+    box: { left: 75.5, top: 70.0, width: 20.2, height: 26.2 },
     art: '/assets/jones/keeper_employment.jpg',
-    keeperName: 'Counselor Clara',
-    quote: '“Looking to move up in the world? Let’s match your Degrees, Experience, and Wardrobe to a higher-paying career!”',
+    keeperName: 'Neural Career Guild Dispatch',
+    quote: '“Ready to climb the grid? Match your Degrees, Experience, and ChromaThreads tier to unlock top-paying roles!”',
   },
   {
     id: 7,
     icon: '⚙️',
     name: 'SLX Foundry',
-    sub: 'Industrial & Wasm Engineering',
-    awning: 'linear-gradient(90deg, #f97316, #ea580c)',
+    sub: 'Quantum Silicon & Wasm Engineering',
+    neon: '#f97316',
+    glow: 'rgba(249, 115, 22, 0.36)',
+    box: { left: 52.0, top: 67.6, width: 20.2, height: 28.6 },
     art: '/assets/jones/keeper_tech.jpg',
-    keeperName: 'Foreman Torque @ Foundry',
-    quote: '“From Custodian all the way to Chief Wasm Architect—clock in a 6-hour shift and build serious career experience!”',
+    keeperName: 'Foreman Torque @ SLX Foundry',
+    quote: '“From Reactor Sweeper up to Chief Wasm Architect—clock a 6-hour shift in the plasma bays and stack credits!”',
   },
   {
     id: 8,
     icon: '🏦',
-    name: 'Consensus Bank',
-    sub: '2%/wk Savings & 3 Town Stocks',
-    awning: 'linear-gradient(90deg, #059669, #10b981)',
+    name: 'Cryo-Bank Vault',
+    sub: '2%/wk Yield & 3 Cyber-Equities',
+    neon: '#facc15',
+    glow: 'rgba(250, 204, 21, 0.34)',
+    box: { left: 29.8, top: 66.4, width: 18.8, height: 29.8 },
     art: '/assets/jones/keeper_bank.jpg',
-    keeperName: 'Barnaby @ First Consensus Bank',
-    quote: '“Savings earn 2% compound interest every weekend—and Sneaky Sam can NEVER touch money inside our golden vault!”',
+    keeperName: 'Broker Unit-7 @ Consensus Cryo-Bank',
+    quote: '“Vault deposits earn 2% compound yield every weekend—and Glitch-Sam can NEVER swipe credits behind our laser grid!”',
   },
   {
     id: 9,
-    icon: '🍎',
-    name: 'FreshBlock Market',
-    sub: 'Healthy 1, 2 & 4-Week Groceries',
-    awning: 'linear-gradient(90deg, #22c55e, #84cc16)',
+    icon: '🍏',
+    name: 'BioFresh Dome',
+    sub: '1, 2 & 4-Week Hydroponic Rations',
+    neon: '#4ade80',
+    glow: 'rgba(74, 222, 128, 0.34)',
+    box: { left: 4.5, top: 70.0, width: 22.2, height: 26.2 },
     art: '/assets/jones/keeper_market.jpg',
-    keeperName: 'Grocer Gus @ FreshBlock',
-    quote: '“Fresh apples, warm baguettes, and farm milk! Bring a Fridge for 2-week crates or a Freezer for 4-week bulk savings!”',
+    keeperName: 'Grocer Kai @ BioFresh Hydro-Dome',
+    quote: '“Crisp cyber-apples and nutrient loaves! Own a Cryo-Fridge for 2-week crates or a Sub-Zero Freezer for 4-week bulk packs!”',
   },
   {
     id: 10,
-    icon: '🌳',
-    name: 'Rent & Commons',
-    sub: 'Monthly Rent, Condo & Picnic',
-    awning: 'linear-gradient(90deg, #14b8a6, #0ea5e9)',
-    art: '/assets/jones/town_center.jpg',
-    keeperName: 'Sunnyvale Civic & Leasing Office',
-    quote: '“Pay monthly rent, upgrade to bandit-proof LeSecurity Condo, or enjoy a free 6-hour Sunnyvale Park Picnic (+4 Happiness)!”',
+    icon: '🌸',
+    name: 'Neon Commons',
+    sub: 'Hab-Lease, Spire Upgrade & Zen Park',
+    neon: '#f472b6',
+    glow: 'rgba(244, 114, 182, 0.34)',
+    box: { left: 4.2, top: 50.2, width: 23.2, height: 19.2 },
+    art: '/assets/jones/keeper_clothing.jpg',
+    keeperName: 'Sakura Rooftop & Hab-Lease Kiosk',
+    quote: '“Settle monthly hab-rent, upgrade to bandit-proof LeSecurity Spire, or chill under the neon cherry blossoms (+4 Vibe, $0)!”',
   },
   {
     id: 11,
     icon: '🔧',
-    name: 'Pawn & Repair',
-    sub: 'Fix Gadgets or Emergency Cash',
-    awning: 'linear-gradient(90deg, #a855f7, #ec4899)',
-    art: '/assets/jones/keeper_tech.jpg',
-    keeperName: 'Tinker Tess @ Repair Shop',
-    quote: '“Appliance acting up after the weekend? I’ll tune it right up for $55—or buy used gear for 55% instant cash!”',
+    name: 'Glitch-Pawn Lab',
+    sub: 'Tune Broken Tech or Instant Creds',
+    neon: '#c084fc',
+    glow: 'rgba(192, 132, 252, 0.36)',
+    box: { left: 4.5, top: 30.0, width: 23.0, height: 19.4 },
+    art: '/assets/jones/bandit_sam.jpg',
+    keeperName: 'Patchwork Pix @ Glitch-Pawn',
+    quote: '“Power surge fry a circuit over the weekend? I’ll re-solder any rig for $55—or buy used cyber-gear for 55% instant cash!”',
   },
 ];
 
 export const DEGREES = [
-  { id: 0, icon: '📜', name: 'Junior College Diploma', reqText: 'Open to all', unlocks: 'Shift Supervisor, Assistant Buyer, Adv. Degrees' },
-  { id: 1, icon: '🔌', name: 'Electronics & Wasm Eng.', reqText: 'Open to all', unlocks: 'Gadget Bench Tech, Assembly Engineer' },
-  { id: 2, icon: '📊', name: 'Business & Ledger Admin.', reqText: 'Open to all', unlocks: 'Bank Teller, Investment Analyst' },
-  { id: 3, icon: '🏛️', name: 'Protocol Architecture', reqText: 'Requires Jr. College + (Electronics or Business)', unlocks: 'Chief Wasm Architect, Bank President' },
+  { id: 0, icon: '💠', name: 'Junior Cyber-Diploma', reqText: 'Open to all runners', unlocks: 'Shift Lead, Supply Buyer, Adv. Neural Degrees' },
+  { id: 1, icon: '⚡', name: 'Cybernetics & Wasm Eng.', reqText: 'Open to all runners', unlocks: 'Cyberdeck Bench Tech, Foundry Engineer' },
+  { id: 2, icon: '📊', name: 'DeFi & Ledger Systems', reqText: 'Open to all runners', unlocks: 'Cryo-Bank Teller, Quant Analyst' },
+  { id: 3, icon: '🧬', name: 'Consensus Architecture', reqText: 'Requires Jr. Diploma + (Cybernetics or DeFi)', unlocks: 'Chief Wasm Architect, Cryo-Bank President' },
 ];
 
 export const APPLIANCES = [
-  { id: 0, icon: '🧊', name: 'Refrigerator', basePrice: 320, hap: 5, perk: 'Stores up to 2 weeks of FreshBlock groceries' },
-  { id: 1, icon: '❄️', name: 'Deep Freezer', basePrice: 280, hap: 5, perk: 'Requires Fridge · Stores up to 6 weeks of bulk food' },
-  { id: 2, icon: '🍿', name: 'Microwave Oven', basePrice: 220, hap: 4, perk: '+4 Bonus Hours EVERY week (64h weekly clock!)' },
-  { id: 3, icon: '📺', name: 'Color Stereo TV', basePrice: 360, hap: 8, perk: '+8 Happiness & boosts Home Relax to +5 Hap' },
-  { id: 4, icon: '💻', name: 'Home Computer', basePrice: 540, hap: 8, perk: '2x University Study Speed (+2 credits) & +$25/wk tips!' },
-  { id: 5, icon: '🛴', name: 'Electric Scooter', basePrice: 420, hap: 6, perk: 'Cuts town travel cost in half (1h per step instead of 2h!)' },
+  { id: 0, icon: '🧊', name: 'Cryo-Fridge', basePrice: 320, hap: 5, perk: 'Stores up to 2 weeks of BioFresh hydro-groceries' },
+  { id: 1, icon: '❄️', name: 'Sub-Zero Freezer', basePrice: 280, hap: 5, perk: 'Requires Cryo-Fridge · Stores up to 6 weeks of bulk rations' },
+  { id: 2, icon: '⚡', name: 'Pulse-Wave Oven', basePrice: 220, hap: 4, perk: '+4 Bonus Chrono-Hours EVERY week (64h weekly budget!)' },
+  { id: 3, icon: '📺', name: 'Holo-Stereo Wall', basePrice: 360, hap: 8, perk: '+8 Vibe & upgrades Pod-Hab Chill to +5 Vibe' },
+  { id: 4, icon: '💻', name: 'Neural Cyberdeck PC', basePrice: 540, hap: 8, perk: '2x Cyber-U. Study Speed (+2 credits) & +$25/wk node tips!' },
+  { id: 5, icon: '🛴', name: 'Neon Hover-Scooter', basePrice: 420, hap: 6, perk: 'Cuts city block travel time in half (1h per step instead of 2h!)' },
 ];
 
 export const JOBS = [
-  { id: 1, title: 'Fry Cook', workplace: 1, baseWage: 8, dress: 1, reqDegMask: 0, anyAdv: false, reqExp: 0, reqDep: 0, rank: 1 },
-  { id: 2, title: 'Stock Clerk', workplace: 2, baseWage: 9, dress: 1, reqDegMask: 0, anyAdv: false, reqExp: 0, reqDep: 0, rank: 1 },
-  { id: 3, title: 'Foundry Custodian', workplace: 7, baseWage: 10, dress: 1, reqDegMask: 0, anyAdv: false, reqExp: 4, reqDep: 15, rank: 2 },
-  { id: 4, title: 'Shift Supervisor', workplace: 1, baseWage: 13, dress: 1, reqDegMask: 0b0001, anyAdv: false, reqExp: 10, reqDep: 20, rank: 3 },
-  { id: 5, title: 'Gadget Bench Tech', workplace: 4, baseWage: 16, dress: 1, reqDegMask: 0b0010, anyAdv: false, reqExp: 12, reqDep: 25, rank: 4 },
-  { id: 6, title: 'Assistant Buyer', workplace: 2, baseWage: 17, dress: 2, reqDegMask: 0b0001, anyAdv: false, reqExp: 14, reqDep: 25, rank: 4 },
-  { id: 7, title: 'Bank Ledger Teller', workplace: 8, baseWage: 20, dress: 2, reqDegMask: 0b0100, anyAdv: false, reqExp: 18, reqDep: 30, rank: 5 },
-  { id: 8, title: 'Assembly Engineer', workplace: 7, baseWage: 24, dress: 2, reqDegMask: 0b0011, anyAdv: false, reqExp: 24, reqDep: 35, rank: 6 },
-  { id: 9, title: 'Adjunct Lecturer', workplace: 5, baseWage: 27, dress: 2, reqDegMask: 0b0001, anyAdv: true, reqExp: 30, reqDep: 40, rank: 7 },
-  { id: 10, title: 'Investment Analyst', workplace: 8, baseWage: 32, dress: 3, reqDegMask: 0b0101, anyAdv: false, reqExp: 36, reqDep: 45, rank: 8 },
+  { id: 1, title: 'Synth-Grill Cook', workplace: 1, baseWage: 8, dress: 1, reqDegMask: 0, anyAdv: false, reqExp: 0, reqDep: 0, rank: 1 },
+  { id: 2, title: 'Cargo Drone Loader', workplace: 2, baseWage: 9, dress: 1, reqDegMask: 0, anyAdv: false, reqExp: 0, reqDep: 0, rank: 1 },
+  { id: 3, title: 'Reactor Sweeper', workplace: 7, baseWage: 10, dress: 1, reqDegMask: 0, anyAdv: false, reqExp: 4, reqDep: 15, rank: 2 },
+  { id: 4, title: 'Diner Shift Lead', workplace: 1, baseWage: 13, dress: 1, reqDegMask: 0b0001, anyAdv: false, reqExp: 10, reqDep: 20, rank: 3 },
+  { id: 5, title: 'Cyberdeck Bench Tech', workplace: 4, baseWage: 16, dress: 1, reqDegMask: 0b0010, anyAdv: false, reqExp: 12, reqDep: 25, rank: 4 },
+  { id: 6, title: 'Bazaar Supply Buyer', workplace: 2, baseWage: 17, dress: 2, reqDegMask: 0b0001, anyAdv: false, reqExp: 14, reqDep: 25, rank: 4 },
+  { id: 7, title: 'Cryo-Vault Teller', workplace: 8, baseWage: 20, dress: 2, reqDegMask: 0b0100, anyAdv: false, reqExp: 18, reqDep: 30, rank: 5 },
+  { id: 8, title: 'Foundry Mecha Eng.', workplace: 7, baseWage: 24, dress: 2, reqDegMask: 0b0011, anyAdv: false, reqExp: 24, reqDep: 35, rank: 6 },
+  { id: 9, title: 'Cyber-U. Adjunct', workplace: 5, baseWage: 27, dress: 2, reqDegMask: 0b0001, anyAdv: true, reqExp: 30, reqDep: 40, rank: 7 },
+  { id: 10, title: 'DeFi Quant Analyst', workplace: 8, baseWage: 32, dress: 3, reqDegMask: 0b0101, anyAdv: false, reqExp: 36, reqDep: 45, rank: 8 },
   { id: 11, title: 'Chief Wasm Architect', workplace: 7, baseWage: 38, dress: 3, reqDegMask: 0b1011, anyAdv: false, reqExp: 44, reqDep: 50, rank: 9 },
-  { id: 12, title: 'Bank President', workplace: 8, baseWage: 45, dress: 3, reqDegMask: 0b1111, anyAdv: false, reqExp: 52, reqDep: 55, rank: 10 },
+  { id: 12, title: 'Cryo-Bank President', workplace: 8, baseWage: 45, dress: 3, reqDegMask: 0b1111, anyAdv: false, reqExp: 52, reqDep: 55, rank: 10 },
 ];
 
 const STOCK_NAMES = [
-  { id: 0, sym: 'T-BILLS', name: 'Sunnyvale T-Bills', risk: 'Safe Steady Bond' },
-  { id: 1, sym: 'BURGER', name: 'Burger Bytes Corp', risk: 'Consumer Growth' },
-  { id: 2, sym: 'Q-CHIP', name: 'QuantumChip Foundry', risk: 'High-Tech Swing' },
+  { id: 0, sym: 'CRYO-TB', name: 'Sector Treasury Bonds', risk: 'Low-Vol Yield' },
+  { id: 1, sym: 'BYTE-BG', name: 'Byte-Burger SynthCorp', risk: 'Mid-Cap Growth' },
+  { id: 2, sym: 'Q-WASM', name: 'Quantum Wasm Foundry', risk: 'High-Beta Tech' },
 ];
 
-const DRESS_NAMES = ['Tattered Clothes', 'Casual Wear', 'Smart Dress', 'Executive Suit'];
+const DRESS_NAMES = ['Frayed Streetwear', 'Neon Street Hoodie', 'Smart LED Blazer', 'Exec Chrome Suit'];
 
 const WEEKEND_HEADLINES = {
-  1: { icon: '☀️', text: 'enjoyed a peaceful, sunny weekend around town.', thumb: '/assets/jones/town_center.jpg' },
-  2: { icon: '🦝', text: 'got visited at Shady Acres by Sneaky Sam! Unbanked pocket cash swiped:', thumb: '/assets/jones/bandit_sam.jpg' },
-  3: { icon: '🛡️', text: 'watched LeSecurity Condo’s robo-doorman bounce Sneaky Sam! (+2 Hap)', thumb: '/assets/jones/bandit_sam.jpg' },
-  4: { icon: '🥪', text: 'forgot groceries! Ordered emergency corner sandwiches (-4 Hap):', thumb: '/assets/jones/keeper_burgers.jpg' },
-  5: { icon: '🥛', text: 'had extra unrefrigerated groceries spoil over the weekend! Buy a Fridge!', thumb: '/assets/jones/keeper_market.jpg' },
-  6: { icon: '💌', text: 'received a cheerful birthday card & cash gift from Aunt Millie!', thumb: '/assets/jones/town_center.jpg' },
-  7: { icon: '🎈', text: 'won Best Pie at the Sunnyvale Neighborhood Block Party! (+3 Hap)', thumb: '/assets/jones/town_center.jpg' },
-  8: { icon: '🏦', text: 'received a $60 Civic Consensus Dividend Rebate!', thumb: '/assets/jones/keeper_bank.jpg' },
-  9: { icon: '🔧', text: 'had an appliance fuse hiccup—visit Pawn & Repair to tune it up!', thumb: '/assets/jones/keeper_tech.jpg' },
-  10: { icon: '💻', text: 'earned +$25 passive weekend node tips from their Home Computer!', thumb: '/assets/jones/keeper_tech.jpg' },
-  11: { icon: '🏠', text: 'settled monthly Sunnyvale apartment rent:', thumb: '/assets/jones/town_center.jpg' },
-  12: { icon: '🏆', text: 'REACHED 100% IN ALL FOUR LIFE PILLARS & WON SUNNYVALE!', thumb: '/assets/jones/rival_jones.jpg' },
+  1: { icon: '🌃', text: 'cruised the neon skyways over a chill cyberpunk weekend.', thumb: '/assets/jones/town_center.jpg' },
+  2: { icon: '🕶️', text: 'got packet-skimmed outside Pod-Hab by Glitch-Sam! Unbanked cash lost:', thumb: '/assets/jones/bandit_sam.jpg' },
+  3: { icon: '🛡️', text: 'watched LeSecurity Spire’s laser-turret bounce Glitch-Sam! (+2 Vibe)', thumb: '/assets/jones/bandit_sam.jpg' },
+  4: { icon: '🍜', text: 'ran out of rations! Ordered drone-drop synth-noodles (-4 Vibe):', thumb: '/assets/jones/keeper_burgers.jpg' },
+  5: { icon: '🥬', text: 'had uncooled BioFresh greens wilt! Pick up a Cryo-Fridge!', thumb: '/assets/jones/keeper_market.jpg' },
+  6: { icon: '💠', text: 'received an encrypted cred-drop from Aunt Millie on the Lunar Relay!', thumb: '/assets/jones/rival_jones.jpg' },
+  7: { icon: '🎸', text: 'won Best Synth-Track at the Neon Commons Rooftop Jam! (+3 Vibe)', thumb: '/assets/jones/keeper_clothing.jpg' },
+  8: { icon: '🏦', text: 'collected a $60 Subnet Validator Staking Rebate!', thumb: '/assets/jones/keeper_bank.jpg' },
+  9: { icon: '🔧', text: 'blew a plasma fuse during a grid surge—visit Glitch-Pawn to tune it!', thumb: '/assets/jones/keeper_tech.jpg' },
+  10: { icon: '💻', text: 'mined +$25 passive weekend relay rewards on their Cyberdeck PC!', thumb: '/assets/jones/keeper_tech.jpg' },
+  11: { icon: '🏙️', text: 'auto-settled monthly Neo-Sector hab-lease:', thumb: '/assets/jones/town_center.jpg' },
+  12: { icon: '🏆', text: 'MAXED 100% ACROSS ALL FOUR PILLARS & RULED NEO-SECTOR!', thumb: '/assets/jones/rival_jones.jpg' },
 };
 
 // ---------------------------------------------------------------------------
@@ -261,7 +287,7 @@ let contractAddr = '';
 let activeGameId = DEFAULT_GAME_ID;
 let gameState = null;
 let directoryGames = [];
-let selectedBuilding = null; // null = Sunnyvale Plaza overview, 0..11 = Building interior
+let selectedBuilding = null; // null = Full Map Overview, 0..11 = Venue Holo-Terminal
 let plannedSteps = []; // array of { op, arg, label }
 let selectedPreset = 0;
 let selectedBots = 1;
@@ -692,7 +718,7 @@ function decodeGamesListHex(hexStr) {
 }
 
 // ---------------------------------------------------------------------------
-// RPC Sync & Identity-Gated Transactions
+// RPC Sync & Strict Identity-Gated Transactions
 // ---------------------------------------------------------------------------
 
 function showToast(msg) {
@@ -705,18 +731,17 @@ function showToast(msg) {
 }
 
 function seatDisplayName(seat) {
-  if (!seat) return 'Townsperson';
+  if (!seat) return 'Runner';
   if (seat.isBot > 0) {
     const bp = BOT_PROFILES[seat.isBot] || BOT_PROFILES[1];
     return `${bp.icon} ${bp.name}`;
   }
   const nick = nickCache.get(seat.identity);
-  if (nick) return `🧑 @${nick}`;
-  return `🧑 ${shortAddr(seat.eoa)}`;
+  if (nick) return `⚡ @${nick}`;
+  return `⚡ ${shortAddr(seat.eoa)}`;
 }
 
 async function hydrateNicknames(seats) {
-  let changed = false;
   for (const s of seats) {
     if (s.isBot === 0 && s.identity && s.identity !== ZERO_ADDR && !nickCache.has(s.identity)) {
       nickCache.set(s.identity, '');
@@ -730,7 +755,6 @@ async function hydrateNicknames(seats) {
         .catch(() => {});
     }
   }
-  if (changed) renderAll();
 }
 
 async function refreshGameState() {
@@ -763,7 +787,6 @@ async function refreshGameState() {
     const nextState = stateHex && stateHex !== '0x' ? decodeGameSnapshotHex(stateHex) : null;
     directoryGames = listHex && listHex !== '0x' ? decodeGamesListHex(listHex) : [];
 
-    // If our current week advanced or turn changed on-chain, clear local planned steps cleanly
     if (
       nextState &&
       gameState &&
@@ -796,22 +819,28 @@ async function ensurePlayerIdentity() {
   }
 }
 
-async function sendJonesTx(label, calldataHex) {
+async function sendJonesTx(label, calldataHex, extraTargets = [], preverifiedIdRec = null) {
   if (txBusy) return false;
   if (!contractAddr) await bootReadyPromise;
   if (!contractAddr) {
-    showToast('⚠ Sunnyvale Town HFS contract not configured.');
+    showToast('⚠ Neo-Sector HFS contract not configured.');
     return false;
   }
+  const idRec = preverifiedIdRec || (await ensurePlayerIdentity());
+  if (!idRec?.identityAddr || idRec.identityAddr === ZERO_ADDR) return false;
+
   txBusy = true;
   renderAll();
   try {
+    const uniqTargets = Array.from(
+      new Set([contractAddr, idRec.identityAddr, ...extraTargets].filter(Boolean).map((a) => a.toLowerCase()))
+    );
     await slxClient.sendAndConfirm({
       privateKey: wallet.keypair.privateKey,
       to: contractAddr,
       data: calldataHex,
       gasLimit: 5_000_000n,
-      extraTargets: [contractAddr],
+      extraTargets: uniqTargets,
       label,
     });
     await refreshGameState();
@@ -830,13 +859,12 @@ async function startSoloGameTx(preset = 0, botCount = 1) {
   const idRec = await ensurePlayerIdentity();
   if (!idRec) return;
 
-  // Always allocate a fresh unique board ID when starting a new Solo game so existing boards stay preserved!
   const newGid = bytesToHex(concatBytes(utf8ToBytes('JONES_SOLO'), randomBytes(22)));
   activeGameId = newGid;
   plannedSteps = [];
   selectedBuilding = null;
 
-  showToast('☀️ Moving into Sunnyvale & winding your 60-hour pocket watch…');
+  showToast('⚡ Jacking into Neo-Sector & syncing your 60-hour chrono-watch…');
   const ok = await sendJonesTx(
     'quickStartSolo',
     encodeAbi('quickStartSolo(bytes32,address,uint64,uint64)', [
@@ -844,11 +872,13 @@ async function startSoloGameTx(preset = 0, botCount = 1) {
       ['address', idRec.identityAddr],
       ['uint64', BigInt(botCount)],
       ['uint64', BigInt(preset)],
-    ])
+    ]),
+    [],
+    idRec
   );
   if (ok) {
     closeModal('soloModal');
-    showToast('🎉 Welcome to Week 1! Click Employment Office to grab your first job!');
+    showToast('🎉 Week 1 Live! Click Job Guild Tower (bottom-right) to grab your first gig!');
   }
 }
 
@@ -875,9 +905,11 @@ async function createLobbyGameTx(preset = 1) {
       ['uint64', h],
       ['uint64', e],
       ['uint64', c],
-    ])
+    ]),
+    [],
+    idRec
   );
-  if (ok) showToast('🏡 Open Family Lobby created! Friends can join or you can start anytime.');
+  if (ok) showToast('🌐 Open Crew Lobby created! Friends can join or you can launch anytime.');
 }
 
 async function joinLobbyGameTx(gid) {
@@ -890,11 +922,13 @@ async function joinLobbyGameTx(gid) {
     encodeAbi('joinGame(bytes32,address)', [
       ['bytes32', gid],
       ['address', idRec.identityAddr],
-    ])
+    ]),
+    [],
+    idRec
   );
   if (ok) {
     closeModal('lobbyModal');
-    showToast('🙋 Joined Sunnyvale Board!');
+    showToast('🙋 Jacked into Neo-Sector Board!');
   }
 }
 
@@ -907,11 +941,13 @@ async function startLobbyGameTx(gid, fillToSeats = 2) {
     encodeAbi('startGame(bytes32,uint64)', [
       ['bytes32', gid],
       ['uint64', BigInt(fillToSeats)],
-    ])
+    ]),
+    [],
+    idRec
   );
   if (ok) {
     closeModal('lobbyModal');
-    showToast('☀️ Sunnyvale Week 1 has begun!');
+    showToast('⚡ Neo-Sector Week 1 has begun!');
   }
 }
 
@@ -925,13 +961,15 @@ async function submitWeekPlanTx() {
     flatBytes[i * 2 + 1] = plannedSteps[i].arg & 0xff;
   }
 
-  showToast('🌙 Rolling the weekend gazette & Rival Jones’s turn…');
+  showToast('🌙 Committing 60h Week Plan & rolling Rival Jones’s turn…');
   const ok = await sendJonesTx(
     'submitWeekPlan',
     encodeAbi('submitWeekPlan(bytes32,bytes)', [
       ['bytes32', activeGameId],
       ['bytes', flatBytes],
-    ])
+    ]),
+    [],
+    idRec
   );
   if (ok) {
     plannedSteps = [];
@@ -948,7 +986,9 @@ async function rematchTx() {
     encodeAbi('rematchGame(bytes32,uint64)', [
       ['bytes32', activeGameId],
       ['uint64', BigInt(selectedPreset)],
-    ])
+    ]),
+    [],
+    idRec
   );
 }
 
@@ -970,32 +1010,32 @@ function getActivePreview() {
 function queueBuildingAction(targetBuilding, op, arg, label) {
   const { baseMe, simMe, isMyTurn } = getActivePreview();
   if (!isMyTurn || !simMe || txBusy) {
-    showToast('🕰️ Start a game or wait for your turn to plan your week!');
+    showToast('⏱️ Launch a run vs. Jones or wait for your turn to queue ops!');
     return;
   }
 
   const nextSteps = [...plannedSteps];
   if (simMe.location !== targetBuilding) {
     if (nextSteps.length + 1 > MAX_PLAN_STEPS) {
-      showToast('⚠ Weekly step limit (32 actions) reached—click Finish Week!');
+      showToast('⚠ Weekly op limit (32 steps) reached—click Commit Week!');
       return;
     }
+    const moveIcon = hasWorkingApp(simMe, 5) ? '🛴' : '🚶';
     nextSteps.push({
       op: OP_MOVE,
       arg: targetBuilding,
-      label: `🚶→${BUILDINGS[targetBuilding].icon}`,
+      label: `${moveIcon}→${BUILDINGS[targetBuilding].icon}`,
     });
   }
 
   if (op !== OP_MOVE) {
     if (nextSteps.length + 1 > MAX_PLAN_STEPS) {
-      showToast('⚠ Weekly step limit (32 actions) reached—click Finish Week!');
+      showToast('⚠ Weekly op limit (32 steps) reached—click Commit Week!');
       return;
     }
     nextSteps.push({ op, arg, label });
   }
 
-  // Verify the simulated step actually succeeded (had enough hours/cash)
   const afterSim = simulateLocalPlan(baseMe, gameState, nextSteps);
   if (
     afterSim.hoursLeft === simMe.hoursLeft &&
@@ -1005,7 +1045,7 @@ function queueBuildingAction(targetBuilding, op, arg, label) {
     afterSim.jobId === simMe.jobId &&
     afterSim.happiness === simMe.happiness
   ) {
-    showToast('⚠ Not enough hours, cash, or prerequisites for that action!');
+    showToast('⚠ Not enough chrono-hours, cash, or prerequisites for that op!');
     return;
   }
 
@@ -1014,7 +1054,7 @@ function queueBuildingAction(targetBuilding, op, arg, label) {
 }
 
 // ---------------------------------------------------------------------------
-// Rendering Engine: 12-Tile Perimeter Board, Shop Stage, 4 Pillars & Gazette
+// Rendering Engine: Full Illustrated Map + Overlaid Venue Hitboxes + Holo-Terminal
 // ---------------------------------------------------------------------------
 
 function escapeHtml(str) {
@@ -1027,8 +1067,8 @@ function escapeHtml(str) {
 
 function renderAll() {
   renderTopRibbon();
-  renderPerimeterTiles();
-  renderCenterStage();
+  renderVenueHotspots();
+  renderCenterHoloLayer();
   renderPlannerBar();
   renderSidebar();
   renderLobbyDirectory();
@@ -1040,43 +1080,43 @@ function renderTopRibbon() {
   const turnEl = document.getElementById('hudTurnBadge');
   if (!gameState) {
     if (wkEl) wkEl.textContent = '1';
-    if (econEl) econEl.textContent = '☀️ Sunnyvale Ready';
-    if (turnEl) turnEl.textContent = contractAddr ? 'Click ☀️ Play vs. Jones to begin!' : 'Connecting…';
+    if (econEl) econEl.textContent = '🌐 Neo-Sector Ready';
+    if (turnEl) turnEl.textContent = contractAddr ? 'Click ⚡ Play vs. Jones to jack in!' : 'Syncing…';
     return;
   }
 
   wkEl.textContent = String(gameState.weekNumber);
   const idx = gameState.economyIndex;
   const arrow = gameState.economyTrend > 0 ? '↗' : gameState.economyTrend < 0 ? '↘' : '→';
-  const weather = idx >= 108 ? '☀️ Boom' : idx <= 92 ? '🌧️ Bargain Dip' : '🌤️ Steady';
-  econEl.textContent = `${weather} ${idx}% ${arrow}`;
+  const pulse = idx >= 108 ? '🔥 Bull Surge' : idx <= 92 ? '⚡ Discount Dip' : '🌐 Cyber-Index';
+  econEl.textContent = `${pulse} ${idx}% ${arrow}`;
 
   if (gameState.phase === PHASE_LOBBY) {
-    turnEl.textContent = `🏡 Open Lobby (${gameState.seatCount}/4 Seats)`;
+    turnEl.textContent = `🌐 Crew Lobby (${gameState.seatCount}/4 Runners)`;
     jbGuide?.updateCoach({
-      pill: '🏡 FAMILY LOBBY',
+      pill: '🌐 CREW LOBBY',
       tone: 'action',
-      html: 'Share this Sunnyvale board with family &amp; friends, or click <strong>☀️ Start Now</strong> to fill empty seats with Jones!',
+      html: 'Share this Neo-Sector board with friends/family, or click <strong>⚡ Start Now</strong> to fill empty seats with Rival Jones!',
     });
   } else if (gameState.phase === PHASE_FINISHED) {
     const winSeat = gameState.seats[gameState.winnerSeat];
     turnEl.textContent = `🏆 Winner: ${seatDisplayName(winSeat)}!`;
     jbGuide?.updateCoach({
-      pill: '🏆 VICTORY!',
+      pill: '🏆 SECTOR LEGEND!',
       tone: 'action',
-      html: `<strong>${escapeHtml(seatDisplayName(winSeat))}</strong> reached 100% across Wealth, Happiness, Education &amp; Career!`,
-      actionLabel: '🔄 Play Again',
+      html: `<strong>${escapeHtml(seatDisplayName(winSeat))}</strong> hit 100% across Wealth, Vibe, Neural Education &amp; Career!`,
+      actionLabel: '🔄 Rematch',
       onAction: () => rematchTx(),
     });
   } else if (gameState.viewerSeat === gameState.turnSeat) {
-    turnEl.textContent = txBusy ? '⛓️ Sealing Week on Subnet 1…' : '🟢 Your 60-Hour Week!';
+    turnEl.textContent = txBusy ? '⛓️ Sealing Week on Subnet 1…' : '🟢 Your 60-Hour Chrono-Week!';
     const { simMe } = getActivePreview();
     if (simMe && simMe.jobId === 0) {
       jbGuide?.updateCoach({
-        pill: '💼 STEP 1',
+        pill: '💼 OP #1',
         tone: 'action',
-        html: 'Click <strong>💼 Employment Office</strong> to grab your first job (Fry Cook or Stock Clerk), then work shifts &amp; grab a meal!',
-        actionLabel: '💼 Go to Employment',
+        html: 'Click <strong>💼 Job Guild Tower</strong> (bottom-right on map) to land your first gig, work 6h shifts, and grab a Synth-Burger!',
+        actionLabel: '💼 Open Job Guild',
         onAction: () => {
           selectedBuilding = 6;
           renderAll();
@@ -1084,10 +1124,10 @@ function renderTopRibbon() {
       });
     } else if (simMe && simMe.foodWeeks === 0) {
       jbGuide?.updateCoach({
-        pill: '🍔 DINNER REMINDER',
+        pill: '🍔 RATIONS ALERT',
         tone: 'urgent',
-        html: `You have <strong>0 weeks of food</strong> stored! Visit <strong>🍔 Burger Bytes</strong> or <strong>🍎 FreshBlock Market</strong> before Friday night!`,
-        actionLabel: '🍔 Burger Bytes',
+        html: `You have <strong>0 weeks of food</strong>! Click <strong>🍔 Byte-Burgers</strong> (top-left-center) or <strong>🍏 BioFresh Dome</strong> before committing your week!`,
+        actionLabel: '🍔 Byte-Burgers',
         onAction: () => {
           selectedBuilding = 1;
           renderAll();
@@ -1095,56 +1135,56 @@ function renderTopRibbon() {
       });
     } else if (simMe) {
       jbGuide?.updateCoach({
-        pill: `🕰️ ${simMe.hoursLeft}H LEFT`,
+        pill: `⏱️ ${simMe.hoursLeft}H LEFT`,
         tone: 'action',
-        html: `Work 6h shifts, attend a lecture at <strong>🎓 Haltproof Univ.</strong>, deposit cash at <strong>🏦 Bank</strong>, or seal your week!`,
-        actionLabel: '🌙 Finish Week',
+        html: `Click venues on the neon map to work 6h shifts, study at <strong>🎓 Haltproof Cyber-U.</strong>, vault cash at <strong>🏦 Cryo-Bank</strong>, then commit your week!`,
+        actionLabel: '🌙 Commit Week',
         onAction: () => submitWeekPlanTx(),
       });
     }
   } else if (gameState.viewerSeat === 0xff) {
-    turnEl.textContent = '👀 Spectating Sunnyvale — Click ☀️ Play vs. Jones!';
+    turnEl.textContent = '👀 Live Neo-Sector Feed — Click ⚡ Play vs. Jones!';
     jbGuide?.updateCoach({
-      pill: '☀️ WELCOME TO SUNNYVALE',
+      pill: '⚡ NEO-SECTOR LIVE',
       tone: 'action',
-      html: 'Live Week 3 showcase board in progress! Click <strong>☀️ Play vs. Jones</strong> to start your own cozy career at $0.00 gas.',
-      actionLabel: '☀️ Play vs. Jones',
+      html: 'Click any glowing venue directly on the cyberpunk city map to explore—or click <strong>⚡ Play vs. Jones</strong> to start your own run at $0.00 gas!',
+      actionLabel: '⚡ Play vs. Jones',
       onAction: () => openModal('soloModal'),
     });
   } else {
     const active = gameState.seats[gameState.turnSeat];
-    turnEl.textContent = `🕰️ Waiting on ${seatDisplayName(active)}`;
+    turnEl.textContent = `⏱️ Waiting on ${seatDisplayName(active)}`;
     jbGuide?.updateCoach({
-      pill: '🕰️ FAMILY TURN',
+      pill: '🌐 CREW TURN',
       tone: 'info',
-      html: `Waiting for <strong>${escapeHtml(seatDisplayName(active))}</strong> to finish Week ${gameState.weekNumber}.`,
+      html: `Waiting for <strong>${escapeHtml(seatDisplayName(active))}</strong> to commit Week ${gameState.weekNumber}.`,
     });
   }
 }
 
-function renderPerimeterTiles() {
+function renderVenueHotspots() {
+  const layer = document.getElementById('venueHotspotsLayer');
+  if (!layer) return;
+
   const { simMe, isMyTurn } = getActivePreview();
   const curLoc = simMe ? simMe.location : 0;
   const hasScooter = simMe ? hasWorkingApp(simMe, 5) : false;
   const myJob = simMe ? getJob(simMe.jobId) : null;
 
-  for (let i = 0; i < NUM_BUILDINGS; i++) {
-    const mount = document.getElementById(`tileMount${i}`);
-    if (!mount) continue;
-    const b = BUILDINGS[i];
-    const dist = ringDistance(curLoc, i);
+  layer.innerHTML = BUILDINGS.map((b) => {
+    const dist = ringDistance(curLoc, b.id);
     const hrs = dist * (hasScooter ? 1 : 2);
-    const isHere = simMe && curLoc === i;
-    const isSel = selectedBuilding === i;
+    const isHere = Boolean(simMe && curLoc === b.id);
+    const isSel = selectedBuilding === b.id;
 
     const pawnsHtml = [];
     if (gameState?.seats) {
       for (const s of gameState.seats) {
         const sLoc =
           isMyTurn && s.seatIdx === gameState.viewerSeat && simMe ? simMe.location : s.location;
-        if (sLoc === i) {
+        if (sLoc === b.id) {
           if (s.seatIdx === gameState.viewerSeat) {
-            pawnsHtml.push(`<span class="jb-pawn">⭐ You</span>`);
+            pawnsHtml.push(`<span class="jb-pawn">⚡ YOU</span>`);
           } else {
             const label = s.isBot > 0 ? BOT_PROFILES[s.isBot]?.name || 'Bot' : shortAddr(s.eoa);
             pawnsHtml.push(`<span class="jb-pawn rival">${escapeHtml(label)}</span>`);
@@ -1154,32 +1194,33 @@ function renderPerimeterTiles() {
     }
 
     const travelBadge = isHere
-      ? `<span class="jb-tile-travel here">📍 HERE</span>`
-      : `<span class="jb-tile-travel mono">${hasScooter ? '🛴' : '🚶'} ${hrs}h</span>`;
+      ? `<span class="jb-hotspot-travel here">📍 HERE</span>`
+      : `<span class="jb-hotspot-travel mono">${hasScooter ? '🛴' : '🚶'}${hrs}h</span>`;
 
     const jobBadge =
-      myJob && myJob.workplace === i ? `<span class="jb-work-tag">💼 WORK</span>` : '';
+      myJob && myJob.workplace === b.id ? `<span class="jb-work-tag">💼 WORK</span>` : '';
 
-    mount.innerHTML = `
-      <button type="button" class="jb-tile ${isSel ? 'is-selected' : ''} ${isHere ? 'is-here' : ''}" data-building-id="${i}">
-        <div class="jb-tile-awning" style="background: ${b.awning};"></div>
-        <div class="jb-tile-inner">
-          <div class="jb-tile-top">
-            <span class="jb-tile-icon">${b.icon}</span>
+    return `
+      <button
+        type="button"
+        class="jb-venue-hotspot ${isSel ? 'is-selected' : ''} ${isHere ? 'is-here' : ''}"
+        data-building-id="${b.id}"
+        title="${escapeHtml(b.name)} — ${escapeHtml(b.sub)}"
+        style="left:${b.box.left}%;top:${b.box.top}%;width:${b.box.width}%;height:${b.box.height}%;--v-neon:${b.neon};--v-border:${b.neon}99;--v-glow:${b.glow};">
+        <div class="jb-hotspot-top">
+          <div class="jb-pawns-row">${pawnsHtml.join('')}</div>
+          <div class="jb-hotspot-badges">
+            ${jobBadge}
             ${travelBadge}
           </div>
-          <div>
-            <div class="jb-tile-name">${escapeHtml(b.name)}</div>
-            <div class="jb-tile-sub">${escapeHtml(b.sub)}</div>
-          </div>
-          <div class="jb-tile-footer">
-            <div class="jb-pawns-row">${pawnsHtml.join('')}</div>
-            ${jobBadge}
-          </div>
+        </div>
+        <div class="jb-hotspot-plate">
+          <span class="jb-hotspot-title">${b.icon} ${escapeHtml(b.name)}</span>
+          <span class="jb-hotspot-cta mono">${isSel ? '✕' : '▸'}</span>
         </div>
       </button>
     `;
-  }
+  }).join('');
 }
 
 function buildInteriorActions(bId, simMe, econ, isMyTurn) {
@@ -1188,9 +1229,8 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
   const curLoc = simMe ? simMe.location : 0;
   const hasScooter = simMe ? hasWorkingApp(simMe, 5) : false;
   const walkHrs = curLoc === bId ? 0 : ringDistance(curLoc, bId) * (hasScooter ? 1 : 2);
-  const walkNote = walkHrs > 0 ? ` (+${walkHrs}h travel)` : '';
+  const walkNote = walkHrs > 0 ? ` (+${walkHrs}h transit)` : '';
 
-  // If workplace of player's current job, always surface a prominent "Work 6h Shift" button right at the top!
   const myJob = simMe ? getJob(simMe.jobId) : null;
   if (myJob && myJob.workplace === bId) {
     const shiftPay = scaledPrice(Math.max(simMe.hourlyWage, myJob.baseWage) * 6, econ);
@@ -1203,16 +1243,16 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
       label: `💼 Work 1 Shift (${myJob.title})`,
       cost: `+$${shiftPay} · 6h${walkNote}`,
       desc: dressOk
-        ? `+2 Experience, +2 Dependability ($${Math.max(simMe.hourlyWage, myJob.baseWage)}/hr)`
-        : `⚠ Requires ${DRESS_NAMES[myJob.dress]} from CryptoThreads!`,
+        ? `+2 Exp, +2 Dependability ($${Math.max(simMe.hourlyWage, myJob.baseWage)}/hr)`
+        : `⚠ Requires ${DRESS_NAMES[myJob.dress]} from ChromaThreads!`,
       disabled: !can1,
     });
     actions.push({
       op: OP_WORK,
       arg: 3,
-      label: `⚡ Work 3 Shifts (18h Block)`,
+      label: `⚡ Work 3 Shifts (18h Grind)`,
       cost: `+$${shiftPay * 3} · 18h${walkNote}`,
-      desc: `Full productive workday! +6 Experience, +6 Dependability.`,
+      desc: `Triple shift payout! +6 Exp, +6 Dependability.`,
       disabled: !can3,
     });
   }
@@ -1222,9 +1262,9 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
     actions.push({
       op: OP_RELAX,
       arg: 0,
-      label: tvBonus ? '📺 Watch Color Stereo TV & Chill' : '🛋️ Cozy Afternoon Nap at Home',
+      label: tvBonus ? '📺 Stream Holo-Stereo Wall & Chill' : '🛌 Cryo-Pod Power Nap',
       cost: `$0 · 6h${walkNote}`,
-      desc: tvBonus ? 'Boosts Happiness by +5!' : 'Boosts Happiness by +3 (get a Stereo TV for +5!).',
+      desc: tvBonus ? 'Recharges Vibe by +5!' : 'Recharges Vibe by +3 (get a Holo-Stereo Wall for +5!).',
       disabled: disabledBase || simMe.hoursLeft < walkHrs + 6,
     });
   } else if (bId === 1) {
@@ -1233,17 +1273,17 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
     actions.push({
       op: OP_BUY_FOOD,
       arg: 0,
-      label: '🍔 Cheeseburger Value Meal',
+      label: '🍔 Neon Synth-Burger Combo',
       cost: `$${pMeal} · 2h${walkNote}`,
-      desc: '+1 Week Food & +2 Happiness (no Fridge needed!).',
+      desc: '+1 Week Food & +2 Vibe (no Cryo-Fridge needed!).',
       disabled: disabledBase || simMe.cash < pMeal || simMe.hoursLeft < walkHrs + 2,
     });
     actions.push({
       op: OP_BUY_FOOD,
       arg: 1,
-      label: '🥤 Double Burger & Strawberry Shake Feast',
+      label: '🥤 Double Cyber-Burger & Pink Shake',
       cost: `$${pShake} · 2h${walkNote}`,
-      desc: '+2 Weeks Food & +4 Happiness! Treat yourself!',
+      desc: '+2 Weeks Food & +4 Vibe! Diner favorite!',
       disabled: disabledBase || simMe.cash < pShake || simMe.hoursLeft < walkHrs + 2,
     });
   } else if (bId === 2) {
@@ -1252,17 +1292,17 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
     actions.push({
       op: OP_RELAX,
       arg: 2,
-      label: '🎟️ Sunnyvale Raffle Ticket & Boardgame',
+      label: '🎟️ Sector Cyber-Lotto & Arcade',
       cost: `$${pRaffle} · 2h${walkNote}`,
-      desc: '+3 Happiness + 1-in-8 shot at an instant $200 Raffle Jackpot!',
+      desc: '+3 Vibe + 1-in-8 shot at an instant $200 Jackpot!',
       disabled: disabledBase || simMe.cash < pRaffle || simMe.hoursLeft < walkHrs + 2,
     });
     actions.push({
       op: OP_BUY_CLOTHES,
       arg: 1,
-      label: '👕 Bargain Casual Outfit',
+      label: '👕 Off-Rack Neon Tee',
       cost: `$${pClothes} · 2h${walkNote}`,
-      desc: 'Refreshes Casual Wear to 5 weeks +1 Happiness.',
+      desc: 'Refreshes Tier-1 Streetwear to 5 weeks +1 Vibe.',
       disabled: disabledBase || simMe.cash < pClothes || simMe.hoursLeft < walkHrs + 2,
     });
     for (const appId of [0, 2, 3]) {
@@ -1272,7 +1312,7 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
       actions.push({
         op: OP_BUY_APPLIANCE,
         arg: appId,
-        label: `${app.icon} Refurb ${app.name} (15% Off!)`,
+        label: `${app.icon} Refurb ${app.name} (15% Off)`,
         cost: ownedOk ? 'OWNED ✓' : `$${discPrice} · 2h${walkNote}`,
         desc: app.perk,
         disabled: disabledBase || ownedOk || simMe.cash < discPrice || simMe.hoursLeft < walkHrs + 2,
@@ -1280,9 +1320,9 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
     }
   } else if (bId === 3) {
     const outfits = [
-      { tier: 1, icon: '👕', name: 'Crisp Casual Hoodie', base: 45, wks: 6, hap: 1 },
-      { tier: 2, icon: '🧥', name: 'Smart Career Blazer', base: 95, wks: 7, hap: 3 },
-      { tier: 3, icon: '🎩', name: 'Tailored Executive Suit', base: 195, wks: 8, hap: 6 },
+      { tier: 1, icon: '👕', name: 'Neon Street Hoodie', base: 45, wks: 6, hap: 1 },
+      { tier: 2, icon: '🧥', name: 'Smart LED Career Blazer', base: 95, wks: 7, hap: 3 },
+      { tier: 3, icon: '🎩', name: 'Tailored Exec Chrome Suit', base: 195, wks: 8, hap: 6 },
     ];
     for (const o of outfits) {
       const p = scaledPrice(o.base, econ);
@@ -1291,7 +1331,7 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
         arg: o.tier,
         label: `${o.icon} ${o.name} (Tier ${o.tier})`,
         cost: `$${p} · 2h${walkNote}`,
-        desc: `Lasts ${o.wks} weeks · +${o.hap} Happiness.`,
+        desc: `Lasts ${o.wks} weeks · +${o.hap} Vibe.`,
         disabled: disabledBase || simMe.cash < p || simMe.hoursLeft < walkHrs + 2,
       });
     }
@@ -1305,7 +1345,7 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
         arg: app.id,
         label: `${app.icon} ${app.name}`,
         cost: owned ? 'OWNED ✓' : `$${p} · 2h${walkNote}`,
-        desc: needsFridge ? '⚠ Buy a Refrigerator first!' : `${app.perk} (+${app.hap} Hap)`,
+        desc: needsFridge ? '⚠ Requires Cryo-Fridge first!' : `${app.perk} (+${app.hap} Vibe)`,
         disabled: disabledBase || owned || needsFridge || simMe.cash < p || simMe.hoursLeft < walkHrs + 2,
       });
     }
@@ -1320,12 +1360,12 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
         op: OP_STUDY,
         arg: deg.id,
         label: `${deg.icon} ${deg.name} (${grad ? '10/10 🎓' : `${creds}/10`})`,
-        cost: grad ? 'GRADUATED ✓' : `$${tuition} · 6h${walkNote}`,
+        cost: grad ? 'CERTIFIED ✓' : `$${tuition} · 6h${walkNote}`,
         desc: grad
           ? `Completed! Unlocks: ${deg.unlocks}`
           : !qual
           ? `🔒 ${deg.reqText}`
-          : `+${hasPc ? 2 : 1} Study Credit${hasPc ? 's (💻 PC 2x Boost!)' : ''} · Unlocks: ${deg.unlocks}`,
+          : `+${hasPc ? 2 : 1} Neural Credit${hasPc ? 's (💻 Cyberdeck 2x!)' : ''} · Unlocks: ${deg.unlocks}`,
         disabled: disabledBase || !qual || simMe.cash < tuition || simMe.hoursLeft < walkHrs + 6,
       });
     }
@@ -1334,12 +1374,12 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
       actions.push({
         op: OP_ASK_RAISE,
         arg: 0,
-        label: '📈 Negotiate +$2/hr Pay Raise',
+        label: '📈 Negotiate +$2/hr Guild Raise',
         cost: `4h${walkNote}`,
         desc:
           simMe.dependability >= 55
-            ? 'Your Dependability is 55+ — Counselor Clara will approve +$2/hr & +2 Happiness!'
-            : `Requires 55+ Dependability (currently ${simMe.dependability}) to succeed.`,
+            ? 'Dependability 55+ verified — approves +$2/hr & +2 Vibe!'
+            : `Requires 55+ Dependability (currently ${simMe.dependability}) to approve.`,
         disabled:
           disabledBase ||
           simMe.raiseAskedThisWeek > 0 ||
@@ -1355,8 +1395,8 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
         op: OP_APPLY_JOB,
         arg: jb.id,
         label: `${isCur ? '✅ ' : qual ? '🟢 ' : '🔒 '}${jb.title} ($${jb.baseWage}/hr)`,
-        cost: isCur ? 'CURRENT JOB' : `4h${walkNote}`,
-        desc: `At ${wpName} · Req: Exp ${jb.reqExp}, Dep ${jb.reqDep}, ${DRESS_NAMES[jb.dress]}`,
+        cost: isCur ? 'ACTIVE GIG' : `4h${walkNote}`,
+        desc: `@ ${wpName} · Req: Exp ${jb.reqExp}, Dep ${jb.reqDep}, ${DRESS_NAMES[jb.dress]}`,
         disabled: disabledBase || isCur || !qual || simMe.hoursLeft < walkHrs + 4,
       });
     }
@@ -1365,35 +1405,35 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
       actions.push({
         op: OP_MOVE,
         arg: 6,
-        label: '💼 Visit Employment Office to Apply Here',
-        cost: 'Shortcut',
-        desc: 'Foundry careers pay $10–$38/hr (Custodian, Assembly Engineer, Chief Wasm Architect)!',
-        disabled: disabledBase,
+        label: '💼 Open Job Guild Tower to Apply Here',
+        cost: 'Jump',
+        desc: 'SLX Foundry roles pay $10–$38/hr (Reactor Sweeper, Mecha Eng., Chief Wasm Architect)!',
+        disabled: false,
       });
     }
   } else if (bId === 8) {
     actions.push({
       op: OP_BANK_DEPOSIT,
       arg: 2,
-      label: '🐷 Deposit $100 into Savings (2%/wk)',
+      label: '🔐 Vault $100 into Cryo-Savings (2%/wk)',
       cost: `1h${walkNote}`,
-      desc: 'Earns 2% compound interest every weekend & 100% safe from Sneaky Sam!',
+      desc: 'Compounds +2% every weekend & 100% immune to Glitch-Sam!',
       disabled: disabledBase || simMe.cash < 100 || simMe.hoursLeft < walkHrs + 1,
     });
     actions.push({
       op: OP_BANK_DEPOSIT,
       arg: 0,
-      label: '🔐 Deposit All Spare Cash (Keep $40)',
+      label: '🛡️ Sweep All Spare Cash (Keep $40)',
       cost: `1h${walkNote}`,
-      desc: 'Sweeps pocket cash above $40 safely into your Vault Savings.',
+      desc: 'Locks all pocket cash above $40 inside the laser-grid vault.',
       disabled: disabledBase || simMe.cash <= 40 || simMe.hoursLeft < walkHrs + 1,
     });
     actions.push({
       op: OP_BANK_WITHDRAW,
       arg: 2,
-      label: '💵 Withdraw $100 from Savings',
+      label: '💵 Withdraw $100 from Cryo-Vault',
       cost: `1h${walkNote}`,
-      desc: `Current Vault Savings: $${simMe ? simMe.savings : 0}`,
+      desc: `Vault Balance: $${simMe ? simMe.savings : 0}`,
       disabled: disabledBase || simMe.savings <= 0 || simMe.hoursLeft < walkHrs + 1,
     });
     for (const st of STOCK_NAMES) {
@@ -1402,7 +1442,7 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
       actions.push({
         op: OP_BUY_STOCK,
         arg: (st.id << 4) | 1,
-        label: `📈 Buy 1 ${st.sym} Share (Own: ${owned})`,
+        label: `📈 Buy 1 ${st.sym} (Own: ${owned})`,
         cost: `$${price} · 1h${walkNote}`,
         desc: `${st.name} · ${st.risk}`,
         disabled: disabledBase || simMe.cash < price || simMe.hoursLeft < walkHrs + 1,
@@ -1411,9 +1451,9 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
         actions.push({
           op: OP_SELL_STOCK,
           arg: (st.id << 4) | 0,
-          label: `💰 Sell All ${owned} ${st.sym} Shares`,
+          label: `💰 Sell All ${owned} ${st.sym}`,
           cost: `+$${price * owned} · 1h${walkNote}`,
-          desc: `Liquidates ${st.sym} position to pocket cash.`,
+          desc: `Liquidates ${st.sym} shares to pocket cash.`,
           disabled: disabledBase || simMe.hoursLeft < walkHrs + 1,
         });
       }
@@ -1427,28 +1467,28 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
     actions.push({
       op: OP_BUY_FOOD,
       arg: 2,
-      label: '🥖 1-Week Fresh Grocery Basket',
+      label: '🥖 1-Week Hydro-Harvest Basket',
       cost: `$${p1} · 2h${walkNote}`,
-      desc: '+1 Week Food & +1 Happiness.',
+      desc: '+1 Week Food & +1 Vibe.',
       disabled: disabledBase || simMe.cash < p1 || simMe.hoursLeft < walkHrs + 2,
     });
     actions.push({
       op: OP_BUY_FOOD,
       arg: 3,
-      label: '🍎 2-Week Refrigerator Crate',
+      label: '🍏 2-Week Cryo-Fridge Crate',
       cost: `$${p2} · 2h${walkNote}`,
-      desc: hasFridge ? '+2 Weeks Food & +2 Happiness!' : '🔒 Requires a working Refrigerator!',
+      desc: hasFridge ? '+2 Weeks Food & +2 Vibe!' : '🔒 Requires working Cryo-Fridge!',
       disabled: disabledBase || !hasFridge || simMe.cash < p2 || simMe.hoursLeft < walkHrs + 2,
     });
     actions.push({
       op: OP_BUY_FOOD,
       arg: 4,
-      label: '❄️ 4-Week Bulk Freezer Chest',
+      label: '❄️ 4-Week Sub-Zero Bulk Chest',
       cost: `$${p4} · 2h${walkNote}`,
       desc:
         hasFridge && hasFreezer
-          ? '+4 Weeks Food & +4 Happiness! Huge time & money saver!'
-          : '🔒 Requires both Refrigerator + Deep Freezer!',
+          ? '+4 Weeks Food & +4 Vibe! Massive chrono-saver!'
+          : '🔒 Requires Cryo-Fridge + Sub-Zero Freezer!',
       disabled:
         disabledBase || !hasFridge || !hasFreezer || simMe.cash < p4 || simMe.hoursLeft < walkHrs + 2,
     });
@@ -1456,18 +1496,18 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
     actions.push({
       op: OP_RELAX,
       arg: 1,
-      label: '🧺 Sunnyvale Plaza Picnic & Concert',
+      label: '🌸 Neon Sakura Park Synth-Concert',
       cost: `FREE · 6h${walkNote}`,
-      desc: '+4 Happiness for $0! Everyone in town is welcome!',
+      desc: '+4 Vibe for $0! Chill beneath the holographic cherry blossoms.',
       disabled: disabledBase || simMe.hoursLeft < walkHrs + 6,
     });
     if (simMe && simMe.rentDebt > 0) {
       actions.push({
         op: OP_PAY_RENT,
         arg: 0,
-        label: `🧾 Pay Rent Arrears ($${simMe.rentDebt})`,
+        label: `🧾 Settle Hab-Rent Arrears ($${simMe.rentDebt})`,
         cost: `2h${walkNote}`,
-        desc: 'Clears rent balance (+2 Dependability, +2 Happiness).',
+        desc: 'Clears hab-lease debt (+2 Dependability, +2 Vibe).',
         disabled: disabledBase || simMe.cash <= 0 || simMe.hoursLeft < walkHrs + 2,
       });
     }
@@ -1476,9 +1516,9 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
     actions.push({
       op: OP_SWITCH_APT,
       arg: 1,
-      label: inCondo ? '🏢 Living at LeSecurity Condo ✓' : '🏢 Upgrade to LeSecurity Condo',
+      label: inCondo ? '🏢 LeSecurity Penthouse Active ✓' : '🏢 Upgrade to LeSecurity Spire',
       cost: inCondo ? 'ACTIVE' : `$${condoDep} · 4h${walkNote}`,
-      desc: '100% Sneaky Sam proof + grants +2 cozy Happiness EVERY weekend!',
+      desc: '100% Glitch-Sam proof + grants +2 Penthouse Vibe EVERY weekend!',
       disabled:
         disabledBase || inCondo || simMe.rentDebt > 0 || simMe.cash < condoDep || simMe.hoursLeft < walkHrs + 4,
     });
@@ -1492,9 +1532,9 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
         actions.push({
           op: OP_REPAIR_PAWN,
           arg: app.id,
-          label: `🔧 Repair ${app.name}`,
+          label: `🔧 Re-Solder ${app.name}`,
           cost: `$${repCost} · 3h${walkNote}`,
-          desc: 'Restores full perk & +2 Happiness.',
+          desc: 'Restores full hardware perk & +2 Vibe.',
           disabled: disabledBase || simMe.cash < repCost || simMe.hoursLeft < walkHrs + 3,
         });
       } else if (owned) {
@@ -1502,9 +1542,9 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
         actions.push({
           op: OP_REPAIR_PAWN,
           arg: (1 << 4) | app.id,
-          label: `🏷️ Pawn ${app.name} for Cash`,
+          label: `🏷️ Pawn ${app.name} for Instant Creds`,
           cost: `+$${refund} · 3h${walkNote}`,
-          desc: 'Emergency cash option if you ever run short.',
+          desc: 'Emergency liquidity if you need fast cash.',
           disabled: disabledBase || simMe.hoursLeft < walkHrs + 3,
         });
       }
@@ -1513,10 +1553,10 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
       actions.push({
         op: OP_MOVE,
         arg: 4,
-        label: '🤖 Browse New Gadgets at Socket City',
-        cost: 'Info',
-        desc: 'You have no broken or pawnable appliances right now!',
-        disabled: disabledBase,
+        label: '🤖 Browse Cyberdecks at Socket City Lab',
+        cost: 'Jump',
+        desc: 'All your cyber-gear is running at 100%—check out Socket City!',
+        disabled: false,
       });
     }
   }
@@ -1524,99 +1564,38 @@ function buildInteriorActions(bId, simMe, econ, isMyTurn) {
   return actions;
 }
 
-function renderCenterStage() {
-  const stage = document.getElementById('centerStage');
+function renderCenterHoloLayer() {
+  const stage = document.getElementById('centerHoloLayer');
   if (!stage) return;
 
   const { simMe, isMyTurn } = getActivePreview();
   const econ = gameState?.economyIndex || 100;
 
-  // Victory Celebration View if game finished!
-  if (gameState && gameState.phase === PHASE_FINISHED && selectedBuilding === null) {
-    const winner = gameState.seats[gameState.winnerSeat];
-    stage.innerHTML = `
-      <div class="jb-plaza-hero" style="background-image: url('/assets/jones/town_center.jpg');">
-        <div class="jb-plaza-overlay">
-          <div style="font-size:1.05rem;font-weight:900;color:#fde047;">
-            🏆 ${escapeHtml(seatDisplayName(winner))} Reached 100% Across All Four Pillars in Week ${gameState.weekNumber}!
-          </div>
-          <p style="margin:0;font-size:0.8rem;color:#e2e8f0;line-height:1.45;">
-            Wealth, Happiness, University Education, and Career—all mastered! Play another round on this board or start a fresh Sunnyvale challenge.
-          </p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-            <button type="button" class="jb-btn jb-btn-gold" id="btnStageRematch">🔄 Play Again on This Board</button>
-            <button type="button" class="jb-btn jb-btn-sky" id="btnStageNewSolo">☀️ New Game vs. Jones</button>
-          </div>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  // Open Lobby View if waiting for players
-  if (gameState && gameState.phase === PHASE_LOBBY && selectedBuilding === null) {
-    const amHost = gameState.viewerSeat === 0;
-    const amSeated = gameState.viewerSeat !== 0xff;
-    stage.innerHTML = `
-      <div class="jb-plaza-hero" style="background-image: url('/assets/jones/town_center.jpg');">
-        <div class="jb-plaza-overlay">
-          <div style="font-size:1rem;font-weight:800;color:#fde68a;">
-            🏡 Sunnyvale Family &amp; Friends Lobby (${gameState.seatCount} / 4 Human Seats Joined)
-          </div>
-          <p style="margin:0;font-size:0.79rem;color:#cbd5e1;line-height:1.45;">
-            Targets: <strong>$${gameState.wealthGoal.toLocaleString()}</strong> Wealth · <strong>${gameState.hapGoal}</strong> Happiness · <strong>${gameState.eduGoal / 10}</strong> Degrees · <strong>${gameState.careerGoal}</strong> Career Pts.
-          </p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-            ${
-              !amSeated
-                ? `<button type="button" class="jb-btn jb-btn-emerald" id="btnStageJoinCurrent">🙋 Join This Town Board</button>`
-                : ''
-            }
-            ${
-              amHost
-                ? `<button type="button" class="jb-btn jb-btn-gold" id="btnStageStartWithJones">☀️ Start Now (Fill to 2 w/ Jones)</button>`
-                : ''
-            }
-            ${
-              amHost && gameState.seatCount >= 2
-                ? `<button type="button" class="jb-btn jb-btn-emerald" id="btnStageStartHumansOnly">👨‍👩‍👧‍👦 Start Pure Human PvP (${gameState.seatCount}P)</button>`
-                : ''
-            }
-            <button type="button" class="jb-btn" id="btnStageNewSolo">⚡ Or Instant Solo vs. Jones</button>
-          </div>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  // Building Interior Counter View when a tile `0..11` is selected!
+  // 1) Active Venue Cyberpunk Holo-Terminal Overlay (when a venue hitbox 0..11 is clicked!)
   if (selectedBuilding !== null && BUILDINGS[selectedBuilding]) {
     const b = BUILDINGS[selectedBuilding];
     const actions = buildInteriorActions(selectedBuilding, simMe, econ, isMyTurn);
     const curLoc = simMe ? simMe.location : 0;
-    const walkHrs =
-      curLoc === selectedBuilding
-        ? 0
-        : ringDistance(curLoc, selectedBuilding) * (simMe && hasWorkingApp(simMe, 5) ? 1 : 2);
+    const hasScooter = simMe ? hasWorkingApp(simMe, 5) : false;
+    const walkHrs = curLoc === selectedBuilding ? 0 : ringDistance(curLoc, selectedBuilding) * (hasScooter ? 1 : 2);
 
     stage.innerHTML = `
-      <div class="jb-shop-view">
+      <div class="jb-holo-terminal" style="--v-neon:${b.neon};--v-glow:${b.glow};">
         <div class="jb-shop-hdr">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:1.35rem;">${b.icon}</span>
-            <div>
-              <div style="font-weight:800;font-size:0.92rem;color:#fef08a;">${escapeHtml(b.name)}</div>
-              <div style="font-size:0.7rem;color:#94a3b8;">${escapeHtml(b.keeperName)}</div>
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <span style="font-size:1.3rem;">${b.icon}</span>
+            <div style="min-width:0;">
+              <div style="font-weight:900;font-size:0.88rem;color:${b.neon};letter-spacing:0.02em;">${escapeHtml(b.name)}</div>
+              <div style="font-size:0.68rem;color:#94a3b8;">${escapeHtml(b.keeperName)}</div>
             </div>
           </div>
-          <div style="display:flex;gap:6px;align-items:center;">
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
             ${
               isMyTurn && walkHrs > 0
-                ? `<button type="button" class="jb-btn jb-btn-xs jb-btn-sky" data-q-op="${OP_MOVE}" data-q-arg="${selectedBuilding}" data-q-b="${selectedBuilding}" data-q-lbl="🚶→${b.icon}">🚶 Walk Here (${walkHrs}h)</button>`
+                ? `<button type="button" class="jb-btn jb-btn-xs jb-btn-cyan" data-q-op="${OP_MOVE}" data-q-arg="${selectedBuilding}" data-q-b="${selectedBuilding}" data-q-lbl="${hasScooter ? '🛴' : '🚶'}→${b.icon}">${hasScooter ? '🛴' : '🚶'} Go Here (${walkHrs}h)</button>`
                 : ''
             }
-            <button type="button" class="jb-btn jb-btn-xs" id="btnBackToPlaza">🌳 Town Plaza</button>
+            <button type="button" class="jb-btn jb-btn-xs" id="btnBackToPlaza">✕ Map</button>
           </div>
         </div>
 
@@ -1650,31 +1629,79 @@ function renderCenterStage() {
     return;
   }
 
-  // Default Sunnyvale Plaza Overview
-  const promptHtml =
-    !gameState || gameState.viewerSeat === 0xff
-      ? `
-        <div style="font-size:1.02rem;font-weight:800;color:#fef08a;">☀️ Welcome to Sunnyvale — Keep Up With Jones!</div>
-        <p style="margin:0;font-size:0.8rem;color:#e2e8f0;line-height:1.45;">
-          Stroll around the 12-building town ring, study at <strong>Haltproof University</strong>, climb <strong>12 careers</strong>, furnish your apartment, and reach <strong>100%</strong> in Wealth, Happiness, Education &amp; Career!
-        </p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-          <button type="button" class="jb-btn jb-btn-gold" id="btnStageQuickPlay">☀️ Start Quick Game vs. Jones ($0 Gas)</button>
-          <button type="button" class="jb-btn jb-btn-sky" id="btnStageChoosePace">⚙️ Choose Pace &amp; Rivals</button>
+  // 2) Victory Celebration Dock
+  if (gameState && gameState.phase === PHASE_FINISHED) {
+    const winner = gameState.seats[gameState.winnerSeat];
+    stage.innerHTML = `
+      <div class="jb-plaza-dock is-banner">
+        <div style="font-size:0.9rem;font-weight:900;color:#fde047;">
+          🏆 ${escapeHtml(seatDisplayName(winner))} Maxed All 4 Pillars in Week ${gameState.weekNumber}!
         </div>
-      `
-      : `
-        <div style="font-size:0.98rem;font-weight:800;color:#fef08a;">
-          ☀️ Week ${gameState.weekNumber} in Sunnyvale · Cash: $${simMe.cash.toLocaleString()} · Food: ${simMe.foodWeeks > 0 ? `${simMe.foodWeeks} wk ✓` : '⚠ Grab a meal!'}
+        <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <button type="button" class="jb-btn jb-btn-cyber jb-btn-xs" id="btnStageRematch">🔄 Rematch Board</button>
+          <button type="button" class="jb-btn jb-btn-cyan jb-btn-xs" id="btnStageNewSolo">⚡ New Run vs. Jones</button>
         </div>
-        <p style="margin:0;font-size:0.79rem;color:#cbd5e1;line-height:1.45;">
-          Click any of the <strong>12 storefronts</strong> around the border to step inside! Your actions queue at <strong>0ms</strong> on your 60-hour watch—then click <strong>🌙 Finish Week</strong> to seal the whole week in 1 block.
-        </p>
-      `;
+      </div>
+    `;
+    return;
+  }
+
+  // 3) Open Crew/Family Lobby Dock
+  if (gameState && gameState.phase === PHASE_LOBBY) {
+    const amHost = gameState.viewerSeat === 0;
+    const amSeated = gameState.viewerSeat !== 0xff;
+    stage.innerHTML = `
+      <div class="jb-plaza-dock is-banner">
+        <div style="font-size:0.84rem;font-weight:800;color:#67e8f9;">
+          🌐 Neo-Sector Crew Lobby (${gameState.seatCount}/4 Runners) · Goal $${gameState.wealthGoal.toLocaleString()}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${
+            !amSeated
+              ? `<button type="button" class="jb-btn jb-btn-emerald jb-btn-xs" id="btnStageJoinCurrent">🙋 Join Board</button>`
+              : ''
+          }
+          ${
+            amHost
+              ? `<button type="button" class="jb-btn jb-btn-cyber jb-btn-xs" id="btnStageStartWithJones">⚡ Start (Fill w/ Jones)</button>`
+              : ''
+          }
+          ${
+            amHost && gameState.seatCount >= 2
+              ? `<button type="button" class="jb-btn jb-btn-emerald jb-btn-xs" id="btnStageStartHumansOnly">👥 Start ${gameState.seatCount}P PvP</button>`
+              : ''
+          }
+          <button type="button" class="jb-btn jb-btn-xs" id="btnStageNewSolo">🕶️ Solo vs. Jones</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // 4) Default Compact Courtyard HUD Dock (leaves the Holographic Clocktower Fountain unobstructed!)
+  if (!gameState || gameState.viewerSeat === 0xff) {
+    stage.innerHTML = `
+      <div class="jb-plaza-dock">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:0.78rem;font-weight:800;color:#67e8f9;">⚡ Click any neon building on the map—or jack in!</span>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="jb-btn jb-btn-cyber jb-btn-xs" id="btnStageQuickPlay">⚡ Quick Run vs. Jones</button>
+            <button type="button" class="jb-btn jb-btn-cyan jb-btn-xs" id="btnStageChoosePace">⚙️ Pace</button>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
 
   stage.innerHTML = `
-    <div class="jb-plaza-hero" style="background-image: url('/assets/jones/town_center.jpg');">
-      <div class="jb-plaza-overlay">${promptHtml}</div>
+    <div class="jb-plaza-dock">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:0.74rem;">
+        <span style="font-weight:800;color:#a5f3fc;">
+          ⚡ Wk ${gameState.weekNumber} · 💵 $${simMe.cash.toLocaleString()} · ${simMe.foodWeeks > 0 ? `🍔 ${simMe.foodWeeks}wk ✓` : '⚠ Need Food!'}
+        </span>
+        <span style="color:#cbd5e1;font-size:0.68rem;">Click any glowing building hitbox to queue ops!</span>
+      </div>
     </div>
   `;
 }
@@ -1697,12 +1724,12 @@ function renderPlannerBar() {
 
   if (plannedSteps.length === 0) {
     sumEl.textContent = isMyTurn
-      ? 'Planned Steps (0): Click any storefront around Sunnyvale to plan your 60-hour week!'
-      : 'Weekly Planner: Start or join a Sunnyvale board to wind your pocket watch.';
+      ? 'Queued Ops (0): Click any neon venue directly on the city map above to plan your 60-hour week!'
+      : 'Chrono-Planner: Jack into a Solo or Crew board to activate your 60-hour weekly budget.';
     pillsEl.innerHTML = '';
   } else {
-    const foodWarn = simMe && simMe.foodWeeks === 0 ? ' · ⚠ Don’t forget food!' : ' · 🍔 Fed ✓';
-    sumEl.textContent = `Planned Steps (${plannedSteps.length}/${MAX_PLAN_STEPS})${foodWarn}`;
+    const foodWarn = simMe && simMe.foodWeeks === 0 ? ' · ⚠ Grab rations!' : ' · 🍔 Rations OK ✓';
+    sumEl.textContent = `Queued Ops (${plannedSteps.length}/${MAX_PLAN_STEPS})${foodWarn}`;
     pillsEl.innerHTML = plannedSteps
       .map((s, idx) => `<span class="jb-step-pill">${idx + 1}. ${escapeHtml(s.label)}</span>`)
       .join('');
@@ -1713,7 +1740,7 @@ function renderPlannerBar() {
   finishBtn.disabled = !isMyTurn || txBusy;
   finishBtn.textContent = txBusy
     ? '⛓️ Sealing Week…'
-    : `🌙 Finish Week ${gameState ? gameState.weekNumber : 1} & Roll Weekend!`;
+    : `🌙 Commit Week ${gameState ? gameState.weekNumber : 1} & Roll Feed!`;
 }
 
 function renderSidebar() {
@@ -1725,7 +1752,7 @@ function renderSidebar() {
 
   if (!gameState || !simMe) {
     document.getElementById('lblNetWealth').textContent = '$240 Start';
-    goalsMount.innerHTML = `<div style="font-size:0.77rem;color:#94a3b8;">Click <strong>☀️ Play vs. Jones</strong> above to move into Sunnyvale and track your 4 Life Pillars!</div>`;
+    goalsMount.innerHTML = `<div style="font-size:0.76rem;color:#94a3b8;">Click <strong>⚡ Play vs. Jones</strong> above to deploy your Identity HFS &amp; track your 4 Cyberpunk Pillars!</div>`;
     statsMount.innerHTML = '';
   } else {
     const calc = computeGoalPcts(simMe, gameState);
@@ -1733,8 +1760,8 @@ function renderSidebar() {
 
     const pillars = [
       { label: `💰 Wealth ($${calc.netWealth.toLocaleString()} / $${gameState.wealthGoal.toLocaleString()})`, pct: calc.pcts[0], color: 'linear-gradient(90deg,#f59e0b,#fde047)' },
-      { label: `😊 Happiness (${simMe.happiness} / ${gameState.hapGoal})`, pct: calc.pcts[1], color: 'linear-gradient(90deg,#ec4899,#fb7185)' },
-      { label: `🎓 Education (${(calc.eduCreds / 10).toFixed(1)} / ${(gameState.eduGoal / 10).toFixed(0)} Deg)`, pct: calc.pcts[2], color: 'linear-gradient(90deg,#6366f1,#38bdf8)' },
+      { label: `⚡ Vibe (${simMe.happiness} / ${gameState.hapGoal})`, pct: calc.pcts[1], color: 'linear-gradient(90deg,#ec4899,#e879f9)' },
+      { label: `🎓 Neural Edu (${(calc.eduCreds / 10).toFixed(1)} / ${(gameState.eduGoal / 10).toFixed(0)} Deg)`, pct: calc.pcts[2], color: 'linear-gradient(90deg,#6366f1,#22d3ee)' },
       { label: `💼 Career (${calc.careerPts} / ${gameState.careerGoal} pts)`, pct: calc.pcts[3], color: 'linear-gradient(90deg,#10b981,#34d399)' },
     ];
 
@@ -1744,7 +1771,7 @@ function renderSidebar() {
         <div class="jb-goal-row">
           <div class="jb-goal-top">
             <span>${escapeHtml(p.label)}</span>
-            <span class="mono" style="color:${p.pct >= 100 ? '#6ee7b7' : '#fde68a'};">${p.pct}%</span>
+            <span class="mono" style="color:${p.pct >= 100 ? '#6ee7b7' : '#67e8f9'};">${p.pct}%</span>
           </div>
           <div class="jb-goal-track">
             <div class="jb-goal-fill" style="width:${p.pct}%;background:${p.color};"></div>
@@ -1760,10 +1787,10 @@ function renderSidebar() {
       .join(' ');
 
     statsMount.innerHTML = `
-      <div class="jb-stat-box"><span>💵 Cash / 🏦 Bank</span><strong class="mono">$${simMe.cash} / $${simMe.savings}</strong></div>
-      <div class="jb-stat-box"><span>💼 Current Job</span><strong>${jb ? `${escapeHtml(jb.title)} ($${Math.max(simMe.hourlyWage, jb.baseWage)}/h)` : 'Unemployed'}</strong></div>
-      <div class="jb-stat-box"><span>🍔 Food / 🏠 Home</span><strong>${simMe.foodWeeks} wk · ${simMe.aptTier === 1 ? 'LeSecurity' : 'Shady Acres'}${simMe.rentDebt > 0 ? ` (-$${simMe.rentDebt})` : ''}</strong></div>
-      <div class="jb-stat-box"><span>👔 Outfit / 🤖 Tech</span><strong>${DRESS_NAMES[effectiveClothesTier(simMe)].split(' ')[0]} · ${ownedApps || 'None'}</strong></div>
+      <div class="jb-stat-box"><span>💵 Cash / 🏦 Vault</span><strong class="mono">$${simMe.cash} / $${simMe.savings}</strong></div>
+      <div class="jb-stat-box"><span>💼 Active Gig</span><strong>${jb ? `${escapeHtml(jb.title)} ($${Math.max(simMe.hourlyWage, jb.baseWage)}/h)` : 'Freelance / None'}</strong></div>
+      <div class="jb-stat-box"><span>🍔 Rations / 🏙️ Hab</span><strong>${simMe.foodWeeks} wk · ${simMe.aptTier === 1 ? 'LeSecurity' : 'Pod-Hab'}${simMe.rentDebt > 0 ? ` (-$${simMe.rentDebt})` : ''}</strong></div>
+      <div class="jb-stat-box"><span>🧥 Threads / 🤖 Rig</span><strong>${DRESS_NAMES[effectiveClothesTier(simMe)].split(' ')[0]} · ${ownedApps || 'None'}</strong></div>
     `;
   }
 
@@ -1773,32 +1800,33 @@ function renderSidebar() {
       <div class="jb-rival-card">
         <img src="/assets/jones/rival_jones.jpg" alt="Jones" class="jb-rival-avatar" />
         <div>
-          <div style="font-weight:800;font-size:0.8rem;color:#fef08a;">🕶️ Rival “Jones”</div>
-          <div style="font-size:0.7rem;color:#94a3b8;">Waiting at Sunnyvale Plaza with his golden pocket watch!</div>
+          <div style="font-weight:800;font-size:0.8rem;color:#67e8f9;">🕶️ Rival “Jones”</div>
+          <div style="font-size:0.7rem;color:#94a3b8;">Waiting at the Holographic Clocktower with his cyber-chronometer!</div>
         </div>
       </div>
     `;
   } else {
-    document.getElementById('lblSeatCount').textContent = `${gameState.seatCount} Seats`;
+    document.getElementById('lblSeatCount').textContent = `${gameState.seatCount} Runners`;
     const others = gameState.seats.filter((s) => s.seatIdx !== gameState.viewerSeat);
     rivalsMount.innerHTML = others
       .map((s) => {
-        const bp = BOT_PROFILES[s.isBot] || { art: '/assets/jones/town_center.jpg' };
+        const bp = BOT_PROFILES[s.isBot] || { art: '/assets/jones/rival_jones.jpg' };
         const sj = getJob(s.jobId);
+        const vBuilding = BUILDINGS[s.location] || BUILDINGS[0];
         return `
           <div class="jb-rival-card">
-            <img src="${bp.art}" alt="Seat" class="jb-rival-avatar" />
+            <img src="${bp.art}" alt="Runner" class="jb-rival-avatar" />
             <div>
-              <div style="display:flex;justify-content:space-between;gap:6px;font-size:0.76rem;font-weight:800;">
+              <div style="display:flex;justify-content:space-between;gap:6px;font-size:0.75rem;font-weight:800;">
                 <span>${escapeHtml(seatDisplayName(s))}</span>
-                <span class="mono" style="color:#7dd3fc;">$${s.netWealth.toLocaleString()}</span>
+                <span class="mono" style="color:#67e8f9;">$${s.netWealth.toLocaleString()}</span>
               </div>
-              <div style="font-size:0.67rem;color:#94a3b8;">
-                ${sj ? escapeHtml(sj.title) : 'Job Hunting'} · ${s.degreesMask.toString(2).replace(/0/g, '').length} Deg
+              <div style="font-size:0.66rem;color:#94a3b8;">
+                ${sj ? escapeHtml(sj.title) : 'Unassigned'} · ${vBuilding.icon} ${escapeHtml(vBuilding.name)}
               </div>
               <div class="jb-mini-pillars">
                 <span class="jb-mini-pil">💰${s.goalPcts[0]}%</span>
-                <span class="jb-mini-pil">😊${s.goalPcts[1]}%</span>
+                <span class="jb-mini-pil">⚡${s.goalPcts[1]}%</span>
                 <span class="jb-mini-pil">🎓${s.goalPcts[2]}%</span>
                 <span class="jb-mini-pil">💼${s.goalPcts[3]}%</span>
               </div>
@@ -1809,9 +1837,9 @@ function renderSidebar() {
       .join('');
   }
 
-  // Weekend Gazette
+  // Weekend Net-Feed
   if (!gameState || !gameState.logs.length) {
-    gazetteMount.innerHTML = `<div style="font-size:0.74rem;color:#94a3b8;">Weekend headlines appear here at the end of every 60-hour week!</div>`;
+    gazetteMount.innerHTML = `<div style="font-size:0.73rem;color:#94a3b8;">Sector Net-Feed dispatches appear here after every 60-hour week!</div>`;
   } else {
     const rev = [...gameState.logs].reverse();
     gazetteMount.innerHTML = rev
@@ -1826,7 +1854,7 @@ function renderSidebar() {
           <div class="jb-gazette-item">
             <img src="${meta.thumb}" alt="" class="jb-gazette-thumb" />
             <div>
-              <span class="mono" style="color:#fbbf24;font-weight:800;">Wk ${lg.week}:</span>
+              <span class="mono" style="color:#22d3ee;font-weight:800;">Wk ${lg.week}:</span>
               <strong>${escapeHtml(seatDisplayName(seat))}</strong> ${escapeHtml(meta.text)}${deltaBadge}
             </div>
           </div>
@@ -1840,7 +1868,7 @@ function renderLobbyDirectory() {
   const mount = document.getElementById('gamesDirectoryMount');
   if (!mount) return;
   if (!directoryGames.length) {
-    mount.innerHTML = `<div style="font-size:0.76rem;color:#94a3b8;">No boards listed yet on this HFS—create one above!</div>`;
+    mount.innerHTML = `<div style="font-size:0.76rem;color:#94a3b8;">No boards listed yet on this Sector HFS—open one above!</div>`;
     return;
   }
   mount.innerHTML = directoryGames
@@ -1848,7 +1876,7 @@ function renderLobbyDirectory() {
     .reverse()
     .map((g) => {
       const phaseTxt =
-        g.phase === PHASE_LOBBY ? '🟢 Open Lobby' : g.phase === PHASE_ACTIVE ? `🕰️ Week ${g.weekNumber}` : '🏆 Finished';
+        g.phase === PHASE_LOBBY ? '🟢 Open Lobby' : g.phase === PHASE_ACTIVE ? `⚡ Week ${g.weekNumber}` : '🏆 Finished';
       const isCur = g.gameId.toLowerCase() === activeGameId.toLowerCase();
       return `
         <div class="jb-dir-row">
@@ -1876,24 +1904,24 @@ function renderCatalogModal() {
   const mount = document.getElementById('catalogBodyMount');
   if (!mount) return;
   mount.innerHTML = `
-    <div class="jb-field-label">💼 All 12 Progressive Sunnyvale Careers</div>
+    <div class="jb-field-label">💼 All 12 Neo-Sector Cyber-Careers</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:7px;">
       ${JOBS.map(
         (j) => `
         <div class="jb-stat-box">
           <span>Rank ${j.rank} · ${BUILDINGS[j.workplace].icon} ${escapeHtml(BUILDINGS[j.workplace].name)}</span>
           <strong>${escapeHtml(j.title)} — $${j.baseWage}/hr ($${j.baseWage * 6}/shift)</strong>
-          <div style="font-size:0.66rem;color:#94a3b8;">Outfit: ${DRESS_NAMES[j.dress]} · Exp ${j.reqExp} · Dep ${j.reqDep}</div>
+          <div style="font-size:0.66rem;color:#94a3b8;">Threads: ${DRESS_NAMES[j.dress]} · Exp ${j.reqExp} · Dep ${j.reqDep}</div>
         </div>
       `
       ).join('')}
     </div>
-    <div class="jb-field-label" style="margin-top:8px;">🤖 6 Socket City Appliances (Z-Mart sells Refurb Fridge/Microwave/TV at 15% off!)</div>
+    <div class="jb-field-label" style="margin-top:8px;">🤖 6 Socket City Upgrades (Z-Mart Bazaar sells Refurb Cryo-Fridge/Oven/Holo-Wall at 15% off!)</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:7px;">
       ${APPLIANCES.map(
         (a) => `
         <div class="jb-stat-box">
-          <span>Base $${a.basePrice} · +${a.hap} Happiness</span>
+          <span>Base $${a.basePrice} · +${a.hap} Vibe</span>
           <strong>${a.icon} ${escapeHtml(a.name)}</strong>
           <div style="font-size:0.66rem;color:#cbd5e1;">${escapeHtml(a.perk)}</div>
         </div>
@@ -1942,6 +1970,20 @@ function bindEvents() {
     createLobbyGameTx(preset);
   });
 
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && selectedBuilding !== null) {
+      selectedBuilding = null;
+      renderAll();
+    }
+  });
+
+  document.getElementById('cyberMapCanvas')?.addEventListener('click', (ev) => {
+    if (ev.target.id === 'cyberMapCanvas' && selectedBuilding !== null) {
+      selectedBuilding = null;
+      renderAll();
+    }
+  });
+
   document.addEventListener('click', (ev) => {
     const closeEl = ev.target.closest('[data-close]');
     if (closeEl) {
@@ -1969,7 +2011,8 @@ function bindEvents() {
 
     const tileEl = ev.target.closest('[data-building-id]');
     if (tileEl) {
-      selectedBuilding = Number(tileEl.getAttribute('data-building-id'));
+      const clickedId = Number(tileEl.getAttribute('data-building-id'));
+      selectedBuilding = selectedBuilding === clickedId ? null : clickedId;
       renderAll();
       return;
     }
@@ -2010,7 +2053,7 @@ function bindEvents() {
       const bId = Number(qBtn.getAttribute('data-q-b'));
       const op = Number(qBtn.getAttribute('data-q-op'));
       const arg = Number(qBtn.getAttribute('data-q-arg'));
-      const lbl = qBtn.getAttribute('data-q-lbl') || 'Step';
+      const lbl = qBtn.getAttribute('data-q-lbl') || 'Op';
       if (op === OP_MOVE && arg !== bId) {
         selectedBuilding = arg;
         renderAll();
@@ -2060,7 +2103,7 @@ async function boot() {
     wallet,
     activeAppId: 'jones',
     title: 'Jones in the Blockchain',
-    subtitle: 'Cozy 1–4 Player Career, University & Life-Sim Board Game • 60-Hour Weeks • $0.00 Gas',
+    subtitle: 'Cyberpunk 1–4 Player Career, Cyber-U. & Life-Sim Board Game • 60-Hour Chrono-Weeks • $0.00 Gas',
     rpcUrlFn: () => rpcUrl,
     getContractAddr: () => contractAddr || '',
     getContractLabel: () => 'JonesBlockchain',

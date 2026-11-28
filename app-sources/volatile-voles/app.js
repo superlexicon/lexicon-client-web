@@ -582,7 +582,7 @@ async function refreshTableState() {
   renderAll();
 }
 
-async function sendVolesTx(label, calldataHex) {
+async function sendVolesTx(label, calldataHex, extraTargets = []) {
   if (txBusy) return false;
   if (!contractAddr) {
     await bootReadyPromise;
@@ -591,15 +591,32 @@ async function sendVolesTx(label, calldataHex) {
     showToast('⚠ Burrow Arena HFS contract not configured.');
     return false;
   }
+  let idRec;
+  try {
+    idRec = await wallet.ensureIdentityWithPrompt({
+      rpcUrl: getDefaultNodeWsUrl(),
+      appName: 'Volatile Voles',
+    });
+  } catch (err) {
+    showToast(`⚠ Identity HFS required: ${err?.message || err}`);
+    return false;
+  }
+  if (!idRec?.identityAddr || idRec.identityAddr === ZERO_ADDR) {
+    showToast('⚠ Please deploy your Identity HFS first to play Volatile Voles.');
+    return false;
+  }
   txBusy = true;
   renderAll();
   try {
+    const uniqTargets = Array.from(
+      new Set([contractAddr, idRec.identityAddr, ...extraTargets].filter(Boolean).map((a) => a.toLowerCase()))
+    );
     await slxClient.sendAndConfirm({
       privateKey: wallet.keypair.privateKey,
       to: contractAddr,
       data: calldataHex,
       gasLimit: 5_000_000n,
-      extraTargets: [contractAddr],
+      extraTargets: uniqTargets,
       label,
     });
     wizard = null;
@@ -628,6 +645,10 @@ async function quickMatchTx(botCount = 3, targetVoles = 7) {
     return;
   }
   const idAddr = idRec?.identityAddr || ZERO_ADDR;
+  if (!idAddr || idAddr === ZERO_ADDR) {
+    showToast('⚠ Please deploy your Identity HFS first to play Volatile Voles.');
+    return;
+  }
   // Use a player-scoped quick-match table ID if the shared default table is mid-match with other humans!
   if (
     tableState &&
@@ -946,11 +967,15 @@ function renderCenterStage() {
           rpcUrl: getDefaultNodeWsUrl(),
           appName: 'Volatile Voles',
         });
+        if (!idRec?.identityAddr || idRec.identityAddr === ZERO_ADDR) {
+          showToast('⚠ Please deploy your Identity HFS first to play Volatile Voles.');
+          return;
+        }
         sendVolesTx(
           'joinTable',
           encodeAbi('joinTable(bytes32,address)', [
             ['bytes32', activeTableId],
-            ['address', idRec?.identityAddr || ZERO_ADDR],
+            ['address', idRec.identityAddr],
           ])
         );
       } catch (err) {
@@ -1587,10 +1612,14 @@ async function openPvpLobbyModal() {
       showToast(`⚠ Identity HFS required: ${err?.message || err}`);
       return;
     }
+    const idAddr = idRec?.identityAddr || ZERO_ADDR;
+    if (!idAddr || idAddr === ZERO_ADDR) {
+      showToast('⚠ Please deploy your Identity HFS first to play Volatile Voles.');
+      return;
+    }
     const newTid = bytesToHex(concatBytes(utf8ToBytes('VV_PVP_'), randomBytes(25)));
     activeTableId = newTid;
     closeVvModal();
-    const idAddr = idRec?.identityAddr || ZERO_ADDR;
     await sendVolesTx(
       'createTable',
       encodeAbi('createTable(bytes32,address,uint64)', [

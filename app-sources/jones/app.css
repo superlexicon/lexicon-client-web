@@ -1,13 +1,13 @@
 :root {
-  --jb-bg: #07101f;
-  --jb-panel: #0e1a30;
-  --jb-panel-soft: #13233f;
-  --jb-border: rgba(148, 163, 184, 0.24);
+  --jb-bg: #040814;
+  --jb-panel: #091226;
+  --jb-panel-soft: #0e1c38;
+  --jb-border: rgba(56, 189, 248, 0.24);
+  --jb-cyan: #22d3ee;
+  --jb-magenta: #e879f9;
   --jb-gold: #fbbf24;
-  --jb-gold-bright: #fde047;
   --jb-emerald: #10b981;
-  --jb-sky: #38bdf8;
-  --jb-violet: #a78bfa;
+  --jb-violet: #a855f7;
   --jb-rose: #fb7185;
   --jb-text: #f8fafc;
   --jb-muted: #94a3b8;
@@ -20,7 +20,10 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at 22% 10%, #16294b 0%, #07101f 62%, #040913 100%);
+  background:
+    radial-gradient(circle at 18% 8%, rgba(34, 211, 238, 0.14) 0%, transparent 42%),
+    radial-gradient(circle at 84% 14%, rgba(232, 121, 249, 0.13) 0%, transparent 44%),
+    linear-gradient(180deg, #060d1f 0%, #040814 65%, #02050d 100%);
   color: var(--jb-text);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
@@ -37,12 +40,12 @@ body {
 
 .jb-main {
   flex: 1;
-  max-width: 1560px;
+  max-width: 1580px;
   width: 100%;
   margin: 0 auto;
-  padding: 12px 16px 24px;
+  padding: 10px 16px 24px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 372px;
+  grid-template-columns: minmax(0, 1fr) 368px;
   gap: 14px;
   align-items: start;
 }
@@ -53,32 +56,26 @@ body {
   }
 }
 
-.jb-board-col {
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-  min-width: 0;
-}
-
+.jb-board-col,
 .jb-side-col {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 10px;
   min-width: 0;
 }
 
-/* Top Ribbon */
+/* Top Cyberpunk Telemetry Ribbon */
 .jb-ribbon {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
-  padding: 9px 13px;
+  padding: 8px 13px;
   border-radius: 13px;
-  background: linear-gradient(90deg, rgba(16, 30, 56, 0.94), rgba(22, 37, 68, 0.94));
-  border: 1px solid rgba(251, 191, 36, 0.34);
-  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.42);
+  background: linear-gradient(90deg, rgba(8, 17, 38, 0.95), rgba(14, 24, 52, 0.95));
+  border: 1px solid rgba(34, 211, 238, 0.42);
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.1), 0 8px 24px rgba(2, 6, 23, 0.55);
 }
 
 .jb-ribbon-left,
@@ -95,26 +92,27 @@ body {
   gap: 5px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(8, 15, 30, 0.82);
-  border: 1px solid rgba(100, 116, 139, 0.42);
-  font-size: 0.75rem;
+  background: rgba(4, 9, 22, 0.88);
+  border: 1px solid rgba(100, 116, 139, 0.45);
+  font-size: 0.74rem;
   font-weight: 700;
   color: #e2e8f0;
 }
 
-.jb-chip-sun {
-  border-color: rgba(251, 191, 36, 0.55);
-  background: rgba(120, 53, 15, 0.36);
-  color: #fde68a;
+.jb-chip-neon {
+  border-color: rgba(34, 211, 238, 0.68);
+  background: rgba(8, 51, 68, 0.46);
+  color: #67e8f9;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.2);
 }
 
 .jb-chip-phase {
-  border-color: rgba(52, 211, 153, 0.52);
-  background: rgba(6, 78, 59, 0.36);
-  color: #a7f3d0;
+  border-color: rgba(232, 121, 249, 0.58);
+  background: rgba(74, 4, 78, 0.36);
+  color: #f5d0fe;
 }
 
-/* Buttons */
+/* Cyberpunk Buttons */
 .jb-btn {
   display: inline-flex;
   align-items: center;
@@ -122,11 +120,11 @@ body {
   gap: 6px;
   padding: 7px 13px;
   border-radius: 9px;
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  background: rgba(30, 41, 59, 0.92);
+  border: 1px solid rgba(100, 116, 139, 0.5);
+  background: rgba(15, 25, 48, 0.92);
   color: #f8fafc;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.77rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.14s ease;
@@ -135,32 +133,41 @@ body {
 
 .jb-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: #93c5fd;
-  background: rgba(39, 55, 84, 0.96);
+  border-color: #67e8f9;
+  background: rgba(22, 38, 72, 0.96);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.22);
 }
 
 .jb-btn:disabled {
-  opacity: 0.45;
+  opacity: 0.42;
   cursor: not-allowed;
 }
 
 .jb-btn-xs {
   padding: 3px 8px;
-  font-size: 0.7rem;
+  font-size: 0.69rem;
   border-radius: 7px;
 }
 
-.jb-btn-gold {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  border-color: #fde047;
-  color: #1c1002;
+.jb-btn-cyber {
+  background: linear-gradient(135deg, #06b6d4 0%, #a855f7 100%);
+  border-color: #67e8f9;
+  color: #ffffff;
   font-weight: 800;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.28);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.34);
 }
 
-.jb-btn-gold:hover:not(:disabled) {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  border-color: #fef08a;
+.jb-btn-cyber:hover:not(:disabled) {
+  background: linear-gradient(135deg, #22d3ee 0%, #c084fc 100%);
+  border-color: #a5f3fc;
+  box-shadow: 0 0 22px rgba(232, 121, 249, 0.44);
+}
+
+.jb-btn-cyan {
+  background: rgba(8, 51, 68, 0.55);
+  border-color: rgba(34, 211, 238, 0.65);
+  color: #a5f3fc;
 }
 
 .jb-btn-emerald {
@@ -168,7 +175,7 @@ body {
   border-color: #6ee7b7;
   color: #022c22;
   font-weight: 800;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.32);
 }
 
 .jb-btn-emerald:hover:not(:disabled) {
@@ -176,142 +183,127 @@ body {
   border-color: #a7f3d0;
 }
 
-.jb-btn-sky {
-  background: rgba(14, 165, 233, 0.22);
-  border-color: rgba(56, 189, 248, 0.6);
-  color: #e0f2fe;
-}
+/* ============================================================================
+ * FULL 16:9 ILLUSTRATED CYBERPUNK MAP + OVERLAID INTERACTIVE VENUE HITBOXES
+ * ============================================================================ */
 
-/* Classic 4x4 Perimeter Ring Board */
-.jb-perimeter-board {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: auto minmax(136px, auto) minmax(136px, auto) auto;
-  grid-template-areas:
-    "t0  t1  t2  t3"
-    "t11 ctr ctr t4"
-    "t10 ctr ctr t5"
-    "t9  t8  t7  t6";
-  gap: 9px;
-  padding: 11px;
+.jb-map-frame {
+  padding: 5px;
   border-radius: 18px;
-  background: linear-gradient(155deg, rgba(15, 28, 52, 0.96), rgba(9, 18, 34, 0.98));
-  border: 2px solid rgba(251, 191, 36, 0.32);
-  box-shadow: 0 18px 46px rgba(2, 6, 23, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.42), rgba(168, 85, 247, 0.38), rgba(251, 191, 36, 0.32));
+  box-shadow:
+    0 0 36px rgba(34, 211, 238, 0.16),
+    0 20px 52px rgba(2, 6, 23, 0.78);
 }
 
-@media (max-width: 780px) {
-  .jb-perimeter-board {
-    display: flex;
-    flex-direction: column;
-  }
-  .jb-center-stage {
-    order: -1;
-  }
-}
-
-.jb-tile-slot {
-  display: flex;
-  min-width: 0;
-}
-
-.jb-tile {
-  width: 100%;
-  min-height: 114px;
-  border-radius: 13px;
-  background: linear-gradient(180deg, rgba(22, 37, 66, 0.95) 0%, rgba(13, 24, 44, 0.98) 100%);
-  border: 1.5px solid rgba(100, 116, 139, 0.38);
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  text-align: left;
-  color: var(--jb-text);
-  cursor: pointer;
-  overflow: hidden;
+.jb-cyber-map-canvas {
   position: relative;
-  transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
-}
-
-.jb-tile:hover {
-  transform: translateY(-2px);
-  border-color: rgba(251, 191, 36, 0.72);
-  box-shadow: 0 8px 20px rgba(2, 6, 23, 0.5);
-}
-
-.jb-tile.is-selected {
-  border-color: #fde047;
-  box-shadow: 0 0 0 2px rgba(253, 224, 71, 0.35), 0 10px 24px rgba(251, 191, 36, 0.22);
-}
-
-.jb-tile.is-here {
-  background: linear-gradient(180deg, rgba(20, 62, 56, 0.92) 0%, rgba(12, 32, 46, 0.98) 100%);
-  border-color: #34d399;
-}
-
-.jb-tile-awning {
-  height: 7px;
   width: 100%;
-  flex-shrink: 0;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #050b1a url('/assets/jones/town_center.jpg') center / 100% 100% no-repeat;
+  box-shadow: inset 0 0 42px rgba(2, 6, 23, 0.55);
+  user-select: none;
 }
 
-.jb-tile-inner {
-  padding: 8px 10px 9px;
+.jb-hotspots-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Individual Overlaid Venue Hitbox */
+.jb-venue-hotspot {
+  position: absolute;
+  pointer-events: auto;
+  padding: 0;
+  margin: 0;
+  border-radius: 11px;
+  border: 1.5px solid var(--v-border, rgba(34, 211, 238, 0.55));
+  background: radial-gradient(
+    circle at 50% 44%,
+    rgba(4, 9, 22, 0.02) 38%,
+    rgba(4, 9, 22, 0.28) 100%
+  );
+  box-shadow:
+    0 0 12px var(--v-glow, rgba(34, 211, 238, 0.22)),
+    inset 0 0 12px rgba(2, 6, 23, 0.28);
+  color: #f8fafc;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  flex: 1;
   justify-content: space-between;
+  overflow: hidden;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.jb-tile-top {
+/* Cyberpunk HUD Corner Reticle Brackets */
+.jb-venue-hotspot::before,
+.jb-venue-hotspot::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  transition: all 0.15s ease;
+}
+
+.jb-venue-hotspot::before {
+  top: 3px;
+  left: 3px;
+  border-top: 2.5px solid var(--v-neon, #22d3ee);
+  border-left: 2.5px solid var(--v-neon, #22d3ee);
+  border-top-left-radius: 4px;
+}
+
+.jb-venue-hotspot::after {
+  top: 3px;
+  right: 3px;
+  border-top: 2.5px solid var(--v-neon, #22d3ee);
+  border-right: 2.5px solid var(--v-neon, #22d3ee);
+  border-top-right-radius: 4px;
+}
+
+.jb-venue-hotspot:hover {
+  z-index: 16;
+  transform: scale(1.018);
+  border-color: var(--v-neon, #22d3ee);
+  background: radial-gradient(
+    circle at 50% 44%,
+    rgba(34, 211, 238, 0.08) 25%,
+    rgba(6, 12, 28, 0.22) 100%
+  );
+  box-shadow:
+    0 0 22px var(--v-neon, #22d3ee),
+    inset 0 0 16px var(--v-glow, rgba(34, 211, 238, 0.35));
+}
+
+.jb-venue-hotspot.is-here {
+  border-color: #34d399;
+  box-shadow:
+    0 0 0 2px rgba(16, 185, 129, 0.42),
+    0 0 22px rgba(16, 185, 129, 0.55);
+}
+
+.jb-venue-hotspot.is-selected {
+  z-index: 18;
+  border-color: #fde047;
+  box-shadow:
+    0 0 0 2px rgba(253, 224, 71, 0.65),
+    0 0 28px var(--v-neon, #22d3ee);
+}
+
+.jb-hotspot-top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 6px;
-}
-
-.jb-tile-icon {
-  font-size: 1.32rem;
-  line-height: 1;
-}
-
-.jb-tile-travel {
-  font-size: 0.66rem;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: rgba(8, 15, 29, 0.85);
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  color: #cbd5e1;
-  white-space: nowrap;
-}
-
-.jb-tile-travel.here {
-  background: rgba(16, 185, 129, 0.25);
-  border-color: #34d399;
-  color: #a7f3d0;
-}
-
-.jb-tile-name {
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #f8fafc;
-  line-height: 1.2;
-}
-
-.jb-tile-sub {
-  font-size: 0.67rem;
-  color: #94a3b8;
-  line-height: 1.25;
-}
-
-.jb-tile-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 4px;
-  min-height: 20px;
+  padding: 5px 6px 0;
+  width: 100%;
 }
 
 .jb-pawns-row {
@@ -327,115 +319,204 @@ body {
   gap: 2px;
   padding: 1px 6px;
   border-radius: 999px;
-  font-size: 0.64rem;
-  font-weight: 800;
-  background: rgba(251, 191, 36, 0.24);
-  border: 1px solid #fbbf24;
-  color: #fef08a;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  background: rgba(5, 46, 22, 0.92);
+  border: 1px solid #34d399;
+  color: #a7f3d0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
 }
 
 .jb-pawn.rival {
-  background: rgba(56, 189, 248, 0.2);
+  background: rgba(8, 20, 44, 0.92);
   border-color: #38bdf8;
   color: #bae6fd;
 }
 
+.jb-hotspot-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+}
+
 .jb-work-tag {
+  font-size: 0.58rem;
+  font-weight: 900;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: rgba(88, 28, 135, 0.92);
+  border: 1px solid #e879f9;
+  color: #fae8ff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.jb-hotspot-travel {
   font-size: 0.62rem;
   font-weight: 800;
-  padding: 1px 5px;
-  border-radius: 5px;
-  background: rgba(168, 85, 247, 0.26);
-  border: 1px solid rgba(192, 132, 252, 0.6);
-  color: #f3e8ff;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(4, 9, 22, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.52);
+  color: #e2e8f0;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.72);
 }
 
-/* Center 2x2 Interactive Sunnyvale Stage */
-.jb-center-stage {
-  grid-area: ctr;
-  border-radius: 15px;
-  background: linear-gradient(165deg, #10203b 0%, #091326 100%);
-  border: 1.5px solid rgba(251, 191, 36, 0.42);
+.jb-hotspot-travel.here {
+  background: rgba(6, 78, 59, 0.94);
+  border-color: #34d399;
+  color: #a7f3d0;
+}
+
+.jb-hotspot-plate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  width: 100%;
+  padding: 4px 7px;
+  background: linear-gradient(90deg, rgba(3, 7, 18, 0.93) 0%, rgba(8, 16, 36, 0.89) 100%);
+  border-top: 1.5px solid var(--v-neon, #22d3ee);
+  backdrop-filter: blur(4px);
+}
+
+.jb-hotspot-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.71rem;
+  font-weight: 800;
+  color: #f8fafc;
+  white-space: nowrap;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 300px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
-.jb-plaza-hero {
-  position: relative;
-  flex: 1;
-  min-height: 295px;
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 16px;
+.jb-hotspot-cta {
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: var(--v-neon, #22d3ee);
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
 }
 
-.jb-plaza-overlay {
-  background: linear-gradient(180deg, rgba(6, 12, 24, 0.78) 0%, rgba(6, 12, 24, 0.93) 100%);
-  border: 1px solid rgba(251, 191, 36, 0.45);
-  border-radius: 13px;
-  padding: 13px 15px;
-  backdrop-filter: blur(6px);
+/* ============================================================================
+ * CENTRAL COURTYARD LAYER: FLOATING CLOCKTOWER HUD OR VENUE HOLO-TERMINAL
+ * ============================================================================ */
+
+.jb-center-holo-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 24;
+  pointer-events: none;
+}
+
+/* Compact Floating Plaza HUD Dock (anchored below the Clocktower so art stays visible!) */
+.jb-plaza-dock {
+  position: absolute;
+  left: 28.8%;
+  width: 44.6%;
+  bottom: 34.4%;
+  pointer-events: auto;
+  background: linear-gradient(180deg, rgba(5, 11, 26, 0.88) 0%, rgba(3, 8, 20, 0.95) 100%);
+  border: 1.5px solid rgba(34, 211, 238, 0.62);
+  border-radius: 12px;
+  padding: 9px 12px;
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 0 24px rgba(34, 211, 238, 0.25),
+    0 12px 30px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jb-plaza-dock.is-banner {
+  bottom: 33.8%;
+  border-color: rgba(251, 191, 36, 0.75);
+  box-shadow:
+    0 0 28px rgba(251, 191, 36, 0.28),
+    0 14px 34px rgba(0, 0, 0, 0.85);
+}
+
+/* Active Venue Cyberpunk Holo-Terminal Overlay */
+.jb-holo-terminal {
+  position: absolute;
+  left: 20.5%;
+  top: 11.5%;
+  width: 59%;
+  max-height: 77%;
+  pointer-events: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-/* Building Interior View inside Center Stage */
-.jb-shop-view {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 13px 15px;
-  gap: 10px;
+  padding: 11px 13px;
+  border-radius: 14px;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(34, 211, 238, 0.025) 0px,
+      rgba(34, 211, 238, 0.025) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    linear-gradient(165deg, rgba(6, 13, 31, 0.96) 0%, rgba(3, 8, 20, 0.98) 100%);
+  border: 1.5px solid var(--v-neon, #22d3ee);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 34px var(--v-glow, rgba(34, 211, 238, 0.35)),
+    0 22px 54px rgba(0, 0, 0, 0.88);
+  overflow: hidden;
 }
 
 .jb-shop-hdr {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .jb-shop-keeper-row {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 10px;
   align-items: center;
-  background: rgba(7, 14, 28, 0.68);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 12px;
-  padding: 9px 11px;
+  background: rgba(4, 9, 22, 0.78);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 11px;
+  padding: 7px 10px;
 }
 
 .jb-keeper-img {
-  width: 92px;
-  height: 92px;
-  border-radius: 11px;
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
   object-fit: cover;
-  border: 2px solid rgba(251, 191, 36, 0.65);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+  border: 2px solid var(--v-neon, #22d3ee);
+  box-shadow: 0 0 14px var(--v-glow, rgba(34, 211, 238, 0.35));
 }
 
 .jb-speech-bubble {
-  font-size: 0.81rem;
-  color: #fef9c3;
-  line-height: 1.42;
+  font-size: 0.76rem;
+  color: #e0f2fe;
+  line-height: 1.4;
   font-style: italic;
 }
 
 .jb-shop-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 7px;
   overflow-y: auto;
-  max-height: 225px;
-  padding-right: 2px;
+  padding-right: 3px;
+  flex: 1;
 }
 
 .jb-act-btn {
@@ -443,24 +524,26 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: 3px;
-  padding: 8px 11px;
-  border-radius: 10px;
-  background: rgba(20, 35, 62, 0.92);
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: rgba(13, 25, 48, 0.94);
   border: 1px solid rgba(100, 116, 139, 0.48);
   color: #f8fafc;
+  font-family: inherit;
   text-align: left;
   cursor: pointer;
   transition: all 0.13s ease;
 }
 
 .jb-act-btn:hover:not(:disabled) {
-  border-color: #fde047;
-  background: rgba(30, 50, 86, 0.96);
+  border-color: var(--v-neon, #22d3ee);
+  background: rgba(20, 38, 72, 0.98);
   transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.22);
 }
 
 .jb-act-btn:disabled {
-  opacity: 0.42;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -470,34 +553,68 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 800;
 }
 
 .jb-act-cost {
-  font-size: 0.68rem;
-  color: #fde68a;
+  font-size: 0.66rem;
+  color: #67e8f9;
   font-family: 'JetBrains Mono', monospace;
   white-space: nowrap;
 }
 
 .jb-act-desc {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: #cbd5e1;
-  line-height: 1.3;
+  line-height: 1.28;
 }
 
-/* Weekly Pocket-Watch & Atomic Planner Bar */
+@media (max-width: 860px) {
+  .jb-hotspot-title {
+    font-size: 0.58rem;
+  }
+  .jb-hotspot-cta {
+    display: none;
+  }
+  .jb-center-holo-layer {
+    position: static;
+    pointer-events: auto;
+    margin-top: 8px;
+  }
+  .jb-cyber-map-canvas {
+    overflow: visible;
+    aspect-ratio: auto;
+    background: none;
+  }
+  .jb-hotspots-layer {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #050b1a url('/assets/jones/town_center.jpg') center / 100% 100% no-repeat;
+  }
+  .jb-plaza-dock,
+  .jb-holo-terminal {
+    position: static;
+    width: 100%;
+    max-height: none;
+    margin-top: 8px;
+  }
+}
+
+/* Weekly Chrono-Watch & Atomic 1-Tx Planner Bar */
 .jb-planner-bar {
   display: grid;
   grid-template-columns: 205px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
-  padding: 11px 14px;
+  padding: 10px 14px;
   border-radius: 14px;
-  background: linear-gradient(90deg, rgba(16, 29, 54, 0.96), rgba(13, 25, 46, 0.96));
-  border: 1.5px solid rgba(251, 191, 36, 0.4);
-  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.45);
+  background: linear-gradient(90deg, rgba(9, 18, 38, 0.96), rgba(13, 24, 50, 0.96));
+  border: 1.5px solid rgba(34, 211, 238, 0.42);
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.55);
 }
 
 @media (max-width: 900px) {
@@ -509,7 +626,7 @@ body {
 .jb-watch-box {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .jb-watch-dial {
@@ -519,14 +636,14 @@ body {
 }
 
 .jb-watch-icon {
-  font-size: 1.55rem;
+  font-size: 1.5rem;
 }
 
 .jb-watch-label {
-  font-size: 0.64rem;
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  color: #fbbf24;
+  letter-spacing: 0.08em;
+  color: #67e8f9;
 }
 
 .jb-watch-hours {
@@ -537,21 +654,21 @@ body {
 .jb-watch-track {
   height: 8px;
   border-radius: 999px;
-  background: rgba(6, 11, 22, 0.9);
-  border: 1px solid rgba(100, 116, 139, 0.35);
+  background: rgba(4, 9, 20, 0.95);
+  border: 1px solid rgba(56, 189, 248, 0.35);
   overflow: hidden;
 }
 
 .jb-watch-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #fbbf24);
+  background: linear-gradient(90deg, #22d3ee, #a855f7, #fbbf24);
   transition: width 0.2s ease;
 }
 
 .jb-plan-steps-wrap {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
 }
 
@@ -574,39 +691,39 @@ body {
   align-items: center;
   gap: 5px;
   flex-wrap: wrap;
-  min-height: 24px;
+  min-height: 22px;
 }
 
 .jb-step-pill {
-  font-size: 0.68rem;
+  font-size: 0.67rem;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(14, 165, 233, 0.18);
-  border: 1px solid rgba(56, 189, 248, 0.45);
-  color: #e0f2fe;
+  background: rgba(34, 211, 238, 0.16);
+  border: 1px solid rgba(34, 211, 238, 0.52);
+  color: #cffafe;
 }
 
 .jb-finish-btn {
   padding: 11px 16px;
-  font-size: 0.84rem;
+  font-size: 0.83rem;
   border-radius: 11px;
 }
 
 /* Sidebar Cards */
 .jb-card {
   border-radius: 14px;
-  background: rgba(14, 26, 48, 0.95);
+  background: rgba(9, 18, 38, 0.95);
   border: 1px solid var(--jb-border);
-  padding: 12px 13px;
+  padding: 11px 13px;
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.4);
+  gap: 8px;
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.5);
 }
 
 .jb-goals-card {
-  border-color: rgba(251, 191, 36, 0.42);
+  border-color: rgba(34, 211, 238, 0.45);
 }
 
 .jb-card-hdr {
@@ -617,23 +734,23 @@ body {
 }
 
 .jb-card-title {
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   font-weight: 800;
-  color: #fef3c7;
+  color: #a5f3fc;
 }
 
 .jb-badge {
   padding: 3px 8px;
   border-radius: 999px;
   background: rgba(16, 185, 129, 0.2);
-  border: 1px solid rgba(52, 211, 153, 0.5);
+  border: 1px solid rgba(52, 211, 153, 0.55);
   color: #6ee7b7;
   font-size: 0.72rem;
   font-weight: 800;
 }
 
 .jb-sub-mono {
-  font-size: 0.7rem;
+  font-size: 0.69rem;
   color: #94a3b8;
 }
 
@@ -654,15 +771,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.73rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
 .jb-goal-track {
   height: 9px;
   border-radius: 999px;
-  background: #060d1b;
-  border: 1px solid rgba(100, 116, 139, 0.32);
+  background: #040915;
+  border: 1px solid rgba(100, 116, 139, 0.35);
   overflow: hidden;
 }
 
@@ -672,7 +789,7 @@ body {
   transition: width 0.24s ease;
 }
 
-/* Home & Inventory Grid */
+/* Home & Cyberdeck Inventory Grid */
 .jb-my-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -682,8 +799,8 @@ body {
 }
 
 .jb-stat-box {
-  background: rgba(7, 14, 28, 0.72);
-  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: rgba(5, 11, 24, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.22);
   border-radius: 8px;
   padding: 6px 8px;
   font-size: 0.7rem;
@@ -693,7 +810,7 @@ body {
 }
 
 .jb-stat-box span {
-  font-size: 0.62rem;
+  font-size: 0.61rem;
   color: #94a3b8;
   text-transform: uppercase;
   font-weight: 700;
@@ -701,7 +818,7 @@ body {
 
 .jb-stat-box strong {
   color: #f8fafc;
-  font-size: 0.74rem;
+  font-size: 0.73rem;
 }
 
 /* Rival Cards */
@@ -718,8 +835,8 @@ body {
   align-items: center;
   padding: 8px 9px;
   border-radius: 10px;
-  background: rgba(8, 16, 31, 0.78);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: rgba(5, 11, 24, 0.82);
+  border: 1px solid rgba(56, 189, 248, 0.28);
 }
 
 .jb-rival-avatar {
@@ -727,7 +844,7 @@ body {
   height: 48px;
   border-radius: 9px;
   object-fit: cover;
-  border: 1.5px solid rgba(56, 189, 248, 0.6);
+  border: 1.5px solid #22d3ee;
 }
 
 .jb-mini-pillars {
@@ -738,16 +855,16 @@ body {
 }
 
 .jb-mini-pil {
-  font-size: 0.63rem;
+  font-size: 0.62rem;
   padding: 2px 4px;
   border-radius: 5px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: rgba(12, 21, 42, 0.92);
+  border: 1px solid rgba(100, 116, 139, 0.32);
   text-align: center;
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Weekend Gazette */
+/* Weekend Net-Feed */
 .jb-gazette-list {
   display: flex;
   flex-direction: column;
@@ -762,9 +879,9 @@ body {
   align-items: center;
   padding: 7px 9px;
   border-radius: 9px;
-  background: rgba(8, 15, 29, 0.8);
-  border: 1px solid rgba(100, 116, 139, 0.25);
-  font-size: 0.72rem;
+  background: rgba(5, 11, 24, 0.84);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  font-size: 0.71rem;
   line-height: 1.35;
 }
 
@@ -774,7 +891,7 @@ body {
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid rgba(251, 191, 36, 0.5);
+  border: 1px solid rgba(34, 211, 238, 0.55);
 }
 
 /* Modals */
@@ -782,8 +899,8 @@ body {
   position: fixed;
   inset: 0;
   z-index: 9000;
-  background: rgba(3, 7, 18, 0.82);
-  backdrop-filter: blur(5px);
+  background: rgba(2, 6, 18, 0.84);
+  backdrop-filter: blur(6px);
   display: none;
   align-items: center;
   justify-content: center;
@@ -800,13 +917,13 @@ body {
   max-height: 88vh;
   overflow-y: auto;
   border-radius: 16px;
-  background: #0d182d;
-  border: 1.5px solid rgba(251, 191, 36, 0.5);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
+  background: #081126;
+  border: 1.5px solid rgba(34, 211, 238, 0.58);
+  box-shadow: 0 0 36px rgba(34, 211, 238, 0.2), 0 24px 64px rgba(0, 0, 0, 0.8);
 }
 
 .jb-modal-wide {
-  max-width: 820px;
+  max-width: 840px;
 }
 
 .jb-modal-hdr {
@@ -814,13 +931,13 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 13px 16px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.22);
 }
 
 .jb-modal-hdr h3 {
   margin: 0;
-  font-size: 0.96rem;
-  color: #fef08a;
+  font-size: 0.95rem;
+  color: #67e8f9;
 }
 
 .jb-close-btn {
@@ -845,8 +962,8 @@ body {
   align-items: center;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(8, 15, 29, 0.8);
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(4, 9, 22, 0.85);
+  border: 1px solid rgba(34, 211, 238, 0.4);
 }
 
 .jb-solo-avatar {
@@ -854,15 +971,15 @@ body {
   height: 74px;
   border-radius: 11px;
   object-fit: cover;
-  border: 2px solid #38bdf8;
+  border: 2px solid #22d3ee;
 }
 
 .jb-field-label {
-  font-size: 0.72rem;
+  font-size: 0.71rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #93c5fd;
+  letter-spacing: 0.06em;
+  color: #67e8f9;
 }
 
 .jb-preset-grid {
@@ -878,22 +995,24 @@ body {
   gap: 3px;
   padding: 10px 12px;
   border-radius: 11px;
-  background: rgba(15, 27, 49, 0.9);
-  border: 1.5px solid rgba(100, 116, 139, 0.4);
+  background: rgba(12, 22, 44, 0.9);
+  border: 1.5px solid rgba(100, 116, 139, 0.42);
   color: #f8fafc;
+  font-family: inherit;
   text-align: left;
   cursor: pointer;
 }
 
 .jb-preset-card.is-selected {
-  border-color: #fde047;
-  background: rgba(120, 53, 15, 0.28);
+  border-color: #22d3ee;
+  background: rgba(8, 51, 68, 0.42);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.22);
 }
 
 .jb-preset-badge {
   font-size: 0.72rem;
   font-weight: 800;
-  color: #fde047;
+  color: #67e8f9;
 }
 
 .jb-preset-card strong {
@@ -914,32 +1033,33 @@ body {
 .jb-chip-btn {
   padding: 7px 11px;
   border-radius: 9px;
-  background: rgba(15, 27, 49, 0.9);
+  background: rgba(12, 22, 44, 0.9);
   border: 1.5px solid rgba(100, 116, 139, 0.4);
   color: #e2e8f0;
+  font-family: inherit;
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
 }
 
 .jb-chip-btn.is-selected {
-  border-color: #38bdf8;
-  background: rgba(14, 165, 233, 0.24);
+  border-color: #e879f9;
+  background: rgba(112, 26, 117, 0.38);
   color: #fff;
 }
 
 .jb-lobby-create-box {
   padding: 11px 13px;
   border-radius: 11px;
-  background: rgba(8, 15, 29, 0.78);
-  border: 1px solid rgba(52, 211, 153, 0.35);
+  background: rgba(4, 9, 22, 0.82);
+  border: 1px solid rgba(52, 211, 153, 0.4);
 }
 
 .jb-select {
   padding: 7px 10px;
   border-radius: 8px;
-  background: #060d1b;
-  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #040915;
+  border: 1px solid rgba(56, 189, 248, 0.45);
   color: #f8fafc;
   font-size: 0.78rem;
 }
@@ -958,8 +1078,8 @@ body {
   flex-wrap: wrap;
   padding: 9px 11px;
   border-radius: 10px;
-  background: rgba(15, 27, 49, 0.88);
-  border: 1px solid rgba(100, 116, 139, 0.35);
+  background: rgba(12, 22, 44, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.3);
   font-size: 0.75rem;
 }
 
@@ -970,12 +1090,12 @@ body {
   z-index: 9500;
   padding: 10px 15px;
   border-radius: 11px;
-  background: #0f172a;
-  border: 1.5px solid #fbbf24;
-  color: #fef9c3;
+  background: #060d1f;
+  border: 1.5px solid #22d3ee;
+  color: #ecfeff;
   font-size: 0.79rem;
   font-weight: 700;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.32), 0 12px 32px rgba(0, 0, 0, 0.75);
   opacity: 0;
   pointer-events: none;
   transform: translateY(10px);
