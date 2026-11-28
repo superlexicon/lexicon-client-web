@@ -322,6 +322,19 @@ CORE_APPS = [
         "defaultHfsPath": ("haltfreeEcosystem", "contractAddr"),
         "hasCss": True,
     },
+    {
+        "slug": "hfs-ide",
+        "title": "HFS Studio IDE — Rust Smart Contracts & Live UI",
+        "icon": "🛠️",
+        "category": 6,
+        "version": "1.0.0",
+        "summary": "Full-stack #![no_std] Rust (hps-sdk) IDE with sub-second WASM compilation, in-browser WebAssembly HFS VM, auto-wired window.HFS frontend bridge, live preview, and 1-click Subnet 1 publisher.",
+        "wasmKey": "app_store",
+        "wasmFile": "app_store.wasm",
+        "instKey": "",
+        "topLevelAddrKey": "appStore",
+        "hasCss": True,
+    },
 ]
 
 COMMUNITY_SANDBOX_APPS = [
@@ -780,6 +793,10 @@ def main() -> None:
         if not default_hfs and spec.get("defaultHfsPath"):
             k1, k2 = spec["defaultHfsPath"]
             default_hfs = deploy_json.get(k1, {}).get(k2, "")
+        if not default_hfs and spec.get("topLevelAddrKey"):
+            val = deploy_json.get(spec["topLevelAddrKey"], "")
+            if isinstance(val, str):
+                default_hfs = val
         if not default_hfs:
             default_hfs = "0x" + "00" * 20
 

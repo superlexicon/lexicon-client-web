@@ -41,6 +41,7 @@ const ICON_GRADIENTS = {
   'volatile-voles': 'linear-gradient(145deg, #fb923c 0%, #e11d48 55%, #881337 100%)',
   jones: 'linear-gradient(145deg, #fde047 0%, #f59e0b 52%, #0284c7 100%)',
   'haltfree-ecosystem': 'linear-gradient(145deg, #34d399 0%, #10b981 52%, #0369a1 100%)',
+  'hfs-ide': 'linear-gradient(145deg, #38bdf8 0%, #0284c7 52%, #4f46e5 100%)',
   rides: 'linear-gradient(145deg, #fbbf24 0%, #059669 55%, #064e3b 100%)',
   'rf-micro-poll': 'linear-gradient(145deg, #2dd4bf 0%, #0284c7 100%)',
   'mesh-repeater-wall': 'linear-gradient(145deg, #60a5fa 0%, #4338ca 100%)',

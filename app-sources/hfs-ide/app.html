@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛠️ SuperLexicon HFS Studio IDE — Rust #![no_std] Smart Contracts &amp; Live UI</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/slx-wallet.css" />
+</head>
+<body>
+  <div id="slxUnifiedHeaderMount"></div>
+
+  <div class="ide-shell" id="ideShell" data-layout="split">
+    <!-- Top IDE Command Bar -->
+    <header class="ide-topbar">
+      <div class="ide-topbar-left">
+        <div class="ide-brand">
+          <span class="ide-brand-icon">🛠️</span>
+          <div>
+            <div class="ide-brand-title">HFS Studio IDE</div>
+            <div class="ide-brand-sub mono">Rust #![no_std] • WASM VM • Auto-UI Bridge</div>
+          </div>
+        </div>
+
+        <label class="ide-select-wrap" title="Load a full-stack Rust + UI starter template or workspace crate">
+          <span class="mono ide-select-lbl">TEMPLATE</span>
+          <select id="selTemplate" class="ide-select mono">
+            <optgroup label="Full-Stack Starter Apps (Rust + UI)">
+              <option value="tpl:counter-pro">⚡ Atomic Counter &amp; Scoreboard</option>
+              <option value="tpl:mesh-board">💬 Mesh Guestbook &amp; Wall</option>
+              <option value="tpl:pledge-vault">🏦 Milestone Pledge Vault</option>
+              <option value="tpl:math-duel">🧮 Prime Congruence Duel</option>
+            </optgroup>
+            <optgroup id="optGroupWorkspace" label="Workspace Rust Examples (cargo hps studio)" hidden></optgroup>
+          </select>
+        </label>
+
+        <div class="ide-btn-group">
+          <button type="button" id="btnImportWasm" class="ide-btn" title="Load a compiled .wasm HFS binary into the IDE &amp; Local WASM VM">📥 .wasm</button>
+          <input type="file" id="inWasmFile" accept=".wasm,application/wasm" hidden />
+          <button type="button" id="btnDownloadArtifacts" class="ide-btn" title="Download compiled .wasm + deterministic .html.gz bundle">⬇ Export</button>
+          <button type="button" id="btnSaveLocal" class="ide-btn" title="Save Cargo + UI project to local disk via cargo hps studio" hidden>💾 Save Disk</button>
+        </div>
+      </div>
+
+      <div class="ide-topbar-center">
+        <button type="button" id="btnCompilerStatus" class="ide-compiler-pill mono" title="Configure Rust compiler connection (`cargo hps studio`)">
+          <span class="ide-dot" id="compilerDot"></span>
+          <span id="compilerStatusText">Probing rustc…</span>
+        </button>
+
+        <button type="button" id="btnCompileRust" class="ide-btn ide-btn-sky mono" title="Compile src/main.rs to WebAssembly (Ctrl/Cmd + B)">
+          ⚡ Compile Rust
+        </button>
+
+        <button type="button" id="btnRunTests" class="ide-btn mono" title="Run #[cfg(test)] Rust unit tests against hps_sdk::mock">
+          🧪 Unit Tests
+        </button>
+      </div>
+
+      <div class="ide-topbar-right">
+        <div class="ide-seg mono" role="group" aria-label="Execution Target">
+          <button type="button" id="btnModeLocalVm" class="ide-seg-btn active" title="Execute instantly in Browser WebAssembly HFS VM (0ms)">
+            🧪 Local WASM VM
+          </button>
+          <button type="button" id="btnModeLiveChain" class="ide-seg-btn" title="Execute against live deployed HFS contract on Subnet 1">
+            ⛓️ Subnet 1
+          </button>
+        </div>
+
+        <div class="ide-seg mono ide-layout-seg" role="group" aria-label="Workspace Layout">
+          <button type="button" data-set-layout="split" class="ide-seg-btn active" title="Full-Stack Split View">◫ Split</button>
+          <button type="button" data-set-layout="code" class="ide-seg-btn" title="Maximize Code Editor">🦀 Code</button>
+          <button type="button" data-set-layout="preview" class="ide-seg-btn" title="Maximize Live App &amp; Debugger">🖥️ App</button>
+        </div>
+
+        <button type="button" id="btnOpenDeployModal" class="ide-btn ide-btn-emerald mono" title="Deploy .wasm subroutine &amp; publish .html.gz UI to Subnet 1 AppStore">
+          🚀 Deploy &amp; Publish
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Split Workspace -->
+    <main class="ide-workspace">
+      <!-- LEFT: Multi-File Code Editor + Snippet Palette + Compiler Diagnostics -->
+      <section class="ide-editor-pane" aria-label="Source Code Editor">
+        <div class="ide-file-tabs mono" id="fileTabBar">
+          <button type="button" class="ide-tab active" data-file="main.rs">
+            <span>🦀 src/main.rs</span>
+            <span id="badgeWasmSize" class="ide-tab-badge">—</span>
+          </button>
+          <button type="button" class="ide-tab" data-file="index.html">🌐 ui/index.html</button>
+          <button type="button" class="ide-tab" data-file="styles.css">🎨 ui/styles.css</button>
+          <button type="button" class="ide-tab" data-file="app.js">⚡ ui/app.js</button>
+          <button type="button" class="ide-tab" data-file="app.json">📦 app.json</button>
+          <button type="button" class="ide-tab ide-tab-bridge" data-file="bridge.js" title="Auto-generated JavaScript SDK wired from hps_entry! and event_topic()">
+            🔗 window.HFS SDK
+          </button>
+        </div>
+
+        <!-- Context-Sensitive Snippet & Auto-Wiring Bar -->
+        <div class="ide-snippet-bar mono" id="snippetBar"></div>
+
+        <!-- Synchronized Syntax-Highlighted Code Stage -->
+        <div class="ide-code-stage" id="codeStage">
+          <div class="ide-gutter mono" id="codeGutter" aria-hidden="true">1</div>
+          <div class="ide-editor-scroll" id="editorScrollWrap">
+            <pre class="ide-highlight mono" id="codeHighlight" aria-hidden="true"></pre>
+            <textarea
+              id="codeInput"
+              class="ide-textarea mono"
+              spellcheck="false"
+              autocapitalize="off"
+              autocomplete="off"
+              autocorrect="off"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Compiler Build Output & Diagnostics Footer -->
+        <div class="ide-diag-panel" id="diagPanel">
+          <div class="ide-diag-header mono">
+            <div class="ide-diag-summary">
+              <span id="lblBuildBadge" class="ide-pill ide-pill-ok">✓ WASM Ready</span>
+              <span id="lblWasmBudget">Bytecode: — / 107.4 KiB RF Cap</span>
+              <span class="ide-sep">•</span>
+              <span id="lblCodeHash" title="keccak256(optimized_wasm)">codeHash: —</span>
+            </div>
+            <button type="button" id="btnToggleDiagBody" class="ide-mini-btn mono">▾ Console</button>
+          </div>
+          <div class="ide-diag-body mono" id="diagBody"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Live App Preview Iframe + Interactive ABI Workbench / State Inspector -->
+      <section class="ide-runtime-pane" aria-label="Live Preview and HFS Debugger">
+        <!-- Upper Card: Live Sandboxed UI Preview -->
+        <div class="ide-preview-card">
+          <div class="ide-preview-bar mono">
+            <div class="ide-preview-left">
+              <span id="previewTargetBadge" class="ide-pill ide-pill-cyan">🧪 Local WASM VM</span>
+              <div id="vmControlsGroup" class="ide-vm-controls">
+                <label class="ide-inline-lbl" title="Active simulated caller Identity/EOA in Local WASM VM">
+                  <span>Caller:</span>
+                  <select id="selVmPersona" class="ide-mini-select mono">
+                    <option value="0">👩‍🚀 @Alice · a11c</option>
+                    <option value="1">🧑‍🔧 @Bob · b0b2</option>
+                    <option value="2">🧙‍♂️ @Charlie · c0c3</option>
+                  </select>
+                </label>
+                <button type="button" id="btnVmNextBlock" class="ide-mini-btn" title="Advance simulated block height (+1)">
+                  ⏭ Blk #<span id="lblVmBlock">1</span>
+                </button>
+                <button type="button" id="btnVmReset" class="ide-mini-btn" title="Wipe Local WASM VM storage &amp; events">
+                  ↺ Reset VM
+                </button>
+              </div>
+              <div id="liveChainTargetGroup" class="ide-vm-controls" hidden>
+                <input
+                  type="text"
+                  id="inLiveHfsAddr"
+                  class="ide-mini-input mono"
+                  placeholder="0x… deployed HFS address"
+                />
+              </div>
+            </div>
+
+            <div class="ide-preview-right">
+              <span id="lblBundleSize" class="ide-bundle-stat" title="Deterministic gzip UI bundle size">📦 — KiB gz</span>
+              <button type="button" id="btnReloadPreview" class="ide-mini-btn" title="Rebuild &amp; hot-reload UI preview (Ctrl/Cmd + Enter)">
+                ↻ Reload UI
+              </button>
+            </div>
+          </div>
+
+          <div class="ide-iframe-wrap">
+            <iframe
+              id="previewIframe"
+              class="ide-preview-iframe"
+              sandbox="allow-scripts"
+              title="Sandboxed HFS Application Live Preview"
+            ></iframe>
+          </div>
+        </div>
+
+        <!-- Lower Card: Interactive ABI Workbench, WorldState KV & Event Stream -->
+        <div class="ide-inspector-card">
+          <div class="ide-inspector-tabs mono">
+            <button type="button" class="ide-insp-tab active" data-insp="abi">
+              🎛️ ABI Workbench <span id="cntAbiFns" class="ide-count">0</span>
+            </button>
+            <button type="button" class="ide-insp-tab" data-insp="state">
+              🗄️ WorldState KV <span id="cntStateKeys" class="ide-count">0</span>
+            </button>
+            <button type="button" class="ide-insp-tab" data-insp="logs">
+              📡 Events &amp; Logs <span id="cntLogs" class="ide-count">0</span>
+            </button>
+            <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+              <button type="button" id="btnClearLogs" class="ide-mini-btn" title="Clear event &amp; console trace">🧹 Clear Logs</button>
+            </div>
+          </div>
+
+          <div class="ide-inspector-body">
+            <div id="inspAbi" class="ide-insp-pane active"></div>
+            <div id="inspState" class="ide-insp-pane"></div>
+            <div id="inspLogs" class="ide-insp-pane mono"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Compiler Daemon Connection Modal -->
+  <div class="ide-modal-backdrop" id="modalCompiler" hidden>
+    <div class="ide-modal">
+      <div class="ide-modal-head">
+        <strong>🦀 Rust (`hps-sdk`) Compiler Daemon (`cargo hps studio`)</strong>
+        <button type="button" data-close-modal="modalCompiler" class="ide-mini-btn">✕</button>
+      </div>
+      <p class="ide-modal-p">
+        The In-Browser <code>WebAssembly</code> VM, ABI Workbench, Frontend Editor, and Subnet 1 Publisher run 100% inside your browser. To recompile edited <code>#![no_std]</code> Rust source (<code>~150ms</code> per build) or run native <code>#[test]</code> suites, connect to <code>cargo hps studio</code>:
+      </p>
+      <pre class="ide-cmd-box mono"># On Linux or macOS (inside haltproof-subroutines):
+cargo run --release -p cargo-hps -- studio
+
+# Or hosted stateless sandbox mode on a LAN/dev server:
+cargo run --release -p cargo-hps -- studio --sandbox --bind 0.0.0.0:4770</pre>
+      <label class="ide-field">
+        <span>Compiler Daemon URL</span>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="inCompilerUrl" class="ide-input mono" placeholder="http://127.0.0.1:4770" />
+          <button type="button" id="btnConnectCompiler" class="ide-btn ide-btn-sky mono">Connect &amp; Test</button>
+        </div>
+      </label>
+      <div id="compilerModalStatus" class="mono ide-modal-note"></div>
+    </div>
+  </div>
+
+  <!-- Deploy & Publish to Subnet 1 Modal -->
+  <div class="ide-modal-backdrop" id="modalDeploy" hidden>
+    <div class="ide-modal ide-modal-wide">
+      <div class="ide-modal-head">
+        <strong>🚀 Deploy HFS Subroutine &amp; Publish UI to Subnet 1 (`$0.00` Gas)</strong>
+        <button type="button" data-close-modal="modalDeploy" class="ide-mini-btn">✕</button>
+      </div>
+
+      <div class="ide-deploy-artifacts mono" id="deployArtifactSummary"></div>
+
+      <div class="ide-form-grid">
+        <label class="ide-field">
+          <span>App Slug (URL ID)</span>
+          <input type="text" id="inPubSlug" class="ide-input mono" placeholder="my-hfs-app" />
+        </label>
+        <label class="ide-field">
+          <span>Display Title</span>
+          <input type="text" id="inPubTitle" class="ide-input" placeholder="My Zero-Server App" />
+        </label>
+        <label class="ide-field">
+          <span>Icon</span>
+          <input type="text" id="inPubIcon" class="ide-input" value="⚡" maxlength="8" />
+        </label>
+        <label class="ide-field">
+          <span>Version</span>
+          <input type="text" id="inPubVersion" class="ide-input mono" value="1.0.0" />
+        </label>
+        <label class="ide-field">
+          <span>Directory Category</span>
+          <select id="inPubCategory" class="ide-input">
+            <option value="1">1 • Financial Markets &amp; DEX</option>
+            <option value="2">2 • Corporate Governance &amp; IFRS</option>
+            <option value="3">3 • Commerce &amp; Mobility</option>
+            <option value="4">4 • Social, Messaging &amp; Telephony</option>
+            <option value="5">5 • Verifiable Games &amp; Education</option>
+            <option value="6" selected>6 • Utilities &amp; DevTools</option>
+          </select>
+        </label>
+        <label class="ide-field">
+          <span>Existing HFS Address (optional if reusing)</span>
+          <input type="text" id="inPubExistingHfs" class="ide-input mono" placeholder="Leave blank to instantiate fresh HFS" />
+        </label>
+      </div>
+
+      <label class="ide-field">
+        <span>App Store Summary (&lt;= 240 chars)</span>
+        <input type="text" id="inPubSummary" class="ide-input" maxlength="240" />
+      </label>
+
+      <div class="ide-deploy-actions">
+        <button type="button" id="btnDeployHfsOnly" class="ide-btn ide-btn-sky mono">
+          ⛓️ 1. Deploy .wasm Instance Only (Test on Subnet 1)
+        </button>
+        <button type="button" id="btnPublishFullApp" class="ide-btn ide-btn-emerald mono">
+          🚀 2. Deploy .wasm + Seal UI (`0x0101`) + Publish to AppStore
+        </button>
+      </div>
+
+      <div id="deployProgressBox" class="ide-deploy-log mono">Ready to deploy.</div>
+    </div>
+  </div>
+
+  <div id="ideToast" class="ide-toast mono" hidden></div>
+</body>
+</html>
