@@ -84,6 +84,9 @@ const WASM_LABELS_BY_SLUG = {
   hegemony: 'hegemony.wasm',
   lottery: 'lottery.wasm + vrf_beacon.wasm',
   'volatile-voles': 'volatile_voles.wasm',
+  rides: 'ride_exchange.wasm + identity.wasm',
+  jones: 'jones_blockchain.wasm',
+  'haltfree-ecosystem': 'haltfree_ecosystem.wasm',
 };
 
 const state = {
@@ -457,11 +460,8 @@ function renderSingleAppCardHtml(a) {
         ${
           hasArchDoc
             ? `<button type="button" class="as-btn as-btn-violet" data-doc-slug="${a.slug}" title="View Zero-Server HFS Architecture & Cryptographic Spec">🏛️ Spec</button>`
-            : isHostCore
-            ? `<button type="button" class="as-btn" data-sandbox-slug="${a.slug}" title="Run inside isolated iframe">🛡️ Sandbox</button>`
             : ''
         }
-        <button type="button" class="as-btn as-btn-amber" data-fork-slug="${a.slug}" title="Inspect verified .html.gz release or push an updated version">📦 Release</button>
       </div>
     </article>
   `;
@@ -1172,11 +1172,6 @@ document.getElementById('appsGrid').addEventListener('click', async (ev) => {
   const sbBtn = ev.target.closest('[data-sandbox-slug]');
   if (sbBtn) {
     await launchInSandboxRunner(sbBtn.dataset.sandboxSlug);
-    return;
-  }
-  const fkBtn = ev.target.closest('[data-fork-slug]');
-  if (fkBtn) {
-    await loadAppIntoStudio(fkBtn.dataset.forkSlug);
   }
 });
 
