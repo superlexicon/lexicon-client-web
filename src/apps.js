@@ -67,7 +67,6 @@ const ICON_GRADIENTS_BY_SLUG = {
   'volatile-voles': 'linear-gradient(145deg, #fb923c 0%, #e11d48 55%, #881337 100%)',
   jones: 'linear-gradient(145deg, #fde047 0%, #f59e0b 52%, #0284c7 100%)',
   'haltfree-ecosystem': 'linear-gradient(145deg, #34d399 0%, #10b981 52%, #0369a1 100%)',
-  'hfs-studio': 'linear-gradient(145deg, #c084fc 0%, #9333ea 52%, #0284c7 100%)',
 };
 
 const WASM_LABELS_BY_SLUG = {

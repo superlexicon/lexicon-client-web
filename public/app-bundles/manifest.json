@@ -745,28 +745,6 @@
     },
     {
       "appId": 18,
-      "slug": "hfs-studio",
-      "slugId": "0xeb507a876116e68f38a8691736e17146f67ff22a4c8bd94e6013fefbee1d2a5f",
-      "title": "HFS WonderLab \u2014 Kid & Creator Visual App Studio",
-      "summary": "No-code Scratch-style visual block IDE that compiles kid-friendly rules into real wasm32 Halt-Free Subroutines in the browser and deploys full apps to Subnet 1 in one click!",
-      "icon": "\ud83d\udee0\ufe0f",
-      "category": 6,
-      "version": "1.0.0",
-      "execMode": 1,
-      "uiHash": "0x82846dc6b410feae1355c1bfc7a02d9aa7daff63ccbdc31d1803a90d537fa212",
-      "uncompressedLen": 109833,
-      "compressedLen": 28574,
-      "chunkCount": 1,
-      "bundleUrl": "/app-bundles/hfs-studio.html.gz",
-      "route": "/hfs-studio.html",
-      "wasmCodeHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-      "defaultHfsAddr": "0x0000000000000000000000000000000000000000",
-      "assets": [],
-      "publisherLabel": "SuperLexicon Core \u00b7 HFS",
-      "isSystemCore": true
-    },
-    {
-      "appId": 19,
       "slug": "rf-micro-poll",
       "slugId": "0xfa8eeed1a96e5d1ffdc381328b4e9f0fb2db02208200ea5f529afad1c7507e88",
       "title": "RF Mesh Pulse Poll",
@@ -787,7 +765,7 @@
       "isSystemCore": false
     },
     {
-      "appId": 20,
+      "appId": 19,
       "slug": "mesh-repeater-wall",
       "slugId": "0x54c6cac78e2192d72345ce431721089bdc888fa03efa3df855035ac5323215f6",
       "title": "Mesh Repeater Beacon Wall",
@@ -808,7 +786,7 @@
       "isSystemCore": false
     },
     {
-      "appId": 21,
+      "appId": 20,
       "slug": "hfs-bounty-splits",
       "slugId": "0xc090a02e57ee16c295823c28b4135199600cdc46dd086b1b05b422389215926e",
       "title": "HFS R&D Bounty Splits",
