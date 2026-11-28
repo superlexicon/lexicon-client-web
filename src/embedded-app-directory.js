@@ -1146,7 +1146,11 @@ export function mountEmbeddedAppDirectory(
             });
           } else {
             const syn = `app-${oc.appId}`;
-            bySlug.set(syn, { ...oc, slug: syn, route: `/apps.html?run=${syn}`, source: 'onchain' });
+            const synRoute =
+              oc.execMode === APP_EXEC_MODE.VERIFIED_HOST
+                ? `/app/${syn}`
+                : `/apps.html?run=${syn}`;
+            bySlug.set(syn, { ...oc, slug: syn, route: synRoute, source: 'onchain' });
           }
         }
       }

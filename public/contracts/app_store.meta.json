@@ -1,6 +1,6 @@
 {
   "artifact": "dist/app_store.wasm",
-  "code_hash": "0x9ed33ecadd23d9f35c7f77d0cead887fb40fa3a6fc31eff26783151dd496b948",
+  "code_hash": "0xeb4814dda67ae256ea63bf3d7b2154d24352368f8538faa250e7fbc380c2a07a",
   "exports": [
     "memory",
     "main"
@@ -18,9 +18,6 @@
   ],
   "initial_memory_pages": 32,
   "max_memory_pages": 64,
-  "optimized_wasm_bytes": 23751,
-  "raw_wasm_bytes": 23754,
-  "codeHash": "0xee9d0de546e867f3a564e67cca86ea8988b965246b240eb93c9c2fc83ee90646",
-  "sizeBytes": 27167,
-  "abiVersion": 2
+  "optimized_wasm_bytes": 20033,
+  "raw_wasm_bytes": 20101
 }

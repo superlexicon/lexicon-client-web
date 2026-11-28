@@ -1,12 +1,14 @@
 /**
  * Universal HFS App Host Bootloader (`src/app-host-boot.js`)
  *
- * Boots any converted `<slug>.html` stub page by resolving the app's latest `uiHash` from the
- * on-chain `AppStore` HFS (`app_store.wasm`) / CAS catalog, verifying `keccak256(gzipBytes) === uiHash`,
- * decompressing via `DecompressionStream('gzip')`, and mounting the verified UI bundle dynamically.
+ * Boots ANY SuperLexicon HFS app from the single universal `/app.html` shell (including clean URL
+ * routes like `/<slug>.html`, `/app/<slug>`, and `/app.html?app=<slug>`) with zero per-app HTML
+ * entrypoints — resolving `uiHash` from Subnet 1 `app_store.wasm`, verifying `keccak256` integrity,
+ * decompressing gzip in-browser, and mounting the verified UI dynamically.
  */
 
 import {
+  APP_EXEC_MODE,
   AppStoreClient,
   SlxPersonalAppContainer,
   SlxUiBundleCache,
@@ -22,12 +24,44 @@ import {
   mountVerifiedHostAppBundle,
 } from './app-host-runtime.js';
 
+const RESERVED_SHELL_SLUGS = new Set(['index', 'apps', 'explorer', 'app']);
+
+export function resolveRequestedAppSlug() {
+  const fromAttr = document.body?.getAttribute('data-slx-app-slug') || '';
+  if (fromAttr.trim()) return fromAttr.trim().toLowerCase();
+
+  const params = new URLSearchParams(window.location.search);
+  const fromQuery = params.get('app') || params.get('slug') || '';
+  if (fromQuery.trim()) return fromQuery.trim().toLowerCase();
+
+  const fromId = params.get('id') || params.get('appId') || '';
+  if (fromId.trim() && /^\d+$/.test(fromId.trim())) {
+    return `app-${fromId.trim()}`;
+  }
+
+  const pathname = window.location.pathname || '';
+  const appPrefixMatch = pathname.match(/^\/app\/([a-z0-9_-]+)\/?$/i);
+  if (appPrefixMatch) {
+    return appPrefixMatch[1].toLowerCase();
+  }
+
+  const htmlSlugMatch = pathname.match(/^\/([a-z0-9_-]+)\.html$/i);
+  if (htmlSlugMatch) {
+    const candidate = htmlSlugMatch[1].toLowerCase();
+    if (!RESERVED_SHELL_SLUGS.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  return '';
+}
+
 async function bootHostStub() {
-  const slug =
-    document.body?.getAttribute('data-slx-app-slug') ||
-    new URLSearchParams(window.location.search).get('app') ||
-    '';
-  if (!slug) return;
+  const slug = resolveRequestedAppSlug();
+  if (!slug) {
+    window.location.replace('/apps.html');
+    return;
+  }
 
   const storeClient = new AppStoreClient({ rpcUrl: getDefaultNodeWsUrl() });
 
@@ -43,6 +77,10 @@ async function bootHostStub() {
   // Fast Path: If the current `uiHash` is already verified in local IndexedDB/CAS, mount immediately!
   try {
     const fastMeta = resolveFastCachedAppMeta(slug);
+    if (fastMeta && fastMeta.execMode === APP_EXEC_MODE.SANDBOX_IFRAME && !fastMeta.isSystemCore) {
+      window.location.replace(`/apps.html?run=${encodeURIComponent(slug)}`);
+      return;
+    }
     if (fastMeta?.uiHash && fastMeta.uiHash !== ZERO_BYTES32) {
       const fastHtml = await SlxUiBundleCache.getVerifiedHtml(fastMeta.uiHash);
       if (fastHtml?.html) {
@@ -71,6 +109,10 @@ async function bootHostStub() {
     const appMeta = pinnedInstalled || (await resolveEffectiveAppMeta(slug, storeClient));
     if (!appMeta) {
       throw new Error(`App "${slug}" was not found in AppStore HFS or genesis catalog.`);
+    }
+    if (appMeta.execMode === APP_EXEC_MODE.SANDBOX_IFRAME && !appMeta.isSystemCore) {
+      window.location.replace(`/apps.html?run=${encodeURIComponent(slug)}`);
+      return;
     }
 
     const verifiedBundle = await storeClient.fetchVerifiedBundleHtml({

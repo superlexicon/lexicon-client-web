@@ -291,7 +291,13 @@ export async function resolveEffectiveAppMeta(slug, storeClient) {
   let onChain = null;
   if (storeClient) {
     try {
-      onChain = await storeClient.fetchAppBySlug(cleanSlug);
+      const idMatch = cleanSlug.match(/^app-(\d+)$/);
+      if (idMatch && typeof storeClient.fetchAppById === 'function') {
+        onChain = await storeClient.fetchAppById(Number(idMatch[1]));
+      }
+      if (!onChain) {
+        onChain = await storeClient.fetchAppBySlug(cleanSlug);
+      }
     } catch (_) {}
   }
 
@@ -305,6 +311,7 @@ export async function resolveEffectiveAppMeta(slug, storeClient) {
     ...(localOverrides || {}),
     ...(onChain
       ? {
+          slug: base?.slug || localOverrides?.slug || cleanSlug,
           appId: onChain.appId,
           title: onChain.title || localOverrides?.title || base?.title,
           summary: onChain.summary || localOverrides?.summary || base?.summary,
@@ -411,8 +418,8 @@ function mountVerifiedBundleBadge({ appMeta, verifiedBundle }) {
   const gzKb = ((verifiedBundle.compressedLen || appMeta.compressedLen || 0) / 1024).toFixed(1);
   const srcTag = verifiedBundle.cacheHit
     ? '⚡ Local Cache'
-    : verifiedBundle.loadedFrom === 'onchain-appstore'
-    ? '⛓️ On-Chain AppStore'
+    : verifiedBundle.loadedFrom === 'onchain-ui-bundle-store'
+    ? '⛓️ On-Chain UI Store'
     : 'Verified CAS';
   const shortUi = sdk.shortHex(verifiedBundle.uiHash || appMeta.uiHash || '', 8, 6);
 

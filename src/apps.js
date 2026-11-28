@@ -190,7 +190,10 @@ async function refreshMergedCatalog() {
         bySlug.set(syntheticSlug, {
           ...oc,
           slug: syntheticSlug,
-          route: `/apps.html?run=${syntheticSlug}`,
+          route:
+            oc.execMode === APP_EXEC_MODE.VERIFIED_HOST
+              ? `/app/${syntheticSlug}`
+              : `/apps.html?run=${syntheticSlug}`,
           source: 'onchain',
         });
       }

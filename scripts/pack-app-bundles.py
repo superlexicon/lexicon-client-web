@@ -691,10 +691,7 @@ def main() -> None:
         out_gz = OUT_BUNDLES_DIR / f"{slug}.html.gz"
         out_gz.write_bytes(gz_bytes)
 
-        # Replace static `/<slug>.html` with lightweight Universal Host Runner Stub!
-        (ROOT / f"{slug}.html").write_text(emit_host_stub_html(slug, spec["title"], spec["icon"]))
-
-        chunks = (len(gz_bytes) + 32767) // 32768
+        chunks = (len(gz_bytes) + 40959) // 40960
         manifest_apps.append(
             {
                 "appId": app_id_seq,
@@ -735,7 +732,7 @@ def main() -> None:
         out_gz = OUT_BUNDLES_DIR / f"{slug}.html.gz"
         out_gz.write_bytes(gz_bytes)
 
-        chunks = (len(gz_bytes) + 32767) // 32768
+        chunks = (len(gz_bytes) + 40959) // 40960
         manifest_apps.append(
             {
                 "appId": app_id_seq,
@@ -765,9 +762,10 @@ def main() -> None:
         app_id_seq += 1
 
     manifest_obj = {
-        "schema": "SuperLexicon-HFS-AppStore-Catalog-v1",
-        "appStoreCodeHash": "0xee9d0de546e867f3a564e67cca86ea8988b965246b240eb93c9c2fc83ee90646",
-        "chunkSizeBytes": 32768,
+        "schema": "SuperLexicon-HFS-AppStore-Catalog-v2",
+        "appStoreCodeHash": "0xeb4814dda67ae256ea63bf3d7b2154d24352368f8538faa250e7fbc380c2a07a",
+        "uiBundleStoreAddress": "0x0000000000000000000000000000000000000101",
+        "chunkSizeBytes": 40960,
         "apps": manifest_apps,
     }
     (OUT_BUNDLES_DIR / "manifest.json").write_text(json.dumps(manifest_obj, indent=2) + "\n")

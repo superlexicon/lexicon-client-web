@@ -4,6 +4,28 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = import.meta.dirname || fileURLToPath(new URL('.', import.meta.url));
+const PHYSICAL_SHELLS = new Set(['/index.html', '/apps.html', '/explorer.html', '/app.html']);
+
+function slxUniversalAppHostPlugin() {
+  const attach = (server) => {
+    server.middlewares.use((req, _res, next) => {
+      const cleanPath = (req.url || '').split('?')[0];
+      if (
+        /^\/app\/[a-z0-9_-]+\/?$/i.test(cleanPath) ||
+        (/^\/[a-z0-9_-]+\.html$/i.test(cleanPath) && !PHYSICAL_SHELLS.has(cleanPath.toLowerCase()))
+      ) {
+        const qs = (req.url || '').includes('?') ? '?' + req.url.split('?')[1] : '';
+        req.url = '/app.html' + qs;
+      }
+      next();
+    });
+  };
+  return {
+    name: 'slx-universal-app-host',
+    configureServer: attach,
+    configurePreviewServer: attach,
+  };
+}
 
 function discoverHtmlInputs(dir) {
   const inputs = {};
@@ -16,6 +38,7 @@ function discoverHtmlInputs(dir) {
 }
 
 export default defineConfig({
+  plugins: [slxUniversalAppHostPlugin()],
   define: {
     __SLX_HAS_SLIDES__: JSON.stringify(false),
   },

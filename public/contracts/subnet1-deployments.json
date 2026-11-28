@@ -1,10 +1,10 @@
 {
-  "deployedAt": "2026-11-24T01:12:34.149Z",
+  "deployedAt": "2026-11-28T00:58:42.939Z",
   "wsPort": 8545,
   "codeHashes": {
     "battleship": "0x6a5e510168af50485deb952def622bccbd768ad065d3e08e7c5f781aafa0db1d",
     "identity_registry": "0x6e10c61e55dfdbd777eb9c5c64771a6064263380a3c526dbe19d6ea4848b333d",
-    "identity": "0x76ea486f595517f47cac5e927bd280f5c4afd16f0253076254ee942e2b8cbddc",
+    "identity": "0xcc46a2588c305b47ce5407b744b2c730479459d60fbe3aae1d001a6d740f19cb",
     "messaging": "0xe5eb6cbc561a2e6b84ac8047d86492b942e63c3f9a43ce6fe527d600ed1fac63",
     "product_ledger": "0x590bdeb07de7b13758fd84976f624bc5dabe411aa56d7245f7603c629977fa32",
     "social_charter": "0xcb336f1c9d24be323ae9c4c5e51b25adfa43b562bbb00ca4a7fc7ff4ec57f698",
@@ -24,15 +24,9 @@
     "vrf_beacon": "0xbe906042cf5412ca0ddd9c6a861f1f8cd1e024c3edac5bcb42f1809fdb558a79",
     "lottery": "0x47ad30cec9bea929e83508ac042394ce0bce98caa120afe871bd79e3850bd354",
     "secret_ballot": "0x1817db8449f5166890989a1c56c5552fd21a9af39dfa4c963073a7dfc85adf8f",
-    "subnet_registry": "0x5365ed423586cdd689b264c188f9230b2ba4e1562d8d1a76f802e04ff6547e0f",
-    "app_store": "0xee9d0de546e867f3a564e67cca86ea8988b965246b240eb93c9c2fc83ee90646",
     "webrtc_signal": "0x6883e5a1c75848f8d08717076d90fcf812ac280b6a2fd8d909aed95a2463100b",
-    "volatile_voles": "0x764b74a0b4f862023dc1993abf4cdc8b982f7c314f306d106e3e7db72842566d"
-  },
-  "webrtcSignal": {
-    "contractAddr": "0x95eada4348b88464bc777f38e54070ea82807d64",
-    "abiVersion": 2,
-    "label": "Subnet 1 LexiCall v2 Hub (Calls, Discord Channels & Live Broadcasts)"
+    "volatile_voles": "0x764b74a0b4f862023dc1993abf4cdc8b982f7c314f306d106e3e7db72842566d",
+    "app_store": "0xeb4814dda67ae256ea63bf3d7b2154d24352368f8538faa250e7fbc380c2a07a"
   },
   "battleship": {
     "contractAddr": "0xabb7f6c0ea97ed6f946a51b5d0a944f98226cab1",
@@ -105,7 +99,7 @@
     ]
   },
   "institutional": {
-    "deployedAt": "2026-11-24T01:12:34.149Z",
+    "deployedAt": "2026-11-28T00:58:42.939Z",
     "companyName": "Nvidya Systems Pte. Ltd. [SIM-BOT]",
     "shareTicker": "NVDAX-EQ",
     "firstResolutionAuth": "0xdaccc3a5fd598b76e0b0aeca662aec6a254b7187",
@@ -245,22 +239,22 @@
         "unitCost": 95,
         "isCashProcure": true,
         "defaultOrderQty": 1,
-        "category": "B2C Retail \u2022 Edge AI RF Pod",
-        "specs": "2\u00d7 Semtech LR2021 (Sub-GHz + 2.4 GHz FLRC) + Edge Tensor Module \u2022 Offline radio mesh signing pod",
+        "category": "B2C Retail • Edge AI RF Pod",
+        "specs": "2× Semtech LR2021 (Sub-GHz + 2.4 GHz FLRC) + Edge Tensor Module • Offline radio mesh signing pod",
         "skuId": "0xd4325ca8bbee0b6635c61d1ad04a45cf99ed65fe88ebc6dc3a4885d447039860"
       },
       {
         "code": "APEL-VIZ-PRO",
         "name": "Apel Vizion Pro Mesh [SIM-BOT]",
-        "fullName": "Apel Vizion Pro \u2014 Titanium Spatial Mesh Headset [SIM-BOT]",
+        "fullName": "Apel Vizion Pro — Titanium Spatial Mesh Headset [SIM-BOT]",
         "tier": "b2c",
         "units": 120,
         "price": 920,
         "unitCost": 390,
         "isCashProcure": true,
         "defaultOrderQty": 1,
-        "category": "B2C Retail \u2022 Wearable Mesh Node",
-        "specs": "Grade-5 Titanium \u2022 Dual Micro-OLED \u2022 2\u00d7 LR2021 Dual-Band RF \u2022 u-blox GNSS \u2022 Secure Enclave",
+        "category": "B2C Retail • Wearable Mesh Node",
+        "specs": "Grade-5 Titanium • Dual Micro-OLED • 2× LR2021 Dual-Band RF • u-blox GNSS • Secure Enclave",
         "skuId": "0x36021700c04a386869f065a5069816ee906b735b373086406de6703bec8b1fd3"
       },
       {
@@ -273,8 +267,8 @@
         "unitCost": 680,
         "isCashProcure": true,
         "defaultOrderQty": 1,
-        "category": "B2C Retail \u2022 Satellite + RF Terminal",
-        "specs": "Dual-Core 64-bit RISC-V \u2022 Phased-Array LEO + 2\u00d7 LR2021 Sub-GHz/2.4GHz \u2022 Hardware Signing Vault",
+        "category": "B2C Retail • Satellite + RF Terminal",
+        "specs": "Dual-Core 64-bit RISC-V • Phased-Array LEO + 2× LR2021 Sub-GHz/2.4GHz • Hardware Signing Vault",
         "skuId": "0x3de6ea08cfa9dd9614d8b002be585922ebd0f8a1194699a8ee99809cc81e6c61"
       },
       {
@@ -287,50 +281,50 @@
         "unitCost": 270,
         "isCashProcure": true,
         "defaultOrderQty": 1,
-        "category": "B2C Retail \u2022 RISC-V RF DevKit",
+        "category": "B2C Retail • RISC-V RF DevKit",
         "specs": "Dual 64-bit RISC-V + Dual-LR2021 Hat + Wasmtime HFS SDK & Sub-GHz/2.4GHz SMA Antennas",
         "skuId": "0x225e352f361eab1a8951cda5631ccdf34e6d0068a84d4b19b352712ba9167cd5"
       },
       {
         "code": "B2B-DGX-100",
         "name": "B2B 100x H200 Pods [SIM-BOT]",
-        "fullName": "B2B Fleet Crate \u2014 100\u00d7 Nvidya H200 Mini-Pods (19% Bulk Discount) [SIM-BOT]",
+        "fullName": "B2B Fleet Crate — 100× Nvidya H200 Mini-Pods (19% Bulk Discount) [SIM-BOT]",
         "tier": "b2b",
         "units": 45,
         "price": 19500,
         "unitCost": 8800,
         "isCashProcure": true,
         "defaultOrderQty": 3,
-        "category": "B2B Bulk Deal \u2022 100-Unit Crate",
-        "specs": "100\u00d7 serialized Nvidya H200 Mini-Pods in Pelican fleet case + bulk IdentityRegistry onboarding manifest",
+        "category": "B2B Bulk Deal • 100-Unit Crate",
+        "specs": "100× serialized Nvidya H200 Mini-Pods in Pelican fleet case + bulk IdentityRegistry onboarding manifest",
         "skuId": "0x991a271a41ca03befc33feba482499f7a93f471579af34ba951a06f7ed020453"
       },
       {
         "code": "B2B-VIZ-50",
         "name": "B2B 50x Apel Vizion [SIM-BOT]",
-        "fullName": "B2B Field Crew Pack \u2014 50\u00d7 Apel Vizion Pro Mesh Nodes (17% Bulk Discount) [SIM-BOT]",
+        "fullName": "B2B Field Crew Pack — 50× Apel Vizion Pro Mesh Nodes (17% Bulk Discount) [SIM-BOT]",
         "tier": "b2b",
         "units": 35,
         "price": 38000,
         "unitCost": 17500,
         "isCashProcure": true,
         "defaultOrderQty": 2,
-        "category": "B2B Bulk Deal \u2022 50-Unit Crew Pack",
-        "specs": "50\u00d7 Grade-5 Titanium Apel Vizion nodes pre-keyed for maritime, aerospace & industrial field crews",
+        "category": "B2B Bulk Deal • 50-Unit Crew Pack",
+        "specs": "50× Grade-5 Titanium Apel Vizion nodes pre-keyed for maritime, aerospace & industrial field crews",
         "skuId": "0x5b8843b1ecda5d82ea90c0abf100dad7ee0baf2eaf30e82cecf21d7d6883c932"
       },
       {
         "code": "B2B-DISH-25",
         "name": "B2B 25x Starlynx Kit [SIM-BOT]",
-        "fullName": "B2B Command Lot \u2014 25\u00d7 Starlynx Mini Field Terminals (16% Bulk Discount) [SIM-BOT]",
+        "fullName": "B2B Command Lot — 25× Starlynx Mini Field Terminals (16% Bulk Discount) [SIM-BOT]",
         "tier": "b2b",
         "units": 35,
         "price": 33500,
         "unitCost": 15500,
         "isCashProcure": true,
         "defaultOrderQty": 3,
-        "category": "B2B Bulk Deal \u2022 25-Unit Lot",
-        "specs": "25\u00d7 Starlynx Mini field terminals with Satellite NTN + Dual-LR2021 + 8-bay rugged rack charger",
+        "category": "B2B Bulk Deal • 25-Unit Lot",
+        "specs": "25× Starlynx Mini field terminals with Satellite NTN + Dual-LR2021 + 8-bay rugged rack charger",
         "skuId": "0x807d6957aba1b2124d8df17676bd7e19a35fd90a3585ac33d55273ebff47a0d1"
       },
       {
@@ -343,8 +337,8 @@
         "unitCost": 11800,
         "isCashProcure": false,
         "defaultOrderQty": 3,
-        "category": "B2B Infrastructure \u2022 RF Mast Relay",
-        "specs": "MIL-STD-810H tower/mast relay \u2022 8\u00d7 parallel LR2021 diversity channels \u2022 PoE++ / Solar \u2022 Embedded BFT Validator",
+        "category": "B2B Infrastructure • RF Mast Relay",
+        "specs": "MIL-STD-810H tower/mast relay • 8× parallel LR2021 diversity channels • PoE++ / Solar • Embedded BFT Validator",
         "skuId": "0x64270a26ccabf499d86dcfa2b1a8ddd77e3c62a54ce0cd87041ea2aa17234ea7"
       },
       {
@@ -357,7 +351,7 @@
         "unitCost": 14000,
         "isCashProcure": true,
         "defaultOrderQty": 2,
-        "category": "B2B Enterprise \u2022 BFT Node Rack",
+        "category": "B2B Enterprise • BFT Node Rack",
         "specs": "Dual-PSU 1U Validator Server pre-loaded with Wasmtime HFS Suite (Charter, IFRS, DEX, Custody Vault)",
         "skuId": "0x0434c12c6afc2712ccb61725d587d6c878c55c7cf2a7139ffff305378d8b555e"
       }
@@ -369,7 +363,7 @@
         "title": "Resolution #2026-01: Appoint Independent Director [SIM-BOT]",
         "summary": "Appoint Satyaa Nadella [SIM-BOT] to the Board of Directors of Nvidya Systems Pte. Ltd. [SIM-BOT].",
         "category": "Board Expansion",
-        "policyLabel": "Shareholder Super-Majority (\u226575%)",
+        "policyLabel": "Shareholder Super-Majority (≥75%)",
         "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
         "targetHps": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
         "actionHash": "0xf098aac6988986504ca0df5c07197d50e405d6b6599b8caa3f4af9109775acd6",
@@ -383,7 +377,7 @@
         "title": "Resolution #2026-02: Appoint Chief Financial Officer [SIM-BOT]",
         "summary": "Grant ROLE_TREASURY_MANAGER to Ruth Poratt [SIM-BOT] under Nvidya Systems Pte. Ltd. [SIM-BOT].",
         "category": "Executive Role Grant",
-        "policyLabel": "Shareholder Super-Majority (\u226575%)",
+        "policyLabel": "Shareholder Super-Majority (≥75%)",
         "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
         "targetHps": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
         "actionHash": "0x08dfbdc2a459e9f6e40731bc020c5eaddc6dd13e7bfa96017e436816663c2d58",
@@ -399,7 +393,7 @@
         "title": "Resolution #2026-03: Authorize R&D Treasury Share Issuance [SIM-BOT]",
         "summary": "Issue +20,000 new NVDAX-EQ Common Shares into Nvidya Corporate Reserve [SIM-BOT].",
         "category": "Share Capital Issuance",
-        "policyLabel": "Shareholder Super-Majority (\u226575%)",
+        "policyLabel": "Shareholder Super-Majority (≥75%)",
         "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
         "targetHps": "0xdf8d218d822632b4b3025e899117120c2456cb9f",
         "actionHash": "0xf6c0893fed98b058891fcb4b8c3f833aac3bfaa787446974e6a71366be9acf07",
@@ -414,7 +408,7 @@
         "title": "Resolution #2026-04: Authorize Catalog Product Manager [SIM-BOT]",
         "summary": "Grant ROLE_PRODUCT_MANAGER to Timm Cookk [SIM-BOT] to govern ProductLedger pricing & restocks.",
         "category": "Commerce Governance",
-        "policyLabel": "Shareholder Super-Majority (\u226575%)",
+        "policyLabel": "Shareholder Super-Majority (≥75%)",
         "policyId": "0xbc8e83e12ac868ca96fd993a83765df30fbd0fd42b6b656b340b35ccb31f8199",
         "targetHps": "0xda42b8095e44a36b356bc2b474e9bf79bc5e5547",
         "actionHash": "0xd7358ebe7d174e6ee6dd0fa50340fe46d1d278a777c4fd68076936900941f5e4",
@@ -427,7 +421,7 @@
     ],
     "seededMatchHistory": [
       {
-        "block": 74,
+        "block": 85,
         "price": 104,
         "volume": 85
       }
@@ -514,7 +508,6 @@
     "treasuryIdentity": "0x8a7fd72cc6a828f68d22cb6bf18039fbfc79c5b1"
   },
   "hfsRegistry": "0xe1dc7648205c3704eba81797325e6163a9404d64",
-  "subnetRegistry": "0xd7983d631634bb6d1dea4318a25dd413066ad5fc",
   "secondaryDeployments": {
     "techDex": {
       "dexClob": "0x0af24ca472ded127a172cde227b356ec60e836a6",
@@ -570,7 +563,7 @@
     ]
   },
   "quantumLottery": {
-    "deployedAt": "2026-11-24T01:12:34.149Z",
+    "deployedAt": "2026-11-28T00:58:42.939Z",
     "vrfBeacon": "0x2d2b26458cfa2bec8741e18ec41aab17e67b47b6",
     "contractAddr": "0xeb3ee8d4739cfeb2883ff8583766f4793efdeb15",
     "vaultIdentity": "0x539d6590f7199c4aea51997787ac47693194d912",
@@ -582,14 +575,14 @@
     }
   },
   "secretBallot": {
-    "deployedAt": "2026-11-24T01:12:34.149Z",
+    "deployedAt": "2026-11-28T00:58:42.939Z",
     "vrfBeacon": "0xc98072285235f4ba4669ea786484cbe1461cf432",
     "contractAddr": "0xb2bcd0053c45f268fba8a0aec259e3d8da837747",
     "secondaryHub": "0xc7ba5e936761fc4a64a2d319c454ea17a3ffd1bf",
     "minValidators": 4
   },
   "ifrsAccounting": {
-    "deployedAt": "2026-11-24T01:12:34.149Z",
+    "deployedAt": "2026-11-28T00:58:42.939Z",
     "primaryLedger": "0x4f225000bcb350d37d38d320b3bf50394d235724",
     "primaryConfidentialLedger": "0x975de7db44cc3a0d8445a6139cf77be587b42677",
     "primaryTreasuryIdentity": "0x8a7fd72cc6a828f68d22cb6bf18039fbfc79c5b1",
@@ -607,7 +600,7 @@
   },
   "identityHfsExtension": "0x78b12a31dfdf38f98cea39c79c420de6f0674139",
   "recoveryOracle": {
-    "identityAddr": "0x7dcd1c7166ca7fc4de94851f4f9c477c766c832f",
+    "identityAddr": "0xe3554f83e16d25978c6539628bdf3c4c14f769ca",
     "nickname": "BiometricOracle [SIM-BOT]",
     "handle": "@biometric_oracle_bot",
     "maxCapacityPerSlot": 4,
@@ -616,28 +609,39 @@
         "slotId": 0,
         "label": "Biometric Enclave #0 [SIM-BOT]",
         "maxCapacity": 4,
-        "operatorEoa": "0xf26ab3bbf3f94125af7961f30bb13bf36fab0720",
-        "privateKey": "0x42401346223517c017e5e1cdefe6ca1a8958af515298ccf94930b1537b3e38e5",
-        "edPub32Hex": "0xeef24798db1535800b299ea4e21021f09a702fbbfcfdb457d507948eb31d2d98"
+        "operatorEoa": "0x4dfcc93fd8d77b6a283f8d75345ebe09c83ffd50",
+        "privateKey": "0x62dbebcfd21396341e17faacc518eea43ff0a04e472f5b1a26f559ae6a31f234",
+        "edPub32Hex": "0xed625db8f07c97e30df98d587cf4d3182b755224346ee7319ce757b1602a7003"
       },
       {
         "slotId": 1,
         "label": "Biometric Enclave #1 [SIM-BOT]",
         "maxCapacity": 4,
-        "operatorEoa": "0xfd915b5fe1039015996d2823b887074043eeaf2e",
-        "privateKey": "0x3e2e3daa2fa6331659084a969f1f77fc457e87c7cf82467fbb2264da1c8aaa13",
-        "edPub32Hex": "0x7b7b1ef2fba1dbdc1ac2aae3c257198c9bd5d7836b183f63508e6bd6451f2518"
+        "operatorEoa": "0x7865008d6c7ce4b34f743e2e2652699e587dec50",
+        "privateKey": "0xbb2fb5e5ee669a26ef9a67f92b2401371c99bb64db3d6d8266730f2302ab1788",
+        "edPub32Hex": "0x0e593fccb028f33b69194e8cd2588fc6cd0419ea75f536d6e56dba5d0933f97c"
       },
       {
         "slotId": 2,
         "label": "Biometric Enclave #2 [SIM-BOT]",
         "maxCapacity": 4,
-        "operatorEoa": "0x3ceb304cd8533d093d790cff927b1a2af4365129",
-        "privateKey": "0x6e212d66aa0e333eb4a5568ee8936e972b49daad6c5a37795cad73569ccc5666",
-        "edPub32Hex": "0xa533db5608a3641a32b6d7c35a2466f54e4dbf342980679590cbd0cd86d74618"
+        "operatorEoa": "0x3dcf89a6af9e27faf05c2ba12346f7244ad947f8",
+        "privateKey": "0xe9883a2112ff5aff452515f32af21b5f8e16dd50e1bb530a8a3e2b8ff1f753f3",
+        "edPub32Hex": "0x9c3132e3dc310dc3a3510c503be09b1a1a064d3f4db5a59962d8271d7881e3f4"
       }
     ]
   },
+  "webrtcSignal": {
+    "contractAddr": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+    "abiVersion": 2,
+    "label": "Subnet 1 LexiCall v2 Hub (Calls, Discord Channels & Live Broadcasts)"
+  },
+  "volatileVoles": {
+    "contractAddr": "0x0165878a594ca255338adfa4d48449f69242eb8f",
+    "defaultTableId": "0x564f4c4154494c455f564f4c45535f425552524f575f30310000000000000000",
+    "label": "High-Voltage Burrow Arena #1"
+  },
+  "appStore": "0x610178da211fef7d417bc0e6fed39f05609ad788",
   "sovereignSuperlexiconSpec": {
     "schemaVersion": 1,
     "castInStone": true,
@@ -697,7 +701,7 @@
         {
           "slugName": "developers",
           "slugKeccak256": "0x7425dff72041e497b9005317e8d584a8e5ec49bffe00da3b355471b70c8799a4",
-          "label": "Superlexicon \u00b7 Developers",
+          "label": "Superlexicon · Developers",
           "directorManaged": true,
           "initialMembers": [
             "manogaran_thanabalan",
@@ -719,10 +723,5 @@
       "restrictAppStorePublishToDevelopersSubgroup": true,
       "directRfSubnetIngressUnrestricted": true
     }
-  },
-  "volatileVoles": {
-    "contractAddr": "0x0165878a594ca255338adfa4d48449f69242eb8f",
-    "defaultTableId": "0x564f4c4154494c455f564f4c45535f425552524f575f30310000000000000000",
-    "label": "High-Voltage Burrow Arena #1"
   }
 }
